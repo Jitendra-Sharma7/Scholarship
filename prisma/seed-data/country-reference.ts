@@ -1,0 +1,252 @@
+/**
+ * Every sovereign state, plus the separately administered destinations that host
+ * international programmes of their own (Hong Kong), with the fields that are
+ * objective reference data: the ISO 3166-1 alpha-2 and alpha-3 codes, the
+ * capital city, the continent, and the currency code.
+ *
+ * Nothing here is a claim about scholarships. Cost of living, study
+ * information, and university highlights are deliberately absent for these
+ * countries: an entry the visitor can see is better than an entry padded with
+ * figures nobody verified. The twenty countries in `countries.ts` keep their
+ * written detail, and this list only fills in what was missing.
+ *
+ * The seeder writes name, code, code3, capital, continent, and currency. It does
+ * not overwrite `region` on a row that already has one, so the editorial region
+ * labels ("Middle East", "Europe / Asia") chosen in `countries.ts` survive.
+ */
+
+export interface CountryReference {
+  /** ISO 3166-1 alpha-2, which is also this row's stable id. */
+  code: string;
+  /** ISO 3166-1 alpha-3. */
+  code3: string;
+  name: string;
+  capital: string;
+  continent: string;
+  currency: string;
+}
+
+/** Grouped so the list reads as reference material rather than a wall of rows. */
+const AFRICA: CountryReference[] = [
+  { code: "DZ", code3: "DZA", name: "Algeria", capital: "Algiers", continent: "Africa", currency: "DZD" },
+  { code: "AO", code3: "AGO", name: "Angola", capital: "Luanda", continent: "Africa", currency: "AOA" },
+  { code: "BJ", code3: "BEN", name: "Benin", capital: "Porto-Novo", continent: "Africa", currency: "XOF" },
+  { code: "BW", code3: "BWA", name: "Botswana", capital: "Gaborone", continent: "Africa", currency: "BWP" },
+  { code: "BF", code3: "BFA", name: "Burkina Faso", capital: "Ouagadougou", continent: "Africa", currency: "XOF" },
+  { code: "BI", code3: "BDI", name: "Burundi", capital: "Gitega", continent: "Africa", currency: "BIF" },
+  { code: "CV", code3: "CPV", name: "Cabo Verde", capital: "Praia", continent: "Africa", currency: "CVE" },
+  { code: "CM", code3: "CMR", name: "Cameroon", capital: "Yaounde", continent: "Africa", currency: "XAF" },
+  { code: "CF", code3: "CAF", name: "Central African Republic", capital: "Bangui", continent: "Africa", currency: "XAF" },
+  { code: "TD", code3: "TCD", name: "Chad", capital: "N'Djamena", continent: "Africa", currency: "XAF" },
+  { code: "KM", code3: "COM", name: "Comoros", capital: "Moroni", continent: "Africa", currency: "KMF" },
+  { code: "CG", code3: "COG", name: "Congo", capital: "Brazzaville", continent: "Africa", currency: "XAF" },
+  { code: "CD", code3: "COD", name: "DR Congo", capital: "Kinshasa", continent: "Africa", currency: "CDF" },
+  { code: "CI", code3: "CIV", name: "Cote d'Ivoire", capital: "Yamoussoukro", continent: "Africa", currency: "XOF" },
+  { code: "DJ", code3: "DJI", name: "Djibouti", capital: "Djibouti", continent: "Africa", currency: "DJF" },
+  { code: "EG", code3: "EGY", name: "Egypt", capital: "Cairo", continent: "Africa", currency: "EGP" },
+  { code: "GQ", code3: "GNQ", name: "Equatorial Guinea", capital: "Malabo", continent: "Africa", currency: "XAF" },
+  { code: "ER", code3: "ERI", name: "Eritrea", capital: "Asmara", continent: "Africa", currency: "ERN" },
+  { code: "SZ", code3: "SWZ", name: "Eswatini", capital: "Mbabane", continent: "Africa", currency: "SZL" },
+  { code: "ET", code3: "ETH", name: "Ethiopia", capital: "Addis Ababa", continent: "Africa", currency: "ETB" },
+  { code: "GA", code3: "GAB", name: "Gabon", capital: "Libreville", continent: "Africa", currency: "XAF" },
+  { code: "GM", code3: "GMB", name: "Gambia", capital: "Banjul", continent: "Africa", currency: "GMD" },
+  { code: "GH", code3: "GHA", name: "Ghana", capital: "Accra", continent: "Africa", currency: "GHS" },
+  { code: "GN", code3: "GIN", name: "Guinea", capital: "Conakry", continent: "Africa", currency: "GNF" },
+  { code: "GW", code3: "GNB", name: "Guinea-Bissau", capital: "Bissau", continent: "Africa", currency: "XOF" },
+  { code: "KE", code3: "KEN", name: "Kenya", capital: "Nairobi", continent: "Africa", currency: "KES" },
+  { code: "LS", code3: "LSO", name: "Lesotho", capital: "Maseru", continent: "Africa", currency: "LSL" },
+  { code: "LR", code3: "LBR", name: "Liberia", capital: "Monrovia", continent: "Africa", currency: "LRD" },
+  { code: "LY", code3: "LBY", name: "Libya", capital: "Tripoli", continent: "Africa", currency: "LYD" },
+  { code: "MG", code3: "MDG", name: "Madagascar", capital: "Antananarivo", continent: "Africa", currency: "MGA" },
+  { code: "MW", code3: "MWI", name: "Malawi", capital: "Lilongwe", continent: "Africa", currency: "MWK" },
+  { code: "ML", code3: "MLI", name: "Mali", capital: "Bamako", continent: "Africa", currency: "XOF" },
+  { code: "MR", code3: "MRT", name: "Mauritania", capital: "Nouakchott", continent: "Africa", currency: "MRU" },
+  { code: "MU", code3: "MUS", name: "Mauritius", capital: "Port Louis", continent: "Africa", currency: "MUR" },
+  { code: "MA", code3: "MAR", name: "Morocco", capital: "Rabat", continent: "Africa", currency: "MAD" },
+  { code: "MZ", code3: "MOZ", name: "Mozambique", capital: "Maputo", continent: "Africa", currency: "MZN" },
+  { code: "NA", code3: "NAM", name: "Namibia", capital: "Windhoek", continent: "Africa", currency: "NAD" },
+  { code: "NE", code3: "NER", name: "Niger", capital: "Niamey", continent: "Africa", currency: "XOF" },
+  { code: "NG", code3: "NGA", name: "Nigeria", capital: "Abuja", continent: "Africa", currency: "NGN" },
+  { code: "RW", code3: "RWA", name: "Rwanda", capital: "Kigali", continent: "Africa", currency: "RWF" },
+  { code: "ST", code3: "STP", name: "Sao Tome and Principe", capital: "Sao Tome", continent: "Africa", currency: "STN" },
+  { code: "SN", code3: "SEN", name: "Senegal", capital: "Dakar", continent: "Africa", currency: "XOF" },
+  { code: "SC", code3: "SYC", name: "Seychelles", capital: "Victoria", continent: "Africa", currency: "SCR" },
+  { code: "SL", code3: "SLE", name: "Sierra Leone", capital: "Freetown", continent: "Africa", currency: "SLE" },
+  { code: "SO", code3: "SOM", name: "Somalia", capital: "Mogadishu", continent: "Africa", currency: "SOS" },
+  { code: "ZA", code3: "ZAF", name: "South Africa", capital: "Pretoria", continent: "Africa", currency: "ZAR" },
+  { code: "SS", code3: "SSD", name: "South Sudan", capital: "Juba", continent: "Africa", currency: "SSP" },
+  { code: "SD", code3: "SDN", name: "Sudan", capital: "Khartoum", continent: "Africa", currency: "SDG" },
+  { code: "TZ", code3: "TZA", name: "Tanzania", capital: "Dodoma", continent: "Africa", currency: "TZS" },
+  { code: "TG", code3: "TGO", name: "Togo", capital: "Lome", continent: "Africa", currency: "XOF" },
+  { code: "TN", code3: "TUN", name: "Tunisia", capital: "Tunis", continent: "Africa", currency: "TND" },
+  { code: "UG", code3: "UGA", name: "Uganda", capital: "Kampala", continent: "Africa", currency: "UGX" },
+  { code: "ZM", code3: "ZMB", name: "Zambia", capital: "Lusaka", continent: "Africa", currency: "ZMW" },
+  { code: "ZW", code3: "ZWE", name: "Zimbabwe", capital: "Harare", continent: "Africa", currency: "ZWG" },
+];
+
+const ASIA: CountryReference[] = [
+  { code: "AF", code3: "AFG", name: "Afghanistan", capital: "Kabul", continent: "Asia", currency: "AFN" },
+  { code: "AM", code3: "ARM", name: "Armenia", capital: "Yerevan", continent: "Asia", currency: "AMD" },
+  { code: "AZ", code3: "AZE", name: "Azerbaijan", capital: "Baku", continent: "Asia", currency: "AZN" },
+  { code: "BD", code3: "BGD", name: "Bangladesh", capital: "Dhaka", continent: "Asia", currency: "BDT" },
+  { code: "BT", code3: "BTN", name: "Bhutan", capital: "Thimphu", continent: "Asia", currency: "BTN" },
+  { code: "BN", code3: "BRN", name: "Brunei", capital: "Bandar Seri Begawan", continent: "Asia", currency: "BND" },
+  { code: "KH", code3: "KHM", name: "Cambodia", capital: "Phnom Penh", continent: "Asia", currency: "KHR" },
+  { code: "CN", code3: "CHN", name: "China", capital: "Beijing", continent: "Asia", currency: "CNY" },
+  { code: "GE", code3: "GEO", name: "Georgia", capital: "Tbilisi", continent: "Asia", currency: "GEL" },
+  { code: "HK", code3: "HKG", name: "Hong Kong", capital: "Hong Kong", continent: "Asia", currency: "HKD" },
+  { code: "IN", code3: "IND", name: "India", capital: "New Delhi", continent: "Asia", currency: "INR" },
+  { code: "ID", code3: "IDN", name: "Indonesia", capital: "Jakarta", continent: "Asia", currency: "IDR" },
+  { code: "IR", code3: "IRN", name: "Iran", capital: "Tehran", continent: "Asia", currency: "IRR" },
+  { code: "IQ", code3: "IRQ", name: "Iraq", capital: "Baghdad", continent: "Asia", currency: "IQD" },
+  { code: "IL", code3: "ISR", name: "Israel", capital: "Jerusalem", continent: "Asia", currency: "ILS" },
+  { code: "JP", code3: "JPN", name: "Japan", capital: "Tokyo", continent: "Asia", currency: "JPY" },
+  { code: "JO", code3: "JOR", name: "Jordan", capital: "Amman", continent: "Asia", currency: "JOD" },
+  { code: "KZ", code3: "KAZ", name: "Kazakhstan", capital: "Astana", continent: "Asia", currency: "KZT" },
+  { code: "KW", code3: "KWT", name: "Kuwait", capital: "Kuwait City", continent: "Asia", currency: "KWD" },
+  { code: "KG", code3: "KGZ", name: "Kyrgyzstan", capital: "Bishkek", continent: "Asia", currency: "KGS" },
+  { code: "LA", code3: "LAO", name: "Laos", capital: "Vientiane", continent: "Asia", currency: "LAK" },
+  { code: "LB", code3: "LBN", name: "Lebanon", capital: "Beirut", continent: "Asia", currency: "LBP" },
+  { code: "MY", code3: "MYS", name: "Malaysia", capital: "Kuala Lumpur", continent: "Asia", currency: "MYR" },
+  { code: "MV", code3: "MDV", name: "Maldives", capital: "Male", continent: "Asia", currency: "MVR" },
+  { code: "MN", code3: "MNG", name: "Mongolia", capital: "Ulaanbaatar", continent: "Asia", currency: "MNT" },
+  { code: "MM", code3: "MMR", name: "Myanmar", capital: "Naypyidaw", continent: "Asia", currency: "MMK" },
+  { code: "NP", code3: "NPL", name: "Nepal", capital: "Kathmandu", continent: "Asia", currency: "NPR" },
+  { code: "KP", code3: "PRK", name: "North Korea", capital: "Pyongyang", continent: "Asia", currency: "KPW" },
+  { code: "OM", code3: "OMN", name: "Oman", capital: "Muscat", continent: "Asia", currency: "OMR" },
+  { code: "PK", code3: "PAK", name: "Pakistan", capital: "Islamabad", continent: "Asia", currency: "PKR" },
+  { code: "PS", code3: "PSE", name: "Palestine", capital: "Ramallah", continent: "Asia", currency: "ILS" },
+  { code: "PH", code3: "PHL", name: "Philippines", capital: "Manila", continent: "Asia", currency: "PHP" },
+  { code: "QA", code3: "QAT", name: "Qatar", capital: "Doha", continent: "Asia", currency: "QAR" },
+  { code: "SA", code3: "SAU", name: "Saudi Arabia", capital: "Riyadh", continent: "Asia", currency: "SAR" },
+  { code: "SG", code3: "SGP", name: "Singapore", capital: "Singapore", continent: "Asia", currency: "SGD" },
+  { code: "KR", code3: "KOR", name: "South Korea", capital: "Seoul", continent: "Asia", currency: "KRW" },
+  { code: "LK", code3: "LKA", name: "Sri Lanka", capital: "Sri Jayawardenepura Kotte", continent: "Asia", currency: "LKR" },
+  { code: "SY", code3: "SYR", name: "Syria", capital: "Damascus", continent: "Asia", currency: "SYP" },
+  { code: "TW", code3: "TWN", name: "Taiwan", capital: "Taipei", continent: "Asia", currency: "TWD" },
+  { code: "TJ", code3: "TJK", name: "Tajikistan", capital: "Dushanbe", continent: "Asia", currency: "TJS" },
+  { code: "TH", code3: "THA", name: "Thailand", capital: "Bangkok", continent: "Asia", currency: "THB" },
+  { code: "TL", code3: "TLS", name: "Timor-Leste", capital: "Dili", continent: "Asia", currency: "USD" },
+  { code: "TR", code3: "TUR", name: "Turkey", capital: "Ankara", continent: "Asia", currency: "TRY" },
+  { code: "TM", code3: "TKM", name: "Turkmenistan", capital: "Ashgabat", continent: "Asia", currency: "TMT" },
+  { code: "AE", code3: "ARE", name: "United Arab Emirates", capital: "Abu Dhabi", continent: "Asia", currency: "AED" },
+  { code: "UZ", code3: "UZB", name: "Uzbekistan", capital: "Tashkent", continent: "Asia", currency: "UZS" },
+  { code: "VN", code3: "VNM", name: "Vietnam", capital: "Hanoi", continent: "Asia", currency: "VND" },
+  { code: "YE", code3: "YEM", name: "Yemen", capital: "Sanaa", continent: "Asia", currency: "YER" },
+];
+
+const EUROPE: CountryReference[] = [
+  { code: "AL", code3: "ALB", name: "Albania", capital: "Tirana", continent: "Europe", currency: "ALL" },
+  { code: "AD", code3: "AND", name: "Andorra", capital: "Andorra la Vella", continent: "Europe", currency: "EUR" },
+  { code: "AT", code3: "AUT", name: "Austria", capital: "Vienna", continent: "Europe", currency: "EUR" },
+  { code: "BY", code3: "BLR", name: "Belarus", capital: "Minsk", continent: "Europe", currency: "BYN" },
+  { code: "BE", code3: "BEL", name: "Belgium", capital: "Brussels", continent: "Europe", currency: "EUR" },
+  { code: "BA", code3: "BIH", name: "Bosnia and Herzegovina", capital: "Sarajevo", continent: "Europe", currency: "BAM" },
+  { code: "BG", code3: "BGR", name: "Bulgaria", capital: "Sofia", continent: "Europe", currency: "BGN" },
+  { code: "HR", code3: "HRV", name: "Croatia", capital: "Zagreb", continent: "Europe", currency: "EUR" },
+  { code: "CY", code3: "CYP", name: "Cyprus", capital: "Nicosia", continent: "Europe", currency: "EUR" },
+  { code: "CZ", code3: "CZE", name: "Czechia", capital: "Prague", continent: "Europe", currency: "CZK" },
+  { code: "DK", code3: "DNK", name: "Denmark", capital: "Copenhagen", continent: "Europe", currency: "DKK" },
+  { code: "EE", code3: "EST", name: "Estonia", capital: "Tallinn", continent: "Europe", currency: "EUR" },
+  { code: "FI", code3: "FIN", name: "Finland", capital: "Helsinki", continent: "Europe", currency: "EUR" },
+  { code: "FR", code3: "FRA", name: "France", capital: "Paris", continent: "Europe", currency: "EUR" },
+  { code: "DE", code3: "DEU", name: "Germany", capital: "Berlin", continent: "Europe", currency: "EUR" },
+  { code: "GR", code3: "GRC", name: "Greece", capital: "Athens", continent: "Europe", currency: "EUR" },
+  { code: "HU", code3: "HUN", name: "Hungary", capital: "Budapest", continent: "Europe", currency: "HUF" },
+  { code: "IS", code3: "ISL", name: "Iceland", capital: "Reykjavik", continent: "Europe", currency: "ISK" },
+  { code: "IE", code3: "IRL", name: "Ireland", capital: "Dublin", continent: "Europe", currency: "EUR" },
+  { code: "IT", code3: "ITA", name: "Italy", capital: "Rome", continent: "Europe", currency: "EUR" },
+  { code: "XK", code3: "XKX", name: "Kosovo", capital: "Pristina", continent: "Europe", currency: "EUR" },
+  { code: "LV", code3: "LVA", name: "Latvia", capital: "Riga", continent: "Europe", currency: "EUR" },
+  { code: "LI", code3: "LIE", name: "Liechtenstein", capital: "Vaduz", continent: "Europe", currency: "CHF" },
+  { code: "LT", code3: "LTU", name: "Lithuania", capital: "Vilnius", continent: "Europe", currency: "EUR" },
+  { code: "LU", code3: "LUX", name: "Luxembourg", capital: "Luxembourg", continent: "Europe", currency: "EUR" },
+  { code: "MT", code3: "MLT", name: "Malta", capital: "Valletta", continent: "Europe", currency: "EUR" },
+  { code: "MD", code3: "MDA", name: "Moldova", capital: "Chisinau", continent: "Europe", currency: "MDL" },
+  { code: "MC", code3: "MCO", name: "Monaco", capital: "Monaco", continent: "Europe", currency: "EUR" },
+  { code: "ME", code3: "MNE", name: "Montenegro", capital: "Podgorica", continent: "Europe", currency: "EUR" },
+  { code: "NL", code3: "NLD", name: "Netherlands", capital: "Amsterdam", continent: "Europe", currency: "EUR" },
+  { code: "MK", code3: "MKD", name: "North Macedonia", capital: "Skopje", continent: "Europe", currency: "MKD" },
+  { code: "NO", code3: "NOR", name: "Norway", capital: "Oslo", continent: "Europe", currency: "NOK" },
+  { code: "PL", code3: "POL", name: "Poland", capital: "Warsaw", continent: "Europe", currency: "PLN" },
+  { code: "PT", code3: "PRT", name: "Portugal", capital: "Lisbon", continent: "Europe", currency: "EUR" },
+  { code: "RO", code3: "ROU", name: "Romania", capital: "Bucharest", continent: "Europe", currency: "RON" },
+  { code: "RU", code3: "RUS", name: "Russia", capital: "Moscow", continent: "Europe", currency: "RUB" },
+  { code: "SM", code3: "SMR", name: "San Marino", capital: "San Marino", continent: "Europe", currency: "EUR" },
+  { code: "RS", code3: "SRB", name: "Serbia", capital: "Belgrade", continent: "Europe", currency: "RSD" },
+  { code: "SK", code3: "SVK", name: "Slovakia", capital: "Bratislava", continent: "Europe", currency: "EUR" },
+  { code: "SI", code3: "SVN", name: "Slovenia", capital: "Ljubljana", continent: "Europe", currency: "EUR" },
+  { code: "ES", code3: "ESP", name: "Spain", capital: "Madrid", continent: "Europe", currency: "EUR" },
+  { code: "SE", code3: "SWE", name: "Sweden", capital: "Stockholm", continent: "Europe", currency: "SEK" },
+  { code: "CH", code3: "CHE", name: "Switzerland", capital: "Bern", continent: "Europe", currency: "CHF" },
+  { code: "UA", code3: "UKR", name: "Ukraine", capital: "Kyiv", continent: "Europe", currency: "UAH" },
+  { code: "GB", code3: "GBR", name: "United Kingdom", capital: "London", continent: "Europe", currency: "GBP" },
+  { code: "VA", code3: "VAT", name: "Vatican City", capital: "Vatican City", continent: "Europe", currency: "EUR" },
+];
+
+const NORTH_AMERICA: CountryReference[] = [
+  { code: "AG", code3: "ATG", name: "Antigua and Barbuda", capital: "Saint John's", continent: "North America", currency: "XCD" },
+  { code: "BS", code3: "BHS", name: "Bahamas", capital: "Nassau", continent: "North America", currency: "BSD" },
+  { code: "BB", code3: "BRB", name: "Barbados", capital: "Bridgetown", continent: "North America", currency: "BBD" },
+  { code: "BZ", code3: "BLZ", name: "Belize", capital: "Belmopan", continent: "North America", currency: "BZD" },
+  { code: "CA", code3: "CAN", name: "Canada", capital: "Ottawa", continent: "North America", currency: "CAD" },
+  { code: "CR", code3: "CRI", name: "Costa Rica", capital: "San Jose", continent: "North America", currency: "CRC" },
+  { code: "CU", code3: "CUB", name: "Cuba", capital: "Havana", continent: "North America", currency: "CUP" },
+  { code: "DM", code3: "DMA", name: "Dominica", capital: "Roseau", continent: "North America", currency: "XCD" },
+  { code: "DO", code3: "DOM", name: "Dominican Republic", capital: "Santo Domingo", continent: "North America", currency: "DOP" },
+  { code: "SV", code3: "SLV", name: "El Salvador", capital: "San Salvador", continent: "North America", currency: "USD" },
+  { code: "GD", code3: "GRD", name: "Grenada", capital: "St. George's", continent: "North America", currency: "XCD" },
+  { code: "GT", code3: "GTM", name: "Guatemala", capital: "Guatemala City", continent: "North America", currency: "GTQ" },
+  { code: "HT", code3: "HTI", name: "Haiti", capital: "Port-au-Prince", continent: "North America", currency: "HTG" },
+  { code: "HN", code3: "HND", name: "Honduras", capital: "Tegucigalpa", continent: "North America", currency: "HNL" },
+  { code: "JM", code3: "JAM", name: "Jamaica", capital: "Kingston", continent: "North America", currency: "JMD" },
+  { code: "MX", code3: "MEX", name: "Mexico", capital: "Mexico City", continent: "North America", currency: "MXN" },
+  { code: "NI", code3: "NIC", name: "Nicaragua", capital: "Managua", continent: "North America", currency: "NIO" },
+  { code: "PA", code3: "PAN", name: "Panama", capital: "Panama City", continent: "North America", currency: "PAB" },
+  { code: "KN", code3: "KNA", name: "Saint Kitts and Nevis", capital: "Basseterre", continent: "North America", currency: "XCD" },
+  { code: "LC", code3: "LCA", name: "Saint Lucia", capital: "Castries", continent: "North America", currency: "XCD" },
+  { code: "VC", code3: "VCT", name: "Saint Vincent and the Grenadines", capital: "Kingstown", continent: "North America", currency: "XCD" },
+  { code: "TT", code3: "TTO", name: "Trinidad and Tobago", capital: "Port of Spain", continent: "North America", currency: "TTD" },
+  { code: "US", code3: "USA", name: "United States", capital: "Washington, D.C.", continent: "North America", currency: "USD" },
+];
+
+const SOUTH_AMERICA: CountryReference[] = [
+  { code: "AR", code3: "ARG", name: "Argentina", capital: "Buenos Aires", continent: "South America", currency: "ARS" },
+  { code: "BO", code3: "BOL", name: "Bolivia", capital: "Sucre", continent: "South America", currency: "BOB" },
+  { code: "BR", code3: "BRA", name: "Brazil", capital: "Brasilia", continent: "South America", currency: "BRL" },
+  { code: "CL", code3: "CHL", name: "Chile", capital: "Santiago", continent: "South America", currency: "CLP" },
+  { code: "CO", code3: "COL", name: "Colombia", capital: "Bogota", continent: "South America", currency: "COP" },
+  { code: "EC", code3: "ECU", name: "Ecuador", capital: "Quito", continent: "South America", currency: "USD" },
+  { code: "GY", code3: "GUY", name: "Guyana", capital: "Georgetown", continent: "South America", currency: "GYD" },
+  { code: "PY", code3: "PRY", name: "Paraguay", capital: "Asuncion", continent: "South America", currency: "PYG" },
+  { code: "PE", code3: "PER", name: "Peru", capital: "Lima", continent: "South America", currency: "PEN" },
+  { code: "SR", code3: "SUR", name: "Suriname", capital: "Paramaribo", continent: "South America", currency: "SRD" },
+  { code: "UY", code3: "URY", name: "Uruguay", capital: "Montevideo", continent: "South America", currency: "UYU" },
+  { code: "VE", code3: "VEN", name: "Venezuela", capital: "Caracas", continent: "South America", currency: "VES" },
+];
+
+const OCEANIA: CountryReference[] = [
+  { code: "AU", code3: "AUS", name: "Australia", capital: "Canberra", continent: "Oceania", currency: "AUD" },
+  { code: "FJ", code3: "FJI", name: "Fiji", capital: "Suva", continent: "Oceania", currency: "FJD" },
+  { code: "KI", code3: "KIR", name: "Kiribati", capital: "South Tarawa", continent: "Oceania", currency: "AUD" },
+  { code: "MH", code3: "MHL", name: "Marshall Islands", capital: "Majuro", continent: "Oceania", currency: "USD" },
+  { code: "FM", code3: "FSM", name: "Micronesia", capital: "Palikir", continent: "Oceania", currency: "USD" },
+  { code: "NR", code3: "NRU", name: "Nauru", capital: "Yaren", continent: "Oceania", currency: "AUD" },
+  { code: "NZ", code3: "NZL", name: "New Zealand", capital: "Wellington", continent: "Oceania", currency: "NZD" },
+  { code: "PW", code3: "PLW", name: "Palau", capital: "Ngerulmud", continent: "Oceania", currency: "USD" },
+  { code: "PG", code3: "PNG", name: "Papua New Guinea", capital: "Port Moresby", continent: "Oceania", currency: "PGK" },
+  { code: "WS", code3: "WSM", name: "Samoa", capital: "Apia", continent: "Oceania", currency: "WST" },
+  { code: "SB", code3: "SLB", name: "Solomon Islands", capital: "Honiara", continent: "Oceania", currency: "SBD" },
+  { code: "TO", code3: "TON", name: "Tonga", capital: "Nuku'alofa", continent: "Oceania", currency: "TOP" },
+  { code: "TV", code3: "TUV", name: "Tuvalu", capital: "Funafuti", continent: "Oceania", currency: "AUD" },
+  { code: "VU", code3: "VUT", name: "Vanuatu", capital: "Port Vila", continent: "Oceania", currency: "VUV" },
+];
+
+export const countryReference: CountryReference[] = [
+  ...AFRICA,
+  ...ASIA,
+  ...EUROPE,
+  ...NORTH_AMERICA,
+  ...SOUTH_AMERICA,
+  ...OCEANIA,
+];

@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "scholaratlas/.next"
+		},
+		{
+			"path": "scholaratlas/node_modules"
+		},
+		{
+			"path": "scholaratlas/prisma"
+		},
+		{
+			"path": "scholaratlas/public"
+		},
+		{
+			"path": "scholaratlas/src"
+		}
+	]
+}

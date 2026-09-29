@@ -1,0 +1,297 @@
+export interface CountryData {
+  id: string;
+  name: string;
+  code: string;
+  region: string;
+  flag: string;
+  scholarshipCount: number;
+  featured: boolean;
+  description: string;
+  popularUniversities: string[];
+  avgLivingCost: string;
+  languageRequirements: string[];
+  visaInfo: string;
+}
+
+export const seedCountries: CountryData[] = [
+  {
+    id: "de",
+    name: "Germany",
+    code: "DE",
+    region: "Europe",
+    flag: "🇩🇪",
+    scholarshipCount: 24,
+    featured: true,
+    description: "Known for tuition-free public universities, world-class engineering and research institutions, and generous DAAD scholarships.",
+    popularUniversities: ["Technical University of Munich", "LMU Munich", "Heidelberg University", "RWTH Aachen"],
+    avgLivingCost: "€850 - €1,200 / month",
+    languageRequirements: ["English (IELTS 6.5+) or German (TestDaF 4 / DSH 2)"],
+    visaInfo: "Blocked bank account required (approx. €11,208/year) or official scholarship award letter."
+  },
+  {
+    id: "us",
+    name: "United States",
+    code: "US",
+    region: "North America",
+    flag: "🇺🇸",
+    scholarshipCount: 38,
+    featured: true,
+    description: "Home to the world's highest concentration of top-ranked research universities, offering generous fellowships, Fulbright awards, and assistantships.",
+    popularUniversities: ["Harvard University", "MIT", "Stanford University", "UC Berkeley", "Columbia University"],
+    avgLivingCost: "$1,200 - $2,500 / month",
+    languageRequirements: ["TOEFL (90+) or IELTS (7.0+), GRE/GMAT often required"],
+    visaInfo: "F-1 student visa or J-1 exchange visitor visa with I-20 / DS-2019 sponsorship."
+  },
+  {
+    id: "gb",
+    name: "United Kingdom",
+    code: "GB",
+    region: "Europe",
+    flag: "🇬🇧",
+    scholarshipCount: 31,
+    featured: true,
+    description: "Prestigious global education destination famous for 1-year master's degrees, Chevening, Commonwealth, and Gates Cambridge scholarships.",
+    popularUniversities: ["University of Oxford", "University of Cambridge", "Imperial College London", "UCL", "University of Edinburgh"],
+    avgLivingCost: "£1,000 - £1,600 / month",
+    languageRequirements: ["IELTS Academic (6.5 - 7.5) or Pearson PTE"],
+    visaInfo: "Student Visa (Tier 4) with Confirmation of Acceptance for Studies (CAS)."
+  },
+  {
+    id: "ca",
+    name: "Canada",
+    code: "CA",
+    region: "North America",
+    flag: "🇨🇦",
+    scholarshipCount: 26,
+    featured: true,
+    description: "Top choice for international students offering high quality of life, post-graduation work permits, and prestigious Vanier and Trillium scholarships.",
+    popularUniversities: ["University of Toronto", "UBC", "McGill University", "University of Waterloo", "University of Alberta"],
+    avgLivingCost: "CAD 1,100 - CAD 1,800 / month",
+    languageRequirements: ["IELTS (6.5+) or TOEFL iBT (88+)"],
+    visaInfo: "Study Permit with Provincial Attestation Letter (PAL) and proof of funds."
+  },
+  {
+    id: "au",
+    name: "Australia",
+    code: "AU",
+    region: "Oceania",
+    flag: "🇦🇺",
+    scholarshipCount: 22,
+    featured: true,
+    description: "World-leading education system with Australia Awards, Destination Australia scholarships, and prominent Group of Eight research institutions.",
+    popularUniversities: ["University of Melbourne", "Australian National University", "University of Sydney", "UNSW Sydney", "University of Queensland"],
+    avgLivingCost: "AUD 1,400 - AUD 2,200 / month",
+    languageRequirements: ["IELTS (6.5+) or PTE Academic (58+)"],
+    visaInfo: "Subclass 500 Student Visa with Confirmation of Enrolment (CoE)."
+  },
+  {
+    id: "jp",
+    name: "Japan",
+    code: "JP",
+    region: "Asia",
+    flag: "🇯🇵",
+    scholarshipCount: 18,
+    featured: true,
+    description: "Cutting-edge technology and rich culture with the MEXT government scholarship providing full tuition, airfare, and monthly stipend.",
+    popularUniversities: ["University of Tokyo", "Kyoto University", "Tokyo Institute of Technology", "Osaka University"],
+    avgLivingCost: "¥100,000 - ¥160,000 / month",
+    languageRequirements: ["English for international degree programs (IELTS 6.0+) or JLPT N2/N1 for Japanese programs"],
+    visaInfo: "Certificate of Eligibility (COE) and Student Visa issued via Japanese Embassy."
+  },
+  {
+    id: "kr",
+    name: "South Korea",
+    code: "KR",
+    region: "Asia",
+    flag: "🇰🇷",
+    scholarshipCount: 15,
+    featured: true,
+    description: "Dynamic global innovation hub offering Global Korea Scholarship (GKS/KGSP) covering tuition, roundtrip flight, Korean language training, and stipend.",
+    popularUniversities: ["Seoul National University", "KAIST", "Yonsei University", "Korea University", "POSTECH"],
+    avgLivingCost: "₩900,000 - ₩1,400,000 / month",
+    languageRequirements: ["TOPIK Level 3+ or IELTS (6.0+) / TOEFL (80+) for English-track programs"],
+    visaInfo: "D-2 Student Visa with Certificate of Admission."
+  },
+  {
+    id: "fr",
+    name: "France",
+    code: "FR",
+    region: "Europe",
+    flag: "🇫🇷",
+    scholarshipCount: 19,
+    featured: false,
+    description: "Low public university tuition and prestigious Eiffel Excellence Scholarships for international master's and PhD candidates.",
+    popularUniversities: ["Sorbonne University", "École Polytechnique", "PSL University", "Sciences Po", "HEC Paris"],
+    avgLivingCost: "€800 - €1,400 / month",
+    languageRequirements: ["DELF/DALF B2/C1 for French programs, IELTS 6.5+ for English programs"],
+    visaInfo: "VLS-TS long-stay student visa via Campus France procedure."
+  },
+  {
+    id: "nl",
+    name: "Netherlands",
+    code: "NL",
+    region: "Europe",
+    flag: "🇳🇱",
+    scholarshipCount: 17,
+    featured: false,
+    description: "Highest proportion of English-taught programs in continental Europe, offering the NL Scholarship (Holland Scholarship) and Orange Tulip awards.",
+    popularUniversities: ["TU Delft", "University of Amsterdam", "Utrecht University", "Erasmus University Rotterdam"],
+    avgLivingCost: "€950 - €1,500 / month",
+    languageRequirements: ["IELTS (6.5+) or TOEFL (90+)"],
+    visaInfo: "MVV entry visa and VVR residence permit sponsored directly by the university."
+  },
+  {
+    id: "se",
+    name: "Sweden",
+    code: "SE",
+    region: "Europe",
+    flag: "🇸🇪",
+    scholarshipCount: 14,
+    featured: false,
+    description: "Renowned for innovation, sustainability, and the Swedish Institute (SI) Scholarship for Global Professionals covering full tuition and living expenses.",
+    popularUniversities: ["KTH Royal Institute of Technology", "Lund University", "Karolinska Institute", "Uppsala University"],
+    avgLivingCost: "SEK 9,500 - SEK 13,000 / month",
+    languageRequirements: ["English 6/B equivalent (IELTS 6.5 with no band below 5.5)"],
+    visaInfo: "Swedish Residence Permit for Higher Education Studies from Migrationsverket."
+  },
+  {
+    id: "ch",
+    name: "Switzerland",
+    code: "CH",
+    region: "Europe",
+    flag: "🇨🇭",
+    scholarshipCount: 12,
+    featured: false,
+    description: "Home to ETH Zurich and EPFL with Swiss Government Excellence Scholarships for foreign scholars and researchers.",
+    popularUniversities: ["ETH Zurich", "EPFL", "University of Zurich", "University of Geneva"],
+    avgLivingCost: "CHF 1,800 - CHF 2,600 / month",
+    languageRequirements: ["English (IELTS 7.0+) or German/French depending on the canton"],
+    visaInfo: "Swiss National D Visa with proof of sufficient financial resources."
+  },
+  {
+    id: "sg",
+    name: "Singapore",
+    code: "SG",
+    region: "Asia",
+    flag: "🇸🇬",
+    scholarshipCount: 16,
+    featured: false,
+    description: "Asia's premier education capital boasting NUS, NTU, and SINGA (Singapore International Graduate Award) for science and engineering PhDs.",
+    popularUniversities: ["National University of Singapore", "Nanyang Technological University", "Singapore Management University"],
+    avgLivingCost: "SGD 1,500 - SGD 2,500 / month",
+    languageRequirements: ["English proficiency test (IELTS 6.5+ or TOEFL 90+)"],
+    visaInfo: "Student's Pass (STP) processed through the SOLAR system by the university."
+  },
+  {
+    id: "nz",
+    name: "New Zealand",
+    code: "NZ",
+    region: "Oceania",
+    flag: "🇳🇿",
+    scholarshipCount: 11,
+    featured: false,
+    description: "Safe, welcoming study destination offering Manaaki New Zealand Scholarships and domestic tuition rates for international PhD students.",
+    popularUniversities: ["University of Auckland", "University of Otago", "Victoria University of Wellington"],
+    avgLivingCost: "NZD 1,300 - NZD 1,900 / month",
+    languageRequirements: ["IELTS Academic (6.0 - 6.5)"],
+    visaInfo: "Fee Paying Student Visa with proof of funds (NZD 20,000/year)."
+  },
+  {
+    id: "it",
+    name: "Italy",
+    code: "IT",
+    region: "Europe",
+    flag: "🇮🇹",
+    scholarshipCount: 15,
+    featured: false,
+    description: "Historic universities with low tuition fees, Italian Government (MAECI) Grants, and regional DSU need-based full scholarships.",
+    popularUniversities: ["Politecnico di Milano", "University of Bologna", "Sapienza University of Rome", "University of Padua"],
+    avgLivingCost: "€700 - €1,100 / month",
+    languageRequirements: ["English B2/C1 (IELTS 6.0+) or Italian B2 (CILS/CELI)"],
+    visaInfo: "Type D National Visa through the Universitaly pre-enrolment portal."
+  },
+  {
+    id: "cn",
+    name: "China",
+    code: "CN",
+    region: "Asia",
+    flag: "🇨🇳",
+    scholarshipCount: 20,
+    featured: false,
+    description: "Massive higher education powerhouse offering Chinese Government Scholarship (CSC), Belt and Road scholarships, and Schwarzman Scholars at Tsinghua.",
+    popularUniversities: ["Tsinghua University", "Peking University", "Fudan University", "Zhejiang University"],
+    avgLivingCost: "CNY 3,000 - CNY 5,500 / month",
+    languageRequirements: ["HSK 4-5 for Chinese taught programs, IELTS 6.5+ for English programs"],
+    visaInfo: "X1 long-term student visa requiring JW201 or JW202 form and admission notice."
+  },
+  {
+    id: "tr",
+    name: "Turkey",
+    code: "TR",
+    region: "Europe / Asia",
+    flag: "🇹🇷",
+    scholarshipCount: 13,
+    featured: false,
+    description: "Bridge between East and West with the prestigious Türkiye Bursları full scholarship covering tuition, accommodation, stipend, and health insurance.",
+    popularUniversities: ["Middle East Technical University", "Bogazici University", "Koc University", "Istanbul Technical University"],
+    avgLivingCost: "$350 - $650 / month",
+    languageRequirements: ["TOMER certification or English proficiency (TOEFL/IELTS)"],
+    visaInfo: "Student Visa via Turkish Consulates after scholarship award confirmation."
+  },
+  {
+    id: "ae",
+    name: "United Arab Emirates",
+    code: "AE",
+    region: "Middle East",
+    flag: "🇦🇪",
+    scholarshipCount: 9,
+    featured: false,
+    description: "Rapidly growing international education hub with world-class satellite campuses and fully funded graduate research programs at MBZUAI and Khalifa University.",
+    popularUniversities: ["Mohamed bin Zayed University of Artificial Intelligence", "Khalifa University", "UAE University", "NYU Abu Dhabi"],
+    avgLivingCost: "AED 3,500 - AED 6,000 / month",
+    languageRequirements: ["IELTS 6.5+ or TOEFL iBT 90+"],
+    visaInfo: "University-sponsored Student Residence Visa."
+  },
+  {
+    id: "hu",
+    name: "Hungary",
+    code: "HU",
+    region: "Europe",
+    flag: "🇭🇺",
+    scholarshipCount: 10,
+    featured: false,
+    description: "Home to the Stipendium Hungaricum scholarship program supporting over 5,000 international students yearly with full tuition, dormitory, and allowance.",
+    popularUniversities: ["Eötvös Loránd University", "University of Debrecen", "Budapest University of Technology and Economics"],
+    avgLivingCost: "€500 - €800 / month",
+    languageRequirements: ["IELTS 5.5 - 6.5 or equivalent test score"],
+    visaInfo: "D-type student visa applied through Hungarian Consulates via Tempus Public Foundation."
+  },
+  {
+    id: "at",
+    name: "Austria",
+    code: "AT",
+    region: "Europe",
+    flag: "🇦🇹",
+    scholarshipCount: 8,
+    featured: false,
+    description: "Central European academic excellence with the Ernst Mach Grant and low federal tuition fees for international students.",
+    popularUniversities: ["University of Vienna", "TU Wien", "University of Innsbruck"],
+    avgLivingCost: "€850 - €1,200 / month",
+    languageRequirements: ["German B2/C1 or English B2/C1"],
+    visaInfo: "Residence Permit - Student (Aufenthaltsbewilligung - Student)."
+  },
+  {
+    id: "ie",
+    name: "Ireland",
+    code: "IE",
+    region: "Europe",
+    flag: "🇮🇪",
+    scholarshipCount: 12,
+    featured: false,
+    description: "English-speaking European technology center offering Government of Ireland International Education Scholarships (GOI-IES).",
+    popularUniversities: ["Trinity College Dublin", "University College Dublin", "University of Galway", "University College Cork"],
+    avgLivingCost: "€1,000 - €1,600 / month",
+    languageRequirements: ["IELTS 6.5+ or TOEFL 90+"],
+    visaInfo: "Irish Student Visa (Stamp 2) with permission to work part-time (20 hours/week)."
+  }
+];

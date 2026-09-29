@@ -1,0 +1,27 @@
+[Unit]
+Description=Global Scholarship Hub
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=gsh
+Group=gsh
+WorkingDirectory=/opt/global-scholarship-hub
+EnvironmentFile=/opt/global-scholarship-hub/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/global-scholarship-hub/.next
+
+[Install]
+WantedBy=multi-user.target
