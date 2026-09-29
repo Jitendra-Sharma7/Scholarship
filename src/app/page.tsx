@@ -78,12 +78,6 @@ export default async function HomePage() {
 
         <Container>
           <div className="mx-auto max-w-4xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-white px-4 py-1.5 shadow-xs mb-6">
-              <span className="text-xs font-semibold text-gray-700">
-                {stats.openScholarships.toLocaleString()} open listings
-              </span>
-            </div>
-
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-950 sm:text-6xl sm:leading-tight">
               Find Scholarships. <br className="hidden sm:inline" />
               <span className="text-primary-600">Fund Your Future.</span> Study Anywhere.
