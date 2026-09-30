@@ -89,7 +89,7 @@ export const CONSENT_CATEGORIES: ConsentCategoryMeta[] = [
     description:
       "Used to make advertising more relevant and to measure whether it performs, and to attribute referrals to partner organizations. Sponsored listings are labelled separately and never affect organic search ordering.",
     locked: false,
-    active: false,
+    active: true,
     examples: ["Ad relevance and frequency capping", "Partner and campaign referral measurement"],
   },
 ];

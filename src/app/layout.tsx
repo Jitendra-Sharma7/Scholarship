@@ -3,6 +3,7 @@ import "./globals.css";
 import { Inter, Merriweather } from "next/font/google";
 import { Providers } from "./providers";
 import { SiteChrome } from "@/components/layout/SiteChrome";
+import { AdSenseScript } from "@/components/ads/AdSenseScript";
 import { getSiteBranding } from "@/lib/site-branding-server";
 import JsonLd from "@/components/seo/JsonLd";
 import { OG_IMAGE, SITE_NAME, SITE_URL } from "@/lib/seo";
@@ -96,6 +97,11 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  // Rendered verbatim as <meta name="google-adsense-account"> in the head of
+  // every route, which is how AdSense associates the site with the account.
+  other: {
+    "google-adsense-account": "ca-pub-6190025929296653",
+  },
 };
 
 export const viewport: Viewport = {
@@ -130,6 +136,10 @@ export default async function RootLayout({
           })}
         />
         <Providers>
+          {/* Renders nothing itself; injects the AdSense tag into document.head
+              once the visitor has accepted marketing cookies. In the root layout
+              so it is present on every route. */}
+          <AdSenseScript />
           <SiteChrome branding={branding}>{children}</SiteChrome>
         </Providers>
       </body>
