@@ -1,4 +1,4 @@
-import { getPublicCountries, getPublicFields, toCountryOption } from "@/lib/data/public";
+import { getPublicCountryOptions, getPublicFields } from "@/lib/data/public";
 import { ProfileForm } from "./ProfileForm";
 
 /**
@@ -8,7 +8,10 @@ import { ProfileForm } from "./ProfileForm";
  * per country that this form never shows.
  */
 export default async function ProfilePage() {
-  const [countries, fields] = await Promise.all([getPublicCountries(), getPublicFields()]);
+  const [countries, fields] = await Promise.all([
+    getPublicCountryOptions(),
+    getPublicFields(),
+  ]);
 
-  return <ProfileForm countries={countries.map(toCountryOption)} fields={fields} />;
+  return <ProfileForm countries={countries} fields={fields} />;
 }

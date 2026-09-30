@@ -1,4 +1,4 @@
-import { getPublicCountries, getPublicFields, toCountryOption } from "@/lib/data/public";
+import { getPublicCountryOptions, getPublicFields } from "@/lib/data/public";
 import { FinderQuestionnaire } from "./FinderQuestionnaire";
 import { pageMetadata } from "@/lib/seo";
 
@@ -22,11 +22,14 @@ export const metadata = pageMetadata({
  *
  * The countries are narrowed to the four fields the picker renders: the full
  * record carries a description, study notes and visa guidance per country, and
- * all of that would otherwise be serialised into the page for 197 countries to
- * read four fields each.
+ * all of that would otherwise be read for 197 countries to read four fields
+ * each.
  */
 export default async function ScholarshipFinderPage() {
-  const [countries, fields] = await Promise.all([getPublicCountries(), getPublicFields()]);
+  const [countries, fields] = await Promise.all([
+    getPublicCountryOptions(),
+    getPublicFields(),
+  ]);
 
-  return <FinderQuestionnaire countries={countries.map(toCountryOption)} fields={fields} />;
+  return <FinderQuestionnaire countries={countries} fields={fields} />;
 }

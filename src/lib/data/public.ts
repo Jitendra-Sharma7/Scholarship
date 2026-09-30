@@ -1,4 +1,4 @@
-import { DeadlineStatus, type Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   fromPrismaFundingType,
@@ -352,6 +352,76 @@ export function toPublicScholarship(
 const VISIBLE = { publishStatus: "PUBLISHED" as const, deletedAt: null };
 
 // --- Countries ------------------------------------------------------------
+
+/** The four fields a country `<select>` renders. */
+export interface PublicCountryOption {
+  id: string;
+  name: string;
+  code: string;
+  capital: string | null;
+}
+
+/**
+ * Country rows for a picker, and nothing else.
+ *
+ * Every page with a country dropdown used to call `getPublicCountries()` and
+ * discard most of what it read. The full record carries the editorial prose -
+ * description, study notes, visa guidance, cost of living, popular fields - for
+ * all 197 countries, so the dropdown cost about 125 KB and a second over a
+ * pooler to fetch roughly 19 KB of data. Measured on the live database, and it
+ * is the heaviest read on the site because the homepage, the browse filter, the
+ * finder, the profile form and the submission form all do it on every render.
+ *
+ * `toCountryCard` already keeps that prose out of the browser payload; this is
+ * the same discipline applied to the database read.
+ */
+export async function getPublicCountryOptions(): Promise<PublicCountryOption[]> {
+  return prisma.country.findMany({
+    where: VISIBLE,
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, code: true, capital: true },
+  });
+}
+
+/** A country as rendered in a card grid: identity plus the derived count. */
+export interface PublicCountryTile {
+  id: string;
+  name: string;
+  code: string;
+  region: string;
+  scholarshipCount: number;
+}
+
+/**
+ * The handful of countries a landing grid shows.
+ *
+ * Takes a limit rather than reading all 197 and slicing in memory. The
+ * scholarship count still needs a relation count, so this is the only country
+ * read that touches `_count`; the count is derived rather than stored, which
+ * keeps it from drifting the way a cached column would.
+ */
+export async function getPublicCountryTiles(limit: number): Promise<PublicCountryTile[]> {
+  const rows = await prisma.country.findMany({
+    where: VISIBLE,
+    orderBy: { name: "asc" },
+    take: limit,
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      region: true,
+      _count: { select: { scholarships: true } },
+    },
+  });
+
+  return rows.map((c) => ({
+    id: c.id,
+    name: c.name,
+    code: c.code,
+    region: c.region,
+    scholarshipCount: c._count.scholarships,
+  }));
+}
 
 export async function getPublicCountries(): Promise<PublicCountry[]> {
   const rows = await prisma.country.findMany({
@@ -850,49 +920,57 @@ export interface PublicStats {
  * exists to avoid.
  */
 export async function getPublicStats(now = new Date()): Promise<PublicStats> {
-  const visible: Prisma.ScholarshipWhereInput = { ...VISIBLE };
-  // Same default window the listing uses: a deadline that has passed, with no
-  // admin override holding it open, is not something a visitor can apply to.
-  const openWhere: Prisma.ScholarshipWhereInput = {
-    AND: [
-      visible,
-      {
-        OR: [
-          {
-            AND: [
-              { deadline: { gt: now } },
-              { OR: [{ openingDate: null }, { openingDate: { lte: now } }] },
-            ],
-          },
-          {
-            deadlineStatusOverride: {
-              in: [
-                DeadlineStatus.OPEN,
-                DeadlineStatus.OPENING_SOON,
-                DeadlineStatus.CLOSING_SOON,
-              ],
-            },
-          },
-        ],
-      },
-    ],
-  };
+  // "Open" means the same thing it does in the listing: a deadline that has not
+  // passed and has already opened, or an admin override holding it open.
 
-  const [openScholarships, countries, universities, fields, withFunding, verified] =
-    await Promise.all([
-      prisma.scholarship.count({ where: openWhere }),
-      prisma.country.count({ where: VISIBLE }),
-      prisma.university.count({ where: VISIBLE }),
-      prisma.field.count({ where: VISIBLE }),
-      prisma.scholarship.count({ where: { ...openWhere, fundingAmount: { not: null } } }),
-      prisma.scholarship.count({ where: { ...openWhere, verificationStatus: "VERIFIED_RECENTLY" } }),
-    ]);
+  // One round trip rather than six.
+  //
+  // Three of the six counts above read the same filtered set of scholarships
+  // and differ only in a predicate, and the other three are a single count
+  // each. Against a local database that is a rounding error, but the production
+  // database is a Supabase pooler in another region, where a round trip costs
+  // roughly 200ms. Six statements meant the homepage waited on the slowest of
+  // them and then had five more network hops queued behind it.
+  //
+  // `FILTER (WHERE ...)` evaluates each condition in the same pass over the
+  // same rows, so the six numbers come from one scan instead of three. The
+  // counts are the same integers the separate queries returned, and
+  // `getPublicStats` is verified against them.
+  const [scholarshipCounts, countryCount, universityCount, fieldCount] = await Promise.all([
+    prisma.$queryRaw<
+      { open: bigint; withFunding: bigint; verified: bigint }[]
+    >`
+      SELECT
+        COUNT(*)::bigint AS open,
+        COUNT(*) FILTER (WHERE "fundingAmount" IS NOT NULL)::bigint AS "withFunding",
+        COUNT(*) FILTER (WHERE "verificationStatus" = 'Verified Recently')::bigint AS verified
+      FROM "Scholarship"
+      WHERE ${Prisma.sql`"publishStatus" = 'PUBLISHED' AND "deletedAt" IS NULL`}
+        AND (
+          (
+            "deadline" > ${now}
+            AND ("openingDate" IS NULL OR "openingDate" <= ${now})
+          )
+          OR "deadlineStatusOverride" IN ('Open', 'Opening Soon', 'Closing Soon')
+        )
+    `,
+    prisma.country.count({ where: VISIBLE }),
+    prisma.university.count({ where: VISIBLE }),
+    prisma.field.count({ where: VISIBLE }),
+  ]);
+
+  // `::bigint` is what Postgres counts return, and the ES2017 target rules out
+  // `0n` literals, so the zero default is built rather than written.
+  const ZERO = BigInt(0);
+  const openScholarships = Number(scholarshipCounts[0]?.open ?? ZERO);
+  const withFunding = Number(scholarshipCounts[0]?.withFunding ?? ZERO);
+  const verified = Number(scholarshipCounts[0]?.verified ?? ZERO);
 
   return {
     openScholarships,
-    countries,
-    universities,
-    fields,
+    countries: countryCount,
+    universities: universityCount,
+    fields: fieldCount,
     listingsWithFunding: withFunding,
     verifiedShare: openScholarships > 0 ? Math.round((verified / openScholarships) * 100) : 0,
   };

@@ -1,10 +1,9 @@
 import { Suspense, cache } from "react";
 import type { Metadata } from "next";
 import {
-  getPublicCountries,
+  getPublicCountryOptions,
   getPublicFields,
   getPublicScholarships,
-  toCountryOption,
 } from "@/lib/data/public";
 import { SCHOLARSHIP_PAGE_SIZE } from "@/lib/page-size";
 import { ScholarshipsBrowser } from "./ScholarshipsBrowser";
@@ -17,7 +16,7 @@ import { itemListSchema } from "@/lib/seo-jsonld";
  * Both need the country and field lists, and without this they run the same
  * two queries twice on every request.
  */
-const getCountries = cache(getPublicCountries);
+const getCountries = cache(getPublicCountryOptions);
 const getFields = cache(getPublicFields);
 
 const first = (value: string | string[] | undefined): string => {
@@ -46,13 +45,20 @@ async function resolveFilters(
 
   // An unknown id is dropped rather than rendered into the title, so a
   // hand-edited URL cannot produce a page called "Scholarships in Antarctica".
-  if (raw.country) {
-    const countries = await getCountries();
-    if (!countries.some((c) => c.id === raw.country)) raw.country = "";
+  //
+  // Both lookups run together: awaiting them one after the other put two
+  // database round trips in series, and against the production pooler in
+  // another region that is the dominant cost of the request. `cache()` still
+  // means the page body below reuses these results rather than re-reading.
+  const [countryList, fieldList] = await Promise.all([
+    raw.country ? getCountries() : Promise.resolve(null),
+    raw.field ? getFields() : Promise.resolve(null),
+  ]);
+  if (raw.country && countryList && !countryList.some((c) => c.id === raw.country)) {
+    raw.country = "";
   }
-  if (raw.field) {
-    const fields = await getFields();
-    if (!fields.some((f) => f.id === raw.field)) raw.field = "";
+  if (raw.field && fieldList && !fieldList.some((f) => f.id === raw.field)) {
+    raw.field = "";
   }
   return raw;
 }
@@ -184,10 +190,8 @@ export default async function ScholarshipsPage({
         })}
       />
 
-      {/* The filter only reads a country's id, name and code; the rest of the
-          record is editorial copy the browser never renders. */}
       <ScholarshipsBrowser
-        countries={countries.map(toCountryOption)}
+        countries={countries}
         fields={fields}
         initialResult={initialResult}
       />

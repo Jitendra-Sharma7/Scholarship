@@ -14,11 +14,11 @@ import JsonLd from "@/components/seo/JsonLd";
 import { pageMetadata } from "@/lib/seo";
 import { itemListSchema } from "@/lib/seo-jsonld";
 import {
-  getPublicCountries,
+  getPublicCountryOptions,
+  getPublicCountryTiles,
   getPublicFields,
   getPublicScholarships,
   getPublicStats,
-  toCountryOption,
 } from "@/lib/data/public";
 
 /**
@@ -35,13 +35,15 @@ export const metadata = pageMetadata({
 });
 
 export default async function HomePage() {
-  const [featured, fullyFunded, countries, fields, stats] = await Promise.all([
-    getPublicScholarships({ limit: 6 }),
-    getPublicScholarships({ funding: "fully-funded", limit: 3 }),
-    getPublicCountries(),
-    getPublicFields(),
-    getPublicStats(),
-  ]);
+  const [featured, fullyFunded, countryOptions, countryTiles, fields, stats] =
+    await Promise.all([
+      getPublicScholarships({ limit: 6 }),
+      getPublicScholarships({ funding: "fully-funded", limit: 3 }),
+      getPublicCountryOptions(),
+      getPublicCountryTiles(12),
+      getPublicFields(),
+      getPublicStats(),
+    ]);
   const featuredScholarships = featured.data;
   const fullyFundedList = fullyFunded.data;
 
@@ -108,7 +110,7 @@ export default async function HomePage() {
 
           {/* Large Hero Search Bar */}
           <div className="mx-auto mt-12 max-w-4xl">
-            <HomeSearchForm countries={countries.map(toCountryOption)} fields={fields} />
+            <HomeSearchForm countries={countryOptions} fields={fields} />
 
             {/* Popular Search Tags */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
@@ -318,12 +320,12 @@ export default async function HomePage() {
               href="/countries"
               className="mt-4 sm:mt-0 inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:text-primary-700"
             >
-              {countries.length} countries →
+              {stats.countries} countries →
             </Link>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {countries.slice(0, 12).map((c) => (
+            {countryTiles.map((c) => (
               <Link
                 key={c.id}
                 href={`/scholarships?country=${c.id}`}

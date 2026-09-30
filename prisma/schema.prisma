@@ -495,6 +495,12 @@ model Guide {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  // Guides are merged into the public resources list, which reads published,
+  // non-deleted rows newest first. Without this the whole table is scanned and
+  // sorted on every /resources render and on every sitemap build.
+  @@index([published, deletedAt, createdAt])
+  @@index([category])
 }
 
 model FAQ {
@@ -507,6 +513,12 @@ model FAQ {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   deletedAt     DateTime?
+
+  // The public FAQ page reads published, non-deleted rows in editorial order.
+  // The column order matches the filter-then-sort the page actually issues, so
+  // Postgres can walk the index instead of sorting the table.
+  @@index([publishStatus, deletedAt, sortOrder, createdAt])
+  @@index([category])
 }
 
 model Page {
@@ -599,7 +611,11 @@ model Application {
   scholarship    Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
   user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // The tracker lists a user's applications newest first and filters by status
+  // in the same read, so the index leads with the column that is always present
+  // and the one that is often filtered.
   @@index([userId])
+  @@index([userId, status, createdAt])
 }
 
 model Notification {
@@ -611,6 +627,11 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // The header badge counts unread rows on every authenticated render, and the
+  // panel lists them newest first. Grows with every user, so the index is worth
+  // having well before it is needed.
+  @@index([userId, read, createdAt])
 }
 
 model Alert {
@@ -625,6 +646,9 @@ model Alert {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // The deadline digest walks every active alert for a user.
+  @@index([userId, isActive])
 }
 
 model Document {
@@ -637,6 +661,8 @@ model Document {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 enum Role {

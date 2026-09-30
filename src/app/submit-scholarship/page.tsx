@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 
 import { Container } from "@/components/layout/Layout";
-import { getPublicCountries } from "@/lib/data/public";
+import { getPublicCountryOptions } from "@/lib/data/public";
 import { SubmitScholarshipForm } from "@/components/submissions/SubmitScholarshipForm";
 
 /**
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SubmitScholarshipPage() {
-  const countries = await getPublicCountries();
+  const countries = await getPublicCountryOptions();
 
   return (
     <div className="min-h-screen bg-gray-50/50 py-12">
@@ -51,9 +51,7 @@ export default async function SubmitScholarshipPage() {
           </div>
         </div>
 
-        <SubmitScholarshipForm
-          countries={countries.map((c) => ({ id: c.id, name: c.name, code: c.code }))}
-        />
+        <SubmitScholarshipForm countries={countries} />
 
         <p className="mt-6 text-center text-xs text-gray-500">
           Already listed and out of date? Use the same form and pick{" "}

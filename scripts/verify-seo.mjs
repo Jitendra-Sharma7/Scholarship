@@ -25,10 +25,22 @@
 const BASE = resolveBase();
 
 import { resolveBase } from "./lib/base-url.mjs";
+import { readEnvFile } from "./lib/secrets.mjs";
 
-/** The production origin. Canonicals must use this, not localhost. */
-const SITE_ORIGIN = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://globalscholarshiphub.com")
-  .replace(/\/$/, "");
+/**
+ * The production origin. Canonicals must use this, not localhost.
+ *
+ * Read from `.env` as well as the process environment, because the script is run
+ * by `npm run` and does not go through `with-env.mjs`. Reading only
+ * `process.env` meant a site deployed under any other domain failed every
+ * canonical check against the origin the app was never going to use.
+ */
+const env = readEnvFile();
+const SITE_ORIGIN = (
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  env.get("NEXT_PUBLIC_SITE_URL") ??
+  "https://globalscholarshiphub.com"
+).replace(/\/$/, "");
 
 /**
  * Every public indexable route, with the structured-data types it must emit.
@@ -319,17 +331,26 @@ async function main() {
   console.log("");
   const sitemap = await (await get("/sitemap.xml")).html;
 
+  // Built from SITE_ORIGIN rather than a literal domain, so the sitemap is
+  // matched against whichever origin this deployment actually uses. The host is
+  // escaped because a dot in a hostname is otherwise a wildcard that also
+  // matches unrelated lookalikes.
+  const host = SITE_ORIGIN.replace(/^https?:\/\//, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const groups = [
     {
       key: "scholarship",
       route: "/scholarships",
-      re: /https:\/\/globalscholarshiphub\.com\/scholarships\/([^<"?]+)</g,
+      re: new RegExp(`https?://${host}/scholarships/([^<"?]+)`, "g"),
     },
-    { key: "blog", route: "/blog", re: /https:\/\/globalscholarshiphub\.com\/blog\/([^<"?]+)</g },
+    {
+      key: "blog",
+      route: "/blog",
+      re: new RegExp(`https?://${host}/blog/([^<"?]+)`, "g"),
+    },
     {
       key: "resource",
       route: "/resources",
-      re: /https:\/\/globalscholarshiphub\.com\/resources\/([^<"?]+)</g,
+      re: new RegExp(`https?://${host}/resources/([^<"?]+)`, "g"),
     },
   ];
 
