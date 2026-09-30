@@ -498,7 +498,7 @@ async function main() {
 
     const saved = await submitForm("/admin/settings", {
       "scholarships.closingSoonDays": "21",
-      "site.contactEmail": "hello@globalscholarshiphub.com",
+      "site.contactEmail": "jitendra.route2uni@gmail.com",
       "site.tagline": "Helping students worldwide discover, compare, and apply for scholarships.",
     });
     check(
@@ -526,7 +526,7 @@ async function main() {
     const html = await home.text();
     check(
       "footer shows the configured contact address",
-      html.includes("hello@globalscholarshiphub.com"),
+      html.includes("jitendra.route2uni@gmail.com"),
       html.includes("scholaratlas") ? "WARNING: stale ScholarAtlas branding present" : ""
     );
     check("no stale ScholarAtlas branding in the markup", !html.includes("ScholarAtlas"));

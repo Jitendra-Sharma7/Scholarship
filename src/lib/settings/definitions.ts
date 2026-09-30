@@ -48,7 +48,7 @@ export const SETTING_DEFS: SettingDef[] = [
     description: "The support address shown in the footer. Use an address you actually read.",
     group: "Site",
     kind: "email",
-    default: "hello@globalscholarshiphub.com",
+    default: "jitendra.route2uni@gmail.com",
     hint: "Shown in the footer as a mailto link. Use an address that is monitored.",
     usedBy: "Site footer",
   },

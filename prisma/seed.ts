@@ -507,7 +507,7 @@ async function seedSettings() {
       group: "general",
       label: "Website description",
     },
-    { key: "site.contactEmail", value: "hello@globalscholarshiphub.com", group: "general", label: "Contact email" },
+    { key: "site.contactEmail", value: "jitendra.route2uni@gmail.com", group: "general", label: "Contact email" },
     { key: "site.supportEmail", value: "support@globalscholarshiphub.com", group: "general", label: "Support email" },
     { key: "seo.defaultTitle", value: "Global Scholarship Hub", group: "seo", label: "Default SEO title" },
     {

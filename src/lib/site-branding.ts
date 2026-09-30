@@ -16,7 +16,7 @@ export interface SiteBranding {
 }
 
 export const SITE_BRANDING_FALLBACK: SiteBranding = {
-  contactEmail: "hello@globalscholarshiphub.com",
+  contactEmail: "jitendra.route2uni@gmail.com",
   tagline:
     "Helping students worldwide discover, compare, and apply for scholarships, grants, fellowships, and financial-aid opportunities.",
 };
