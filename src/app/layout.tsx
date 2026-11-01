@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
@@ -36,7 +37,7 @@ const merriweather = Merriweather({
 });
 
 /**
- * Global SEO metadata.
+ * Global SEO and Google AdSense metadata.
  */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -44,9 +45,7 @@ export const metadata: Metadata = {
   title: {
     default:
       "Global Scholarship Hub | Fully Funded Scholarships Worldwide",
-
-    template:
-      "%s | Global Scholarship Hub",
+    template: "%s | Global Scholarship Hub",
   },
 
   description:
@@ -61,9 +60,7 @@ export const metadata: Metadata = {
   ],
 
   creator: SITE_NAME,
-
   publisher: SITE_NAME,
-
   category: "education",
 
   keywords: [
@@ -125,11 +122,8 @@ export const metadata: Metadata = {
 
   openGraph: {
     type: "website",
-
     locale: "en_US",
-
     url: SITE_URL,
-
     siteName: SITE_NAME,
 
     title:
@@ -160,9 +154,11 @@ export const metadata: Metadata = {
     images: [OG_IMAGE.url],
   },
 
+  /**
+   * Google AdSense account verification metadata.
+   */
   other: {
-    "google-adsense-account":
-      "ca-pub-6190025929296653",
+    "google-adsense-account": "ca-pub-6190025929296653",
   },
 };
 
@@ -187,9 +183,7 @@ export default async function RootLayout({
       <body className="font-sans antialiased bg-white text-gray-900">
 
         {/* Website structured data */}
-        <JsonLd
-          data={webSiteSchema()}
-        />
+        <JsonLd data={webSiteSchema()} />
 
         {/* Organization structured data */}
         <JsonLd
@@ -200,13 +194,12 @@ export default async function RootLayout({
         />
 
         <Providers>
-
+          {/* Google AdSense - consent controlled */}
           <AdSenseScript />
 
           <SiteChrome branding={branding}>
             {children}
           </SiteChrome>
-
         </Providers>
 
       </body>
