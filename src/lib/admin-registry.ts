@@ -22,7 +22,8 @@ export type FieldKind =
   | "slug"
   | "url"
   | "email"
-  | "password";
+  | "password"
+  | "image";
 
 export interface FormField {
   name: string;
@@ -43,7 +44,7 @@ export interface FormField {
   step?: number;
   maxLength?: number;
   /** Shown in a "Publishing" group at the end of the form. */
-  group?: "publishing" | "seo" | "content";
+  group?: "publishing" | "seo" | "content" | "images";
 }
 
 export type ColumnKind =
@@ -159,34 +160,48 @@ const universities: EntityDef = {
     { name: "featured", label: "Featured", ref: "featured" },
   ],
   fields: [
+    // Basic Information
     { name: "name", label: "Name", kind: "text", required: true },
     { name: "slug", label: "URL slug", kind: "slug", required: true, full: true, hint: "Used in internal links and filters. There is no public page at this slug, so changing it breaks no inbound URL." },
     { name: "countryId", label: "Country", kind: "select", refOptions: "countries" },
     { name: "city", label: "City", kind: "text" },
-    { name: "region", label: "Region", kind: "text" },
-    { name: "type", label: "Type", kind: "text", placeholder: "e.g. Public research" },
-    { name: "ownership", label: "Ownership", kind: "text", placeholder: "Public or Private" },
-    { name: "website", label: "Website", kind: "url" },
-    { name: "admissionsWebsite", label: "Admissions website", kind: "url" },
-    { name: "foundedYear", label: "Founded", kind: "number", min: 1000, max: 2100 },
-    { name: "qsRanking", label: "QS ranking", kind: "number", min: 1, hint: "Leave blank when unranked." },
-    { name: "theRanking", label: "THE ranking", kind: "number", min: 1 },
-    { name: "acceptanceRate", label: "Acceptance rate (%)", kind: "number", min: 0, max: 100, step: 0.01 },
-    { name: "studentCount", label: "Total students", kind: "number", min: 0 },
-    { name: "internationalStudentCount", label: "International students", kind: "number", min: 0 },
-    { name: "internationalStudentPercent", label: "International students (%)", kind: "number", min: 0, max: 100, step: 0.01 },
-    { name: "contactEmail", label: "Contact email", kind: "email" },
-    { name: "contactPhone", label: "Contact phone", kind: "text" },
-    { name: "address", label: "Address", kind: "text" },
-    { name: "latitude", label: "Latitude", kind: "number", step: 0.0001, min: -90, max: 90 },
-    { name: "longitude", label: "Longitude", kind: "number", step: 0.0001, min: -180, max: 180 },
-    { name: "popularFields", label: "Popular fields", kind: "strings", rows: 4, full: true },
-    { name: "description", label: "Description", kind: "textarea", rows: 6, full: true, group: "content" },
-    { name: "tuitionInfo", label: "Tuition information", kind: "textarea", rows: 3, full: true, group: "content" },
-    { name: "admissionInfo", label: "Admissions information", kind: "textarea", rows: 3, full: true, group: "content" },
-    { name: "internationalInfo", label: "International students", kind: "textarea", rows: 3, full: true, group: "content" },
-    { name: "logo", label: "Logo URL", kind: "url", full: true },
-    { name: "coverImage", label: "Cover image URL", kind: "url", full: true },
+    { name: "region", label: "Region / State", kind: "text" },
+    { name: "type", label: "Type", kind: "select", options: ["Public", "Private", "Non-profit", "For-profit"], placeholder: "Select type" },
+    { name: "ownership", label: "Ownership", kind: "select", options: ["Public", "Private"], placeholder: "Select ownership" },
+
+    // Online Presence
+    { name: "website", label: "Official Website", kind: "url", placeholder: "https://" },
+    { name: "admissionsWebsite", label: "Admissions Website", kind: "url", placeholder: "https://" },
+
+    // Rankings & Statistics
+    { name: "foundedYear", label: "Founded Year", kind: "number", min: 1000, max: 2100 },
+    { name: "qsRanking", label: "QS World Ranking", kind: "number", min: 1, hint: "Leave blank when unranked. Lower number = better ranking." },
+    { name: "theRanking", label: "THE World Ranking", kind: "number", min: 1, hint: "Leave blank when unranked. Lower number = better ranking." },
+    { name: "acceptanceRate", label: "Acceptance Rate (%)", kind: "number", min: 0, max: 100, step: 0.01, hint: "Percentage of applicants admitted." },
+    { name: "studentCount", label: "Total Students", kind: "number", min: 0, hint: "Total enrolled students (domestic + international)." },
+    { name: "internationalStudentCount", label: "International Students", kind: "number", min: 0 },
+    { name: "internationalStudentPercent", label: "International Students (%)", kind: "number", min: 0, max: 100, step: 0.01, hint: "Percentage of student body that is international." },
+
+    // Contact & Location
+    { name: "contactEmail", label: "Contact Email", kind: "email", placeholder: "admissions@university.edu" },
+    { name: "contactPhone", label: "Contact Phone", kind: "text", placeholder: "+1 (555) 123-4567" },
+    { name: "address", label: "Street Address", kind: "text", full: true, placeholder: "123 University Ave" },
+    { name: "latitude", label: "Latitude", kind: "number", step: 0.0001, min: -90, max: 90, hint: "For map placement (e.g., 40.7128)." },
+    { name: "longitude", label: "Longitude", kind: "number", step: 0.0001, min: -180, max: 180, hint: "For map placement (e.g., -74.0060)." },
+
+    // Academic Profile
+    { name: "popularFields", label: "Popular Fields of Study", kind: "strings", rows: 4, full: true, hint: "One field per line (e.g., Computer Science, Business, Engineering)." },
+
+    // Content Sections
+    { name: "description", label: "Description", kind: "textarea", rows: 6, full: true, group: "content", hint: "General overview shown on the university profile page." },
+    { name: "tuitionInfo", label: "Tuition Information", kind: "textarea", rows: 3, full: true, group: "content", hint: "Details about tuition fees, payment options, and cost estimates." },
+    { name: "admissionInfo", label: "Admissions Information", kind: "textarea", rows: 3, full: true, group: "content", hint: "Requirements, deadlines, and application process details." },
+    { name: "internationalInfo", label: "International Student Support", kind: "textarea", rows: 3, full: true, group: "content", hint: "Services, orientation, visa help, and support for international students." },
+
+    // Images & Branding
+    { name: "logo", label: "Logo", kind: "image", full: true, group: "images", hint: "Upload or select a logo from the Media Library. Recommended: SVG or PNG, max 200x200px." },
+    { name: "coverImage", label: "Cover Image", kind: "image", full: true, group: "images", hint: "Hero image for the university profile page. Recommended: 16:9 ratio, min 1200px wide." },
+
     ...PUBLISH_FIELDS,
     ...SEO_FIELDS,
   ],

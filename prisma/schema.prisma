@@ -52,12 +52,12 @@ model User {
   applications        Application[]
   oauthAccounts       AuthAccount[]
   blogPosts           BlogPost[]
+  deadlineAlerts      DeadlineAlert[]
   documents           Document[]
   uploads             Media[]
   notifications       Notification[]
   savedScholarships   SavedScholarship[]
   scholarshipMatches  ScholarshipMatch[]
-  deadlineAlerts      DeadlineAlert[]
   sessions            Session[]
   reviewedSubmissions Submission[]       @relation("SubmissionReviewer")
   submittedItems      Submission[]       @relation("SubmissionAuthor")
@@ -371,6 +371,7 @@ model Scholarship {
   degreeLevels            String[]
   publishedAt             DateTime?
   applications            Application[]
+  deadlineAlerts          DeadlineAlert[]
   savedBy                 SavedScholarship[]
   country                 Country?             @relation(fields: [countryId], references: [id])
   provider                Provider?            @relation(fields: [providerId], references: [id])
@@ -379,7 +380,6 @@ model Scholarship {
   fields                  ScholarshipField[]
   intakes                 ScholarshipIntake[]
   matches                 ScholarshipMatch[]
-  deadlineAlerts          DeadlineAlert[]
 
   @@index([publishStatus, deletedAt])
   @@index([publishStatus, deletedAt, deadline])
@@ -501,9 +501,6 @@ model Guide {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  // Guides are merged into the public resources list, which reads published,
-  // non-deleted rows newest first. Without this the whole table is scanned and
-  // sorted on every /resources render and on every sitemap build.
   @@index([published, deletedAt, createdAt])
   @@index([category])
 }
@@ -519,9 +516,6 @@ model FAQ {
   updatedAt     DateTime      @updatedAt
   deletedAt     DateTime?
 
-  // The public FAQ page reads published, non-deleted rows in editorial order.
-  // The column order matches the filter-then-sort the page actually issues, so
-  // Postgres can walk the index instead of sorting the table.
   @@index([publishStatus, deletedAt, sortOrder, createdAt])
   @@index([category])
 }
@@ -616,9 +610,6 @@ model Application {
   scholarship    Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
   user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // The tracker lists a user's applications newest first and filters by status
-  // in the same read, so the index leads with the column that is always present
-  // and the one that is often filtered.
   @@index([userId])
   @@index([userId, status, createdAt])
 }
@@ -633,9 +624,6 @@ model Notification {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // The header badge counts unread rows on every authenticated render, and the
-  // panel lists them newest first. Grows with every user, so the index is worth
-  // having well before it is needed.
   @@index([userId, read, createdAt])
 }
 
@@ -652,24 +640,23 @@ model Alert {
   createdAt     DateTime @default(now())
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // The deadline digest walks every active alert for a user.
   @@index([userId, isActive])
 }
 
 model Intake {
-  id          String   @id @default(cuid())
-  name        String   // e.g. "September 2027"
-  slug        String   @unique
-  startMonth  Int      // 1-12
-  startYear   Int
-  endMonth    Int?     // Optional, for multi-month intakes
-  endYear     Int?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
+  id           String              @id @default(cuid())
+  name         String
+  slug         String              @unique
+  startMonth   Int
+  startYear    Int
+  endMonth     Int?
+  endYear      Int?
+  isActive     Boolean             @default(true)
+  sortOrder    Int                 @default(0)
+  description  String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  deletedAt    DateTime?
   scholarships ScholarshipIntake[]
 
   @@index([startYear, startMonth])
@@ -679,51 +666,51 @@ model Intake {
 model ScholarshipIntake {
   scholarshipId String
   intakeId      String
-  scholarship   Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
-  intake        Intake      @relation(fields: [intakeId], references: [id], onDelete: Cascade)
-  deadline      DateTime?   // Intake-specific deadline override
-  openingDate   DateTime?   // Intake-specific opening date
+  deadline      DateTime?
+  openingDate   DateTime?
   isPrimary     Boolean     @default(false)
+  intake        Intake      @relation(fields: [intakeId], references: [id], onDelete: Cascade)
+  scholarship   Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
 
   @@id([scholarshipId, intakeId])
   @@index([intakeId])
 }
 
 model SyncLog {
-  id              String      @id @default(cuid())
-  sourceUrl       String
-  sourceName      String
-  status          SyncStatus  @default(PENDING)
-  startedAt       DateTime    @default(now())
-  completedAt     DateTime?
-  totalFound      Int         @default(0)
-  totalNew        Int         @default(0)
-  totalUpdated    Int         @default(0)
-  totalErrors     Int         @default(0)
-  errorDetails    Json?
-  triggeredBy     String?     // "scheduled" | "manual" | "api"
-  triggeredById   String?     // user ID if manual
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id            String     @id @default(cuid())
+  sourceUrl     String
+  sourceName    String
+  status        SyncStatus @default(PENDING)
+  startedAt     DateTime   @default(now())
+  completedAt   DateTime?
+  totalFound    Int        @default(0)
+  totalNew      Int        @default(0)
+  totalUpdated  Int        @default(0)
+  totalErrors   Int        @default(0)
+  errorDetails  Json?
+  triggeredBy   String?
+  triggeredById String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   @@index([status, createdAt])
   @@index([sourceName, createdAt])
 }
 
 model ScholarshipMatch {
-  id              String        @id @default(cuid())
-  userId          String
-  scholarshipId   String
-  matchScore      Float         // 0-100
-  matchReasons    String[]      // Why this matched
-  status          MatchStatus   @default(SUGGESTED)
-  userNotes       String?
-  appliedAt       DateTime?
-  reviewedAt      DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scholarship     Scholarship   @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  id            String      @id @default(cuid())
+  userId        String
+  scholarshipId String
+  matchScore    Float
+  matchReasons  String[]
+  status        MatchStatus @default(SUGGESTED)
+  userNotes     String?
+  appliedAt     DateTime?
+  reviewedAt    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  scholarship   Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, scholarshipId])
   @@index([userId, status])
@@ -732,18 +719,18 @@ model ScholarshipMatch {
 }
 
 model DeadlineAlert {
-  id            String           @id @default(cuid())
+  id            String            @id @default(cuid())
   userId        String
   scholarshipId String
   alertType     DeadlineAlertType @default(SEVEN_DAYS)
   sendAt        DateTime
   sentAt        DateTime?
-  isSent        Boolean          @default(false)
-  isRead        Boolean          @default(false)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scholarship   Scholarship      @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  isSent        Boolean           @default(false)
+  isRead        Boolean           @default(false)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  scholarship   Scholarship       @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, scholarshipId, alertType])
   @@index([sendAt, isSent])

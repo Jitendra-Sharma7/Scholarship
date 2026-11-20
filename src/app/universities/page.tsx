@@ -2,6 +2,7 @@ import { GraduationCap } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { UniversitiesBrowser } from "@/components/public/UniversitiesBrowser";
 import { getPublicUniversities } from "@/lib/data/public";
+import { prisma } from "@/lib/prisma";
 import JsonLd from "@/components/seo/JsonLd";
 import { pageMetadata } from "@/lib/seo";
 import { itemListSchema } from "@/lib/seo-jsonld";
@@ -14,19 +15,29 @@ export const metadata = pageMetadata({
 });
 
 export default async function UniversitiesPage() {
-  const universities = await getPublicUniversities();
+  const [universities, countriesResult] = await Promise.all([
+    getPublicUniversities(),
+    prisma.university.findMany({
+      where: { publishStatus: "PUBLISHED", deletedAt: null },
+      select: { country: { select: { name: true } } },
+      distinct: ["countryId"],
+      orderBy: { country: { name: "asc" } },
+    }),
+  ]);
+
+  const countries = countriesResult
+    .map((u) => u.country?.name)
+    .filter((c): c is string => Boolean(c))
+    .sort();
 
   return (
     <div className="bg-gray-50/50 min-h-screen py-10">
       <JsonLd
         data={itemListSchema({
           name: "Universities offering scholarships",
-          // Matches the card's own link, which searches the listing by
-          // university name. The listing has no `?university=` parameter, so
-          // pointing at one would describe a URL that does not filter.
           items: universities.map((u) => ({
             name: u.name,
-            path: `/scholarships?query=${encodeURIComponent(u.name)}`,
+            path: `/universities/${u.id}`,
             description: u.description,
           })),
         })}
@@ -46,7 +57,7 @@ export default async function UniversitiesPage() {
           </p>
         </div>
 
-        <UniversitiesBrowser universities={universities} />
+        <UniversitiesBrowser universities={universities} countries={countries} />
       </Container>
     </div>
   );

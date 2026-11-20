@@ -234,7 +234,7 @@ export default function SyncManagementPage({
               value="Global Scholarship Point"
             />
             <input
-              type="hidden
+              type="hidden"
               name="targetIntake"
               value="September 2027"
             />

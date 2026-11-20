@@ -9,6 +9,7 @@ import {
   Checkbox,
   DateInput,
   FormSection,
+  ImagePicker,
   NumberInput,
   Select,
   SlugInput,
@@ -53,9 +54,10 @@ const INITIAL: EntityActionState = {};
 
 /** Fields are grouped by their `group`, with anything ungrouped first. */
 function groupFields(fields: FormField[]) {
-  const order: FormField["group"][] = [undefined, "content", "publishing", "seo"];
+  const order: FormField["group"][] = [undefined, "images", "content", "publishing", "seo"];
   const titles: Record<string, string> = {
     content: "Content",
+    images: "Images & Branding",
     publishing: "Publishing",
     seo: "Search engines",
   };
@@ -240,6 +242,21 @@ export function EntityForm({
                     }
                     className={span}
                   />
+                );
+              }
+
+              if (field.kind === "image") {
+                return (
+                  <div key={field.name} className={span}>
+                    <ImagePicker
+                      label={field.label}
+                      name={field.name}
+                      hint={field.hint}
+                      error={error}
+                      required={field.required}
+                      defaultValue={typeof value === "string" ? value : ""}
+                    />
+                  </div>
                 );
               }
 

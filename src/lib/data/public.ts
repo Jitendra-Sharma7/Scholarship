@@ -199,11 +199,13 @@ export interface PublicUniversity {
   country: string;
   city: string | null;
   website: string | null;
+  admissionsWebsite: string | null;
   logo: string | null;
   /** Higher is better; unranked institutions sort last. */
   ranking: number;
   description: string | null;
   programs: string[];
+  popularFields: string[];
   tuitionInfo: string | null;
   admissionInfo: string | null;
   internationalInfo: string | null;
@@ -222,6 +224,7 @@ export interface PublicUniversity {
   internationalStudentCount: number | null;
   address: string | null;
   contactEmail: string | null;
+  contactPhone: string | null;
   featured: boolean;
 }
 
@@ -516,11 +519,13 @@ export async function getPublicUniversities(limit?: number): Promise<PublicUnive
     country: u.country?.name ?? u.countryNameLegacy ?? "",
     city: u.city,
     website: u.website,
+    admissionsWebsite: u.admissionsWebsite,
     logo: u.logo,
     // Unranked institutions sort after every ranked one.
     ranking: u.qsRanking ?? 9999,
     description: u.description,
     programs: u.popularFields,
+    popularFields: u.popularFields,
     tuitionInfo: u.tuitionInfo,
     admissionInfo: u.admissionInfo,
     internationalInfo: u.internationalInfo,
@@ -539,8 +544,55 @@ export async function getPublicUniversities(limit?: number): Promise<PublicUnive
     internationalStudentCount: u.internationalStudentCount,
     address: u.address,
     contactEmail: u.contactEmail,
+    contactPhone: u.contactPhone,
     featured: u.featured,
   }));
+}
+
+export async function getPublicUniversityById(id: string): Promise<PublicUniversity | null> {
+  const row = await prisma.university.findFirst({
+    where: { ...VISIBLE, OR: [{ id }, { slug: id }] },
+    include: {
+      country: { select: { id: true, name: true, code: true } },
+      _count: { select: { scholarships: true } },
+    },
+  });
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    name: row.name,
+    country: row.country?.name ?? row.countryNameLegacy ?? "",
+    city: row.city,
+    website: row.website,
+    admissionsWebsite: row.admissionsWebsite,
+    logo: row.logo,
+    ranking: row.qsRanking ?? 9999,
+    description: row.description,
+    programs: row.popularFields,
+    popularFields: row.popularFields,
+    tuitionInfo: row.tuitionInfo,
+    admissionInfo: row.admissionInfo,
+    internationalInfo: row.internationalInfo,
+    scholarshipCount: row._count.scholarships,
+    establishedYear: row.foundedYear,
+    studentCount: row.studentCount,
+    internationalStudentPercent: row.internationalStudentPercent,
+    countryId: row.countryId,
+    slug: row.slug,
+    coverImage: row.coverImage,
+    type: row.type,
+    ownership: row.ownership,
+    qsRanking: row.qsRanking,
+    theRanking: row.theRanking,
+    acceptanceRate: row.acceptanceRate,
+    internationalStudentCount: row.internationalStudentCount,
+    address: row.address,
+    contactEmail: row.contactEmail,
+    contactPhone: row.contactPhone,
+    featured: row.featured,
+  };
 }
 
 // --- Providers ------------------------------------------------------------

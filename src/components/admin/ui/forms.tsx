@@ -650,3 +650,113 @@ export function CharCount({ value, max }: { value: string; max: number }) {
     </span>
   );
 }
+
+// --- Image Picker ----------------------------------------------------------
+
+interface MediaItem {
+  id: string;
+  originalName: string;
+  url: string;
+  mimeType: string;
+  folder: string;
+  size: number;
+}
+
+export function ImagePicker({
+  label,
+  name,
+  defaultValue,
+  hint,
+  error,
+  required,
+  className,
+}: {
+  label: string;
+  name: string;
+  defaultValue?: string | null;
+  hint?: ReactNode;
+  error?: string;
+  required?: boolean;
+  className?: string;
+}) {
+  const id = useId();
+  const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
+
+  return (
+    <div className={cn("space-y-1.5", className)}>
+      <label htmlFor={id} className="block text-xs font-semibold text-slate-700">
+        {label}
+        {required ? (
+          <span className="ml-0.5 text-red-600" aria-hidden="true">*</span>
+        ) : null}
+      </label>
+
+      <div className="flex flex-col gap-2">
+        {/* Current image preview */}
+        {defaultValue && (
+          <div className="relative max-w-xs">
+            <img
+              src={defaultValue}
+              alt="Current image"
+              className="w-full h-auto rounded-lg border border-slate-200"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const hiddenInput = document.getElementById(`${name}-clear`) as HTMLInputElement;
+                if (hiddenInput) hiddenInput.value = "true";
+              }}
+              className="absolute top-2 right-2 rounded-full bg-red-600/90 p-1 text-white hover:bg-red-700"
+              aria-label="Remove image"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Image URL input */}
+        <input
+          id={id}
+          name={name}
+          type="url"
+          defaultValue={defaultValue ?? ""}
+          placeholder="https://example.com/image.png or select from Media Library"
+          aria-invalid={Boolean(error)}
+          aria-describedby={describedBy}
+          className={cn(CONTROL_BASE, error ? CONTROL_ERR : CONTROL_OK)}
+        />
+
+        {/* Clear sentinel */}
+        <input type="hidden" id={`${name}-clear`} name={`${name}_clear`} value="" />
+
+        {/* Media Library button */}
+        <button
+          type="button"
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          onClick={() => {
+            // Open media library modal - this would need to be implemented
+            window.open("/admin/media", "_blank");
+          }}
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          Open Media Library
+        </button>
+
+        {hint ? (
+          <p id={`${id}-hint`} className="text-[11px] leading-snug text-slate-500">
+            {hint}
+          </p>
+        ) : null}
+        {error ? (
+          <p id={`${id}-error`} className="text-[11px] font-medium text-red-600">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
