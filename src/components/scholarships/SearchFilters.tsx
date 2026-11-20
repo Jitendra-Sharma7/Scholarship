@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useId } from "react";
-import { Filter, RotateCcw } from "lucide-react";
+import { Filter, RotateCcw, Check } from "lucide-react";
 import { CountryFlagWithName } from "@/components/ui/CountryFlag";
 import type { PublicCountryOption, PublicField } from "@/lib/data/public";
 
@@ -12,17 +12,16 @@ interface FilterState {
   degree: string;
   funding: string;
   intake: string;
+  status: string;
+  eligibleNationality: string;
+  applicationFee: string;
+  sortBy: string;
 }
 
 interface SearchFiltersProps {
   filters: FilterState;
   onChange: (newFilters: FilterState) => void;
   onReset: () => void;
-  /**
-   * Supplied by the server page from published records, so an option an editor
-   * unpublishes disappears from the filter instead of returning an empty result
-   * set. Passed in rather than fetched: the browser does not read the API.
-   */
   countries: PublicCountryOption[];
   fields: PublicField[];
   intakes: { id: string; name: string; slug: string }[];
@@ -54,11 +53,42 @@ export function SearchFilters({
     { value: "fully-tuition", label: "Full Tuition Coverage" },
     { value: "partial-tuition", label: "Partial Tuition Waiver" },
     { value: "stipend", label: "Monthly Stipend / Allowance" },
+    { value: "mixed", label: "Mixed / Other" },
   ];
 
   const intakeOptions = [
     { value: "", label: "All Intakes" },
     ...intakes.map((i) => ({ value: i.slug, label: i.name })),
+  ];
+
+  const statusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "open", label: "Open" },
+    { value: "upcoming", label: "Upcoming" },
+    { value: "closing-soon", label: "Closing Soon" },
+    { value: "closed", label: "Closed" },
+    { value: "expired", label: "Expired" },
+  ];
+
+  const nationalityOptions = [
+    { value: "", label: "All Nationalities" },
+    { value: "international", label: "Open to International" },
+    { value: "specific", label: "Specific Countries Only" },
+  ];
+
+  const applicationFeeOptions = [
+    { value: "", label: "All Fees" },
+    { value: "free", label: "Free ($0)" },
+    { value: "paid", label: "Has Application Fee" },
+  ];
+
+  const sortOptions = [
+    { value: "relevance", label: "Relevance / Match" },
+    { value: "deadline", label: "Upcoming Deadline" },
+    { value: "newest", label: "Recently Added" },
+    { value: "alphabetical", label: "Alphabetical (A-Z)" },
+    { value: "amount", label: "Scholarship Amount (High-Low)" },
+    { value: "fully-funded", label: "Fully Funded First" },
   ];
 
   const handleSelect = (key: keyof FilterState, value: string) => {
@@ -68,30 +98,26 @@ export function SearchFilters({
     });
   };
 
-  /**
-   * This panel is rendered twice on /scholarships - a desktop sidebar and the
-   * mobile drawer - so the ids are scoped to the instance. A shared id would
-   * give the second copy duplicate ids, and every `htmlFor` would point at the
-   * first copy's control.
-   */
   const id = useId();
   const controlId = (name: string) => `${id}-filter-${name}`;
 
   const hasActiveFilters = Boolean(
-    filters.query || filters.country || filters.field || filters.degree || filters.funding || filters.intake
+    filters.query || filters.country || filters.field || filters.degree || 
+    filters.funding || filters.intake || filters.status || 
+    filters.eligibleNationality || filters.applicationFee || filters.sortBy
   );
 
   return (
-    <div className="space-y-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+    <div className="space-y-6 rounded-2xl border border-secondary-200 bg-white p-5 shadow-card">
+      <div className="flex items-center justify-between border-b border-secondary-100 pb-4">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-primary-600" />
-          <h2 className="font-semibold text-gray-900">Filters</h2>
+          <h2 className="font-semibold text-secondary-900">Filters</h2>
         </div>
         {hasActiveFilters && (
           <button
             onClick={onReset}
-            className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-primary-600"
+            className="flex items-center gap-1 text-xs font-medium text-secondary-500 hover:text-primary-600"
           >
             <RotateCcw className="h-3 w-3" />
             Reset all
@@ -99,19 +125,37 @@ export function SearchFilters({
         )}
       </div>
 
+      {/* Search Query */}
+      <div className="space-y-2">
+        <label
+          htmlFor={controlId("query")}
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
+        >
+          Search Keywords
+        </label>
+        <input
+          id={controlId("query")}
+          type="text"
+          value={filters.query}
+          onChange={(e) => handleSelect("query", e.target.value)}
+          placeholder="e.g., Chevening, DAAD, Computer Science..."
+          className="input-field"
+        />
+      </div>
+
       {/* Degree Level */}
       <div className="space-y-2">
         <label
           htmlFor={controlId("degree")}
-          className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
         >
-          Degree Level
+          Study Level
         </label>
         <select
           id={controlId("degree")}
           value={filters.degree}
           onChange={(e) => handleSelect("degree", e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50/50 p-2.5 text-sm text-gray-800 transition-colors focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="input-field"
         >
           {degrees.map((d) => (
             <option key={d.value} value={d.value}>
@@ -125,7 +169,7 @@ export function SearchFilters({
       <div className="space-y-2">
         <label
           htmlFor={controlId("country")}
-          className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
         >
           Destination Country
         </label>
@@ -133,7 +177,7 @@ export function SearchFilters({
           id={controlId("country")}
           value={filters.country}
           onChange={(e) => handleSelect("country", e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50/50 p-2.5 text-sm text-gray-800 transition-colors focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="input-field"
         >
           <option value="">All Countries</option>
           {countries.map((c) => (
@@ -148,7 +192,7 @@ export function SearchFilters({
       <div className="space-y-2">
         <label
           htmlFor={controlId("field")}
-          className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
         >
           Field of Study
         </label>
@@ -156,7 +200,7 @@ export function SearchFilters({
           id={controlId("field")}
           value={filters.field}
           onChange={(e) => handleSelect("field", e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50/50 p-2.5 text-sm text-gray-800 transition-colors focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="input-field"
         >
           <option value="">All Fields</option>
           {fields.map((f) => (
@@ -171,7 +215,7 @@ export function SearchFilters({
       <div className="space-y-2">
         <label
           htmlFor={controlId("intake")}
-          className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
         >
           Academic Intake
         </label>
@@ -179,7 +223,7 @@ export function SearchFilters({
           id={controlId("intake")}
           value={filters.intake}
           onChange={(e) => handleSelect("intake", e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50/50 p-2.5 text-sm text-gray-800 transition-colors focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="input-field"
         >
           {intakeOptions.map((i) => (
             <option key={i.value} value={i.value}>
@@ -193,7 +237,7 @@ export function SearchFilters({
       <div className="space-y-2">
         <label
           htmlFor={controlId("funding")}
-          className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
         >
           Funding Coverage
         </label>
@@ -201,7 +245,7 @@ export function SearchFilters({
           id={controlId("funding")}
           value={filters.funding}
           onChange={(e) => handleSelect("funding", e.target.value)}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50/50 p-2.5 text-sm text-gray-800 transition-colors focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+          className="input-field"
         >
           {fundingTypes.map((ft) => (
             <option key={ft.value} value={ft.value}>
@@ -211,44 +255,135 @@ export function SearchFilters({
         </select>
       </div>
 
+      {/* Status */}
+      <div className="space-y-2">
+        <label
+          htmlFor={controlId("status")}
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
+        >
+          Application Status
+        </label>
+        <select
+          id={controlId("status")}
+          value={filters.status}
+          onChange={(e) => handleSelect("status", e.target.value)}
+          className="input-field"
+        >
+          {statusOptions.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Eligible Nationality */}
+      <div className="space-y-2">
+        <label
+          htmlFor={controlId("eligibleNationality")}
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
+        >
+          Eligible Nationality
+        </label>
+        <select
+          id={controlId("eligibleNationality")}
+          value={filters.eligibleNationality}
+          onChange={(e) => handleSelect("eligibleNationality", e.target.value)}
+          className="input-field"
+        >
+          {nationalityOptions.map((n) => (
+            <option key={n.value} value={n.value}>
+              {n.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Application Fee */}
+      <div className="space-y-2">
+        <label
+          htmlFor={controlId("applicationFee")}
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
+        >
+          Application Fee
+        </label>
+        <select
+          id={controlId("applicationFee")}
+          value={filters.applicationFee}
+          onChange={(e) => handleSelect("applicationFee", e.target.value)}
+          className="input-field"
+        >
+          {applicationFeeOptions.map((a) => (
+            <option key={a.value} value={a.value}>
+              {a.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Sort By */}
+      <div className="space-y-2">
+        <label
+          htmlFor={controlId("sortBy")}
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
+        >
+          Sort By
+        </label>
+        <select
+          id={controlId("sortBy")}
+          value={filters.sortBy}
+          onChange={(e) => handleSelect("sortBy", e.target.value)}
+          className="input-field"
+        >
+          {sortOptions.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Quick shortcuts */}
-      <div className="border-t border-gray-100 pt-4">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+      <div className="border-t border-secondary-100 pt-4">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-secondary-500">
           Popular filters
         </p>
         <div className="flex flex-wrap gap-1.5">
           <button
             onClick={() => handleSelect("funding", "fully-funded")}
             aria-pressed={filters.funding === "fully-funded"}
-            className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors ${
               filters.funding === "fully-funded"
                 ? "border-primary-500 bg-primary-50 font-medium text-primary-700"
-                : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
+                : "border-secondary-200 bg-secondary-50 text-secondary-600 hover:bg-secondary-100"
             }`}
           >
+            <Check className="h-3 w-3" />
             Fully Funded
           </button>
           <button
             onClick={() => handleSelect("degree", "Master's")}
             aria-pressed={filters.degree === "Master's"}
-            className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors ${
               filters.degree === "Master's"
                 ? "border-primary-500 bg-primary-50 font-medium text-primary-700"
-                : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
+                : "border-secondary-200 bg-secondary-50 text-secondary-600 hover:bg-secondary-100"
             }`}
           >
-            Master&apos;s
+            <Check className="h-3 w-3" />
+            Master's
           </button>
           {germany && (
             <button
               onClick={() => handleSelect("country", germany.id)}
               aria-pressed={filters.country === germany.id}
-              className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors ${
                 filters.country === germany.id
                   ? "border-primary-500 bg-primary-50 font-medium text-primary-700"
-                  : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  : "border-secondary-200 bg-secondary-50 text-secondary-600 hover:bg-secondary-100"
               }`}
             >
+              <Check className="h-3 w-3" />
               <CountryFlagWithName
                 code={germany.code}
                 name={germany.name}
@@ -259,12 +394,13 @@ export function SearchFilters({
           {computerScience && (
             <button
               onClick={() => handleSelect("field", computerScience.id)}
-              className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors ${
                 filters.field === computerScience.id
                   ? "border-primary-500 bg-primary-50 font-medium text-primary-700"
-                  : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
+                  : "border-secondary-200 bg-secondary-50 text-secondary-600 hover:bg-secondary-100"
               }`}
             >
+              <Check className="h-3 w-3" />
               Computer Science
             </button>
           )}

@@ -87,7 +87,7 @@ export default async function UniversitiesPage({
   ).length;
 
   return (
-    <div className="bg-gray-50/50 min-h-screen">
+    <div className="bg-secondary-50/50 min-h-screen">
       <JsonLd
         data={itemListSchema({
           name: "Universities offering scholarships",
@@ -105,16 +105,16 @@ export default async function UniversitiesPage({
             <GraduationCap className="h-3.5 w-3.5" />
             <span>Academic Institutions</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-950">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-secondary-950">
             Global University Directory
           </h1>
-          <p className="mt-3 text-base text-gray-600 max-w-2xl">
+          <p className="mt-3 text-base text-secondary-600 max-w-2xl">
             Discover and compare universities offering scholarships to
             international students. Explore verified rankings, programmes,
             tuition and funding opportunities across institutions worldwide.
           </p>
-          <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-gray-500">
-            <span className="font-semibold text-gray-900">
+          <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-secondary-500">
+            <span className="font-semibold text-secondary-900">
               {totalUniversities.toLocaleString()} universities
             </span>
             <span className="px-1">·</span>

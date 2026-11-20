@@ -315,11 +315,11 @@ export function UniversityDirectory({
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-16 text-center">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">
+      <div className="rounded-2xl border border-dashed border-secondary-300 bg-white p-16 text-center">
+        <h3 className="text-base font-semibold text-secondary-900 mb-1">
           We could not load the directory
         </h3>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-secondary-500 mb-6">
           Please try again. If the problem persists, contact support.
         </p>
         <Button onClick={() => window.location.reload()} size="sm">
@@ -337,14 +337,14 @@ export function UniversityDirectory({
       {/* Results toolbar */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-gray-900">
+          <span className="font-semibold text-secondary-900">
             {formatNumber(filtered.length)}
           </span>{" "}
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-secondary-500">
             {filtered.length === 1 ? "university" : "universities"}
           </span>
           {filtered.length > 0 && (
-            <span className="ml-2 text-xs text-gray-500">
+            <span className="ml-2 text-xs text-secondary-500">
               &middot; showing {showingFrom}&ndash;{showingTo}
             </span>
           )}
@@ -353,7 +353,7 @@ export function UniversityDirectory({
         <div className="flex flex-wrap items-center gap-2 min-w-0">
           {chips.length > 0 && (
             <>
-              <span className="text-xs font-semibold text-gray-500 hidden sm:block">
+              <span className="text-xs font-semibold text-secondary-500 hidden sm:block">
                 Applied filters:
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -377,10 +377,10 @@ export function UniversityDirectory({
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-2">
-          <span className="hidden sm:block text-xs font-semibold text-gray-500">
+          <span className="hidden sm:block text-xs font-semibold text-secondary-500">
             View:
           </span>
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div className="inline-flex rounded-lg border border-secondary-200 bg-white shadow-sm">
             <button
               type="button"
               onClick={() => {
@@ -393,7 +393,7 @@ export function UniversityDirectory({
                 "p-2 text-sm transition-colors",
                 state.view === "grid"
                   ? "bg-primary-600 text-white"
-                  : "text-gray-600 hover:bg-gray-50"
+                  : "text-secondary-600 hover:bg-secondary-50"
               )}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -410,7 +410,7 @@ export function UniversityDirectory({
                 "p-2 text-sm transition-colors",
                 state.view === "list"
                   ? "bg-primary-600 text-white"
-                  : "text-gray-600 hover:bg-gray-50"
+                  : "text-secondary-600 hover:bg-secondary-50"
               )}
             >
               <LayoutList className="h-4 w-4" />
@@ -422,7 +422,7 @@ export function UniversityDirectory({
               onChange={(e) =>
                 navigate({ sort: e.target.value as DirectoryState["sort"] })
               }
-              className="min-h-[42px] w-full appearance-none rounded-lg border border-gray-300 bg-white pl-3 pr-9 py-2 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+              className="min-h-[42px] w-full appearance-none rounded-lg border border-secondary-300 bg-white pl-3 pr-9 py-2 text-sm text-secondary-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
             >
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -431,7 +431,7 @@ export function UniversityDirectory({
               ))}
             </select>
             <ChevronDown
-              className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary-400 pointer-events-none"
             />
           </span>
         </div>
@@ -460,11 +460,11 @@ export function UniversityDirectory({
 
       {/* Results */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-16 text-center">
-          <h3 className="text-base font-semibold text-gray-900 mb-1">
+        <div className="rounded-2xl border border-dashed border-secondary-300 bg-white p-16 text-center">
+          <h3 className="text-base font-semibold text-secondary-900 mb-1">
             No universities found
           </h3>
-          <p className="text-sm text-gray-500 max-w-sm mx-auto mb-6">
+          <p className="text-sm text-secondary-500 max-w-sm mx-auto mb-6">
             Try adjusting your search or filters to find what you&rsquo;re
             looking for.
           </p>

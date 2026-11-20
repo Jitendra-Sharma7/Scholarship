@@ -49,7 +49,7 @@ export function UniversityImage({
   return (
     <span
       className={cn(
-        "relative block overflow-hidden rounded-xl bg-gray-50",
+        "relative block overflow-hidden rounded-xl bg-secondary-50",
         className
       )}
     >
@@ -114,17 +114,17 @@ export function UniversitySkeleton({
   return (
     <div
       className={cn(
-        "flex flex-col justify-between rounded-xl border border-gray-200 bg-white",
+        "flex flex-col justify-between rounded-xl border border-secondary-200 bg-white",
         className
       )}
     >
-      <span className="aspect-[16/9] rounded-t-xl bg-gray-200 animate-pulse" />
+      <span className="aspect-[16/9] rounded-t-xl bg-secondary-200 animate-pulse" />
       <div className="p-5">
-        <div className="h-4 w-3/4 bg-gray-200 animate-pulse rounded mb-2" />
-        <div className="h-3 w-full bg-gray-200 animate-pulse rounded mb-1" />
-        <div className="h-3 w-1/2 bg-gray-200 animate-pulse rounded" />
+        <div className="h-4 w-3/4 bg-secondary-200 animate-pulse rounded mb-2" />
+        <div className="h-3 w-full bg-secondary-200 animate-pulse rounded mb-1" />
+        <div className="h-3 w-1/2 bg-secondary-200 animate-pulse rounded" />
       </div>
-      <div className="h-2 px-5 pb-5 w-1/3 bg-gray-200 animate-pulse rounded-b-xl" />
+      <div className="h-2 px-5 pb-5 w-1/3 bg-secondary-200 animate-pulse rounded-b-xl" />
     </div>
   );
 }
@@ -153,15 +153,15 @@ export function UniversitySkeletonList({
       {[...Array(count)].map((_, i) => (
         <div
           key={i}
-          className="flex gap-4 rounded-xl border border-gray-200 bg-white p-4 animate-pulse"
+          className="flex gap-4 rounded-xl border border-secondary-200 bg-white p-4 animate-pulse"
         >
-          <span className="shrink-0 h-16 w-24 rounded-lg bg-gray-200" />
+          <span className="shrink-0 h-16 w-24 rounded-lg bg-secondary-200" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 w-3/4 bg-gray-200 rounded" />
-            <div className="h-3 w-1/2 bg-gray-200 rounded" />
-            <div className="h-3 w-1/3 bg-gray-200 rounded" />
+            <div className="h-4 w-3/4 bg-secondary-200 rounded" />
+            <div className="h-3 w-1/2 bg-secondary-200 rounded" />
+            <div className="h-3 w-1/3 bg-secondary-200 rounded" />
           </div>
-          <div className="h-8 w-32 rounded-lg bg-gray-200" />
+          <div className="h-8 w-32 rounded-lg bg-secondary-200" />
         </div>
       ))}
     </div>

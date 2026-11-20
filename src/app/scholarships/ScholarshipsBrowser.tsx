@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Inbox, RotateCcw, Calendar } from "lucide-react";
+import { Search, SlidersHorizontal, Inbox, RotateCcw, Calendar, LayoutGrid, LayoutList, Filter } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { SearchFilters } from "@/components/scholarships/SearchFilters";
@@ -39,10 +39,15 @@ export function ScholarshipsBrowser({
     degree: searchParams.get("degree") || "",
     funding: searchParams.get("funding") || "",
     intake: searchParams.get("intake") || "",
+    status: searchParams.get("status") || "",
+    eligibleNationality: searchParams.get("eligibleNationality") || "",
+    applicationFee: searchParams.get("applicationFee") || "",
+    sortBy: searchParams.get("sortBy") || "relevance",
   });
 
   const [sortOption, setSortOption] = useState("relevance");
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   // Seeded from the server render, so the first paint is the real result set
   // rather than a skeleton and the result count is in the HTML.
   const [result, setResult] = useState<Paginated<PublicScholarship>>(initialResult);
@@ -64,6 +69,10 @@ export function ScholarshipsBrowser({
       degree: searchParams.get("degree") || "",
       funding: searchParams.get("funding") || "",
       intake: searchParams.get("intake") || "",
+      status: searchParams.get("status") || "",
+      eligibleNationality: searchParams.get("eligibleNationality") || "",
+      applicationFee: searchParams.get("applicationFee") || "",
+      sortBy: searchParams.get("sortBy") || "relevance",
     });
     setPage(1);
   }
@@ -103,6 +112,12 @@ export function ScholarshipsBrowser({
           });
         } else if (sortOption === "alphabetical") {
           sorted.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortOption === "newest") {
+          sorted.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        } else if (sortOption === "amount") {
+          sorted.sort((a, b) => (b.fundingAmount || 0) - (a.fundingAmount || 0));
+        } else if (sortOption === "fully-funded") {
+          sorted.sort((a, b) => (b.isFullyFunded ? 1 : 0) - (a.isFullyFunded ? 1 : 0));
         }
 
         setResult({
@@ -130,11 +145,26 @@ export function ScholarshipsBrowser({
     if (newFilters.degree) params.set("degree", newFilters.degree);
     if (newFilters.funding) params.set("funding", newFilters.funding);
     if (newFilters.intake) params.set("intake", newFilters.intake);
+    if (newFilters.status) params.set("status", newFilters.status);
+    if (newFilters.eligibleNationality) params.set("eligibleNationality", newFilters.eligibleNationality);
+    if (newFilters.applicationFee) params.set("applicationFee", newFilters.applicationFee);
+    if (newFilters.sortBy) params.set("sortBy", newFilters.sortBy);
     router.push(`/scholarships?${params.toString()}`);
   };
 
   const handleResetFilters = () => {
-    const empty = { query: "", country: "", field: "", degree: "", funding: "", intake: "" };
+    const empty = { 
+      query: "", 
+      country: "", 
+      field: "", 
+      degree: "", 
+      funding: "", 
+      intake: "",
+      status: "",
+      eligibleNationality: "",
+      applicationFee: "",
+      sortBy: "relevance"
+    };
     handleFilterChange(empty);
   };
 
@@ -143,15 +173,22 @@ export function ScholarshipsBrowser({
     handleFilterChange(filters);
   };
 
+  const handleViewChange = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", mode);
+    router.push(`/scholarships?${params.toString()}`);
+  };
+
   return (
-    <div className="bg-gray-50/50 min-h-screen py-8">
+    <div className="bg-secondary-50/50 min-h-screen py-8">
       <Container>
         {/* Page Title & Search Bar */}
         <div className="mb-8">
-          <h1 className="text-2xl font-extrabold text-gray-950 sm:text-3xl">
+          <h1 className="text-2xl font-extrabold text-secondary-950 sm:text-3xl">
             Explore Global Scholarships
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-secondary-600">
             Search verified opportunities from accredited universities, governments, and foundations.
           </p>
 
@@ -161,7 +198,7 @@ export function ScholarshipsBrowser({
               <label htmlFor="scholarship-search" className="sr-only">
                 Search scholarships by keyword
               </label>
-              <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-secondary-400" />
               <input
                 id="scholarship-search"
                 type="search"
@@ -169,7 +206,7 @@ export function ScholarshipsBrowser({
                 value={filters.query}
                 onChange={(e) => setFilters({ ...filters, query: e.target.value })}
                 placeholder="Search by keywords, e.g. 'Master in Computer Science Germany' or 'Chevening'..."
-                className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-10 pr-4 text-sm text-gray-900 shadow-xs transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                className="w-full rounded-xl border border-secondary-200 bg-white py-3 pl-10 pr-4 text-sm text-secondary-900 shadow-xs transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
             </div>
             <button
@@ -181,44 +218,66 @@ export function ScholarshipsBrowser({
           </form>
         </div>
 
-        {/* Top Control Bar: Total results & Sort */}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-xs">
+        {/* Top Control Bar: Total results, View Mode & Sort */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-secondary-200 bg-white p-4 shadow-card">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-gray-900 text-sm">{result.total}</span>
-            <span className="text-sm text-gray-600">scholarships found</span>
+            <span className="font-bold text-secondary-900 text-sm">{result.total}</span>
+            <span className="text-sm text-secondary-600">scholarships found</span>
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Mobile Filter Toggle Button. 44px min height keeps it a
-                comfortable thumb target, and aria-expanded tells a screen
-                reader that the panel below has opened. */}
+            {/* Mobile Filter Toggle Button */}
             <button
               onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
               aria-expanded={isMobileFilterOpen}
-              // Only referenced while it exists: the panel is unmounted when
-              // closed, and pointing at a missing element is worse than not
-              // pointing at all.
               aria-controls={isMobileFilterOpen ? "scholarship-filters" : undefined}
-              className="flex min-h-[44px] items-center gap-1.5 rounded-lg border border-gray-200 px-4 text-sm font-medium text-gray-700 hover:bg-gray-50 lg:hidden"
+              className="flex min-h-[44px] items-center gap-1.5 rounded-lg border border-secondary-200 px-4 text-sm font-medium text-secondary-700 hover:bg-secondary-50 lg:hidden"
             >
-              <SlidersHorizontal className="h-4 w-4" />
+              <Filter className="h-4 w-4" />
               Filters
+              {isMobileFilterOpen && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-100 px-1.5 text-[10px] font-bold text-primary-700">✕</span>}
             </button>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 text-xs hidden sm:flex">
+              <span className="text-secondary-500 font-medium">View:</span>
+              <div className="inline-flex rounded-lg border border-secondary-200 bg-white shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => handleViewChange("grid")}
+                  aria-label="Grid view"
+                  className={`p-2 text-sm transition-colors ${viewMode === "grid" ? "bg-primary-600 text-white" : "text-secondary-600 hover:bg-secondary-50"}`}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleViewChange("list")}
+                  aria-label="List view"
+                  className={`p-2 text-sm transition-colors ${viewMode === "list" ? "bg-primary-600 text-white" : "text-secondary-600 hover:bg-secondary-50"}`}
+                >
+                  <LayoutList className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
 
             {/* Sort options */}
             <div className="flex items-center gap-2 text-xs">
-              <label htmlFor="scholarship-sort" className="text-gray-500 font-medium">
+              <label htmlFor="scholarship-sort" className="text-secondary-500 font-medium">
                 Sort by:
               </label>
               <select
                 id="scholarship-sort"
                 value={sortOption}
                 onChange={(e) => setSortOption(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-gray-50/50 py-1.5 px-2.5 text-xs font-medium text-gray-800 focus:border-primary-500 focus:outline-none"
+                className="rounded-lg border border-secondary-200 bg-secondary-50/50 py-1.5 px-2.5 text-xs font-medium text-secondary-800 focus:border-primary-500 focus:outline-none"
               >
                 <option value="relevance">Relevance / Match</option>
                 <option value="deadline">Upcoming Deadline</option>
+                <option value="newest">Recently Added</option>
                 <option value="alphabetical">Alphabetical (A-Z)</option>
+                <option value="amount">Scholarship Amount (High-Low)</option>
+                <option value="fully-funded">Fully Funded First</option>
               </select>
             </div>
           </div>
@@ -263,15 +322,15 @@ export function ScholarshipsBrowser({
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="h-72 rounded-2xl bg-white border border-gray-200 animate-pulse p-5" />
+                  <div key={i} className="h-72 rounded-2xl bg-white border border-secondary-200 animate-pulse p-5" />
                 ))}
               </div>
             ) : result.data.length === 0 ? (
               /* Empty State */
-              <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center">
-                <Inbox className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <h3 className="text-base font-bold text-gray-900">No scholarships found</h3>
-                <p className="mt-1 text-sm text-gray-500 max-w-sm mx-auto">
+              <div className="rounded-2xl border border-dashed border-secondary-300 bg-white p-12 text-center">
+                <Inbox className="h-12 w-12 text-secondary-400 mx-auto mb-3" />
+                <h3 className="text-base font-bold text-secondary-900">No scholarships found</h3>
+                <p className="mt-1 text-sm text-secondary-500 max-w-sm mx-auto">
                   We couldn&apos;t find any opportunities matching your active filters. Try broadening your criteria or resetting filters.
                 </p>
                 <button
@@ -285,7 +344,7 @@ export function ScholarshipsBrowser({
             ) : (
               /* Results List */
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" : "space-y-4"}>
                   {result.data.map((sch) => (
                     <ScholarshipCard key={sch.id} scholarship={sch} />
                   ))}
@@ -297,17 +356,17 @@ export function ScholarshipsBrowser({
                     <button
                       disabled={page === 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50"
+                      className="rounded-lg border border-secondary-200 bg-white px-3 py-1.5 text-xs font-medium text-secondary-700 disabled:opacity-40 hover:bg-secondary-50"
                     >
                       Previous
                     </button>
-                    <span className="text-xs font-semibold text-gray-600 px-2">
+                    <span className="text-xs font-semibold text-secondary-600 px-2">
                       Page {page} of {result.totalPages}
                     </span>
                     <button
                       disabled={page === result.totalPages}
                       onClick={() => setPage((p) => Math.min(result.totalPages, p + 1))}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 disabled:opacity-40 hover:bg-gray-50"
+                      className="rounded-lg border border-secondary-200 bg-white px-3 py-1.5 text-xs font-medium text-secondary-700 disabled:opacity-40 hover:bg-secondary-50"
                     >
                       Next
                     </button>

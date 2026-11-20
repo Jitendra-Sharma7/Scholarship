@@ -24,14 +24,14 @@ export function RankingBadge({
   // Tiered colour by verified rank band.
   const tier =
     ranking <= 10
-      ? "bg-amber-50 border-amber-200 text-amber-800 ring-1 ring-amber-900/10"
+      ? "bg-warning-50 border-warning-200 text-warning-800 ring-1 ring-warning-900/10"
       : ranking <= 50
         ? "bg-primary-50 border-primary-200 text-primary-800 ring-1 ring-primary-900/10"
         : ranking <= 100
-          ? "bg-emerald-50 border-emerald-200 text-emerald-800 ring-1 ring-emerald-900/10"
+          ? "bg-success-50 border-success-200 text-success-800 ring-1 ring-success-900/10"
           : ranking <= 500
-            ? "bg-slate-50 border-slate-200 text-slate-700 ring-1 ring-slate-900/10"
-            : "bg-gray-50 border-gray-200 text-gray-700 ring-1 ring-gray-900/5";
+            ? "bg-secondary-50 border-secondary-200 text-secondary-700 ring-1 ring-secondary-900/10"
+            : "bg-secondary-50 border-secondary-200 text-secondary-700 ring-1 ring-secondary-900/5";
 
   return (
     <span
@@ -69,8 +69,8 @@ export function ScholarshipAvailabilityBadge({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
         available
-          ? "bg-emerald-50 border-emerald-200 text-emerald-800 ring-1 ring-emerald-900/10"
-          : "bg-gray-50 border-gray-200 text-gray-600 ring-1 ring-gray-900/5",
+          ? "bg-success-50 border-success-200 text-success-800 ring-1 ring-success-900/10"
+          : "bg-secondary-50 border-secondary-200 text-secondary-600 ring-1 ring-secondary-900/5",
         className
       )}
     >
@@ -81,7 +81,7 @@ export function ScholarshipAvailabilityBadge({
         </>
       ) : (
         <>
-          <span className="h-3 w-3 rounded-full bg-gray-300" />
+          <span className="h-3 w-3 rounded-full bg-secondary-300" />
           No scholarships listed
         </>
       )}

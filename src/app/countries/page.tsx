@@ -26,7 +26,7 @@ export default async function CountriesPage() {
   const countries = (await getPublicCountries()).map(toCountryCard);
 
   return (
-    <div className="bg-gray-50/50 min-h-screen py-10">
+    <div className="bg-secondary-50/50 min-h-screen py-10">
       <JsonLd
         data={itemListSchema({
           name: "Study destination countries",
@@ -46,10 +46,10 @@ export default async function CountriesPage() {
             <Globe className="h-3.5 w-3.5" />
             <span>Global Destinations</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-950">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-secondary-950">
             Scholarships by Destination Country
           </h1>
-          <p className="mt-2 text-sm text-gray-600 max-w-2xl">
+          <p className="mt-2 text-sm text-secondary-600 max-w-2xl">
             Explore government and university scholarship programs across top higher-education hubs
             worldwide.
           </p>

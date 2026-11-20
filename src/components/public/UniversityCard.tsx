@@ -81,7 +81,7 @@ export function UniversityCard({
     >
       <article
         className={cn(
-          "flex flex-col justify-between rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-xl hover:-translate-y-1",
+          "flex flex-col justify-between rounded-xl border border-secondary-200 bg-white shadow-card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1",
           isActive && "ring-2 ring-primary-500 bg-primary-50",
           "min-h-[560px]"
         )}
@@ -127,12 +127,12 @@ export function UniversityCard({
 
         <div className="p-5 flex flex-col flex-1">
           <div className="mb-1.5">
-            <h3 className="text-base font-bold text-gray-950 leading-tight line-clamp-2">
+            <h3 className="text-base font-bold text-secondary-950 leading-tight line-clamp-2">
               {university.name}
             </h3>
           </div>
 
-          <p className="flex items-center gap-1.5 text-xs text-gray-500 mb-3.5">
+          <p className="flex items-center gap-1.5 text-xs text-secondary-500 mb-3.5">
             <CountryFlag
               code={university.countryCode}
               name={university.country}
@@ -144,7 +144,7 @@ export function UniversityCard({
           </p>
 
           {university.description && (
-            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-3.5">
+            <p className="text-sm text-secondary-600 leading-relaxed line-clamp-2 mb-3.5">
               {university.description}
             </p>
           )}
@@ -155,7 +155,7 @@ export function UniversityCard({
                 {university.popularFields.slice(0, 4).map((field) => (
                   <span
                     key={field}
-                    className="rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-medium text-gray-600 uppercase tracking-wider"
+                    className="rounded-md border border-secondary-200 bg-secondary-50 px-2 py-0.5 text-[10px] font-medium text-secondary-600 uppercase tracking-wider"
                     title={field}
                   >
                     {field}
@@ -164,26 +164,26 @@ export function UniversityCard({
               </div>
             )}
             {levels.length > 0 && (
-              <div className="mt-2.5 flex items-center gap-1.5 text-xs text-gray-500">
+              <div className="mt-2.5 flex items-center gap-1.5 text-xs text-secondary-500">
                 <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-                <span className="font-medium text-gray-700">Study levels:</span>{" "}
+                <span className="font-medium text-secondary-700">Study levels:</span>{" "}
                 <span className="truncate">
                   {levels.join(", ")}
                 </span>
               </div>
             )}
-            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-gray-500">
+            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-secondary-500">
               <Globe className="h-3.5 w-3.5 shrink-0" />
-              <span className="font-medium text-gray-700">International students:</span>{" "}
+              <span className="font-medium text-secondary-700">International students:</span>{" "}
               <span>
                 {university.internationalStudentPercent != null
                   ? `${university.internationalStudentPercent}%`
                   : "Not available"}
               </span>
             </div>
-            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-gray-500">
+            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-secondary-500">
               <Users className="h-3.5 w-3.5 shrink-0" />
-              <span className="font-medium text-gray-700">Student population:</span>{" "}
+              <span className="font-medium text-secondary-700">Student population:</span>{" "}
               <span>
                 {university.studentCount
                   ? formatNumber(university.studentCount)
@@ -193,7 +193,7 @@ export function UniversityCard({
           </div>
         </div>
 
-        <footer className="p-4 border-t border-gray-100 bg-gray-50/50 rounded-b-xl">
+        <footer className="p-4 border-t border-secondary-100 bg-secondary-50/50 rounded-b-xl">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
               <ScholarshipAvailabilityBadge
@@ -212,7 +212,7 @@ export function UniversityCard({
               {university.website && (
                 <button
                   onClick={handleExternalClick}
-                  className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                  className="rounded-lg p-2 text-secondary-400 transition-colors hover:bg-secondary-100 hover:text-secondary-900"
                   aria-label={`Official website of ${university.name}`}
                   title="Official website"
                 >

@@ -545,10 +545,7 @@ export async function getPublicUniversities({
         ? {
             scholarships: {
               where: VISIBLE,
-              select: {
-                id: true,
-                degreeLevels: true,
-                deadline: true,
+              include: {
                 intakes: {
                   include: { intake: true },
                 },
@@ -601,11 +598,11 @@ export async function getPublicUniversities({
     createdAt: u.createdAt,
     ...(includeScholarships
       ? {
-          scholarships: u.scholarships.map((s) => ({
+          scholarships: (u.scholarships as unknown as { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[]).map((s) => ({
             id: s.id,
             degreeLevels: s.degreeLevels,
             deadline: s.deadline,
-            intakes: (s.intakes as { intake: { name: string; slug: string } }[]).map((link) => ({
+            intakes: s.intakes.map((link) => ({
               intake: { name: link.intake.name, slug: link.intake.slug },
             })),
           })),
@@ -746,6 +743,8 @@ export interface ScholarshipQuery {
   degree?: string;
   funding?: string;
   status?: string;
+  eligibleNationality?: string;
+  applicationFee?: string;
   fullyFunded?: boolean;
   featured?: boolean;
   university?: string;
@@ -754,7 +753,7 @@ export interface ScholarshipQuery {
   limit?: number;
   /** Internal: the Top Opportunities section. */
   featuredOnly?: boolean;
-  sort?: "deadline" | "newest" | "title" | "featured";
+  sort?: "deadline" | "newest" | "title" | "featured" | "alphabetical" | "amount" | "fully-funded";
 }
 
 export interface Paginated<T> {
@@ -776,6 +775,8 @@ export async function getPublicScholarships(
     degree,
     funding,
     status,
+    eligibleNationality,
+    applicationFee,
     fullyFunded,
     featured,
     university,
@@ -806,6 +807,25 @@ export async function getPublicScholarships(
   if (degree) where.degreeLevels = { has: degree };
   if (field && field !== "all") where.fields = { some: { fieldId: field } };
   if (intake) where.intakes = { some: { intake: { slug: intake } } };
+
+  // Eligible nationality filter
+  if (eligibleNationality && eligibleNationality !== "all") {
+    if (eligibleNationality === "international") {
+      where.eligibleCountries = { hasSome: ["international", "all", "International", "All"] };
+    } else if (eligibleNationality === "specific") {
+      // Countries with specific eligibility (not open to all)
+      where.NOT = { eligibleCountries: { hasSome: ["international", "all", "International", "All"] } };
+    }
+  }
+
+  // Application fee filter
+  if (applicationFee && applicationFee !== "all") {
+    if (applicationFee === "free") {
+      where.applicationFee = { lte: 0 };
+    } else if (applicationFee === "paid") {
+      where.applicationFee = { gt: 0 };
+    }
+  }
 
   // Status is derived from the deadline, so it is filtered in SQL rather than
   // in memory. Filtering after pagination would let a page of already-expired
@@ -858,7 +878,13 @@ export async function getPublicScholarships(
         ? { title: "asc" as const }
         : sort === "featured"
           ? [{ featuredOrder: "asc" as const }, { createdAt: "desc" as const }]
-          : { deadline: "asc" as const };
+          : sort === "alphabetical"
+            ? { title: "asc" as const }
+            : sort === "amount"
+              ? { fundingAmount: "desc" as const }
+              : sort === "fully-funded"
+                ? { isFullyFunded: "desc" as const }
+                : { deadline: "asc" as const };
 
   const [rows, total] = await Promise.all([
     prisma.scholarship.findMany({

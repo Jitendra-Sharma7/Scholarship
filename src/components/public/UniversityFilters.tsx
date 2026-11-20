@@ -126,20 +126,20 @@ export function UniversityFilters({
   ];
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="rounded-xl border border-secondary-200 bg-white shadow-card">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
         className={cn(
-          "flex w-full items-center justify-between gap-2 rounded-t-xl border-b border-b-gray-200 bg-gray-50/50 px-5 py-3.5 text-left transition-colors hover:bg-gray-100",
+          "flex w-full items-center justify-between gap-2 rounded-t-xl border-b border-b-secondary-200 bg-secondary-50/50 px-5 py-3.5 text-left transition-colors hover:bg-secondary-100",
           !expanded && "rounded-b-xl"
         )}
         aria-expanded={expanded}
         aria-controls="university-filters-panel"
       >
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-gray-500" />
-          <span className="font-semibold text-gray-900">Filters</span>
+          <Filter className="h-4 w-4 text-secondary-500" />
+          <span className="font-semibold text-secondary-900">Filters</span>
           {hasActiveFilters && (
             <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-primary-100 px-1.5 text-[10px] font-bold text-primary-700">
               {Object.values(values).filter(
@@ -149,7 +149,7 @@ export function UniversityFilters({
           )}
         </div>
         <ChevronDown
-          className={cn("h-4 w-4 text-gray-400 transition-transform", expanded && "rotate-180")}
+          className={cn("h-4 w-4 text-secondary-400 transition-transform", expanded && "rotate-180")}
         />
       </button>
 
@@ -160,7 +160,7 @@ export function UniversityFilters({
               <div key={section.key}>
                 <div className="flex items-center gap-2 mb-2">
                   {section.icon}
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-secondary-500">
                     {section.label}
                   </span>
                 </div>
@@ -170,7 +170,7 @@ export function UniversityFilters({
                     onChange={(e) =>
                       onFilterChange({ [section.key]: e.target.value })
                     }
-                    className="min-h-[42px] w-full appearance-none rounded-lg border border-gray-300 bg-white pl-3 pr-9 py-2 text-sm text-gray-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
+                    className="min-h-[42px] w-full appearance-none rounded-lg border border-secondary-300 bg-white pl-3 pr-9 py-2 text-sm text-secondary-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1"
                   >
                     <option value="all">{section.placeholder}</option>
                     {section.options.map((opt) => (
@@ -180,7 +180,7 @@ export function UniversityFilters({
                     ))}
                   </select>
                   <ChevronDown
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary-400 pointer-events-none"
                   />
                 </div>
               </div>

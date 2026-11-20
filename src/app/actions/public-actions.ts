@@ -60,7 +60,7 @@ function allowlisted<T extends string>(value: string | undefined, allowed: reado
   return allowed.includes(value as T) ? (value as T) : undefined;
 }
 
-const SORTS = ["deadline", "newest", "title", "featured"] as const;
+const SORTS = ["deadline", "newest", "title", "featured", "alphabetical", "amount", "fully-funded"] as const;
 
 function sanitiseFilters(input: Partial<ScholarshipQuery>): ScholarshipQuery {
   return {
@@ -70,6 +70,9 @@ function sanitiseFilters(input: Partial<ScholarshipQuery>): ScholarshipQuery {
     degree: input.degree?.slice(0, 80) || undefined,
     funding: input.funding?.slice(0, 40) || undefined,
     status: input.status?.slice(0, 40) || undefined,
+    eligibleNationality: input.eligibleNationality?.slice(0, 40) || undefined,
+    applicationFee: input.applicationFee?.slice(0, 40) || undefined,
+    intake: input.intake?.slice(0, 80) || undefined,
     page: typeof input.page === "number" && input.page > 0 ? Math.trunc(input.page) : 1,
     limit: clampLimit(input.limit),
     sort: allowlisted(input.sort, SORTS),

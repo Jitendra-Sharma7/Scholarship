@@ -30,7 +30,7 @@ export function UniversityRow({ university }: UniversityRowProps) {
   return (
     <Link
       href={`/universities/${university.slug ?? university.id}`}
-      className="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-3 transition-all hover:bg-gray-50 hover:shadow-sm"
+      className="flex items-center gap-4 rounded-xl border border-secondary-200 bg-white p-3 transition-all hover:bg-secondary-50 hover:shadow-card"
       prefetch={true}
     >
       <div className="shrink-0 relative">
@@ -54,12 +54,12 @@ export function UniversityRow({ university }: UniversityRowProps) {
 
       <div className="flex-1 min-w-0">
         <div className="flex flex-wrap items-center gap-1.5 mb-1">
-          <h3 className="text-sm font-bold text-gray-950 leading-tight line-clamp-1">
+          <h3 className="text-sm font-bold text-secondary-950 leading-tight line-clamp-1">
             {university.name}
           </h3>
           <NewlyAddedBadge createdAt={university.createdAt} className="text-[9px]" />
         </div>
-        <p className="flex items-center gap-1.5 text-xs text-gray-500 mb-2">
+        <p className="flex items-center gap-1.5 text-xs text-secondary-500 mb-2">
           <CountryFlag
             code={university.countryCode}
             name={university.country}
@@ -68,28 +68,28 @@ export function UniversityRow({ university }: UniversityRowProps) {
           <span className="truncate" title={countryLabel ?? undefined}>{countryLabel}</span>
         </p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1.5 text-xs text-gray-600">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1.5 text-xs text-secondary-600">
           <div className="flex items-center gap-1">
-            <Trophy className="h-3 w-3 shrink-0 text-gray-400" />
-            <span className="font-medium text-gray-800">
+            <Trophy className="h-3 w-3 shrink-0 text-secondary-400" />
+            <span className="font-medium text-secondary-800">
               {university.qsRanking ? `#${university.qsRanking} QS` : "—"}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="h-3 w-3 rounded-full bg-gray-300 shrink-0" />
-            <span className="font-medium text-gray-800">
+            <div className="h-3 w-3 rounded-full bg-secondary-300 shrink-0" />
+            <span className="font-medium text-secondary-800">
               {university.theRanking ? `#${university.theRanking} THE` : "—"}
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <Star className="h-3 w-3 shrink-0 text-gray-400" />
-            <span className="font-medium text-gray-800">
+            <Star className="h-3 w-3 shrink-0 text-secondary-400" />
+            <span className="font-medium text-secondary-800">
               {university.scholarshipCount} scholarships
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <MapPin className="h-3 w-3 shrink-0 text-gray-400" />
-            <span className="font-medium text-gray-800">
+            <MapPin className="h-3 w-3 shrink-0 text-secondary-400" />
+            <span className="font-medium text-secondary-800">
               {university.internationalStudentPercent != null
                 ? `${university.internationalStudentPercent}% intl`
                 : "—"}
@@ -97,7 +97,7 @@ export function UniversityRow({ university }: UniversityRowProps) {
           </div>
         </div>
 
-        <div className="mt-2.5 text-sm text-gray-500 line-clamp-1">
+        <div className="mt-2.5 text-sm text-secondary-500 line-clamp-1">
           {university.popularFields.slice(0, 3).join(", ") || "No subject areas listed"}
         </div>
       </div>
@@ -107,7 +107,7 @@ export function UniversityRow({ university }: UniversityRowProps) {
         {university.website && (
           <button
             onClick={handleExternalClick}
-            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            className="rounded-lg p-2 text-secondary-400 transition-colors hover:bg-secondary-100 hover:text-secondary-900"
             aria-label={`Official website of ${university.name}`}
             title="Official website"
           >
