@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Bookmark, Layers } from "lucide-react";
+import { Bookmark, Layers, GraduationCap, MapPin } from "lucide-react";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { useStore } from "@/lib/store/useStore";
 import type { PublicScholarship } from "@/lib/data/public";
@@ -32,12 +32,6 @@ export function ScholarshipCard({
   const saved = isSaved(scholarship.id);
   const isCompared = compareIds.includes(scholarship.id);
 
-  // Country, provider and university names travel with the record, so the card
-  // needs no client-side lookup table.
-
-  // Null until mounted, so the deadline badge renders identically on the server
-  // pass and after hydration. Urgency is derived from the same `daysLeft` value
-  // rather than re-reading the clock, so the colour and the countdown agree.
   const now = useNow();
   const daysLeft = now === null ? null : daysUntilFrom(now, scholarship.deadline);
   const urgency: ReturnType<typeof getDeadlineUrgency> =
@@ -79,18 +73,29 @@ export function ScholarshipCard({
   const getFundingBadgeStyle = (type: string) => {
     switch (type) {
       case "fully-funded":
-        return "bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold";
+        return "bg-success-50 text-success-700 border-success-200 font-semibold";
       case "fully-tuition":
-        return "bg-blue-50 text-blue-700 border-blue-200";
+        return "bg-primary-50 text-primary-700 border-primary-200";
       case "partial-tuition":
-        return "bg-amber-50 text-amber-700 border-amber-200";
+        return "bg-warning-50 text-warning-700 border-warning-200";
       default:
         return "bg-purple-50 text-purple-700 border-purple-200";
     }
   };
 
   return (
-    <div className="group relative flex flex-col justify-between rounded-2xl border border-gray-200/90 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md">
+    <div className="group relative flex flex-col justify-between rounded-2xl border border-secondary-200/90 bg-white p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary-300 hover:shadow-card-hover">
+      {/* Scholarship Image/Provider Logo */}
+      {(scholarship.coverImage || scholarship.logo) && (
+        <div className="mb-4 -mx-5 -mt-5 rounded-t-2xl overflow-hidden">
+          <img
+            src={scholarship.coverImage || scholarship.logo || ""}
+            alt={scholarship.providerName || "Scholarship"}
+            className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+      )}
+
       <div>
         {/* Top Badges & Meta */}
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -102,7 +107,7 @@ export function ScholarshipCard({
 
             {/* Verification Badge */}
             <span
-              className="inline-flex items-center gap-1 rounded-md border border-gray-100 bg-gray-50 px-2 py-0.5 text-xs text-gray-600"
+              className="inline-flex items-center gap-1 rounded-md border border-secondary-100 bg-secondary-50 px-2 py-0.5 text-xs text-secondary-600"
               title={`Source: ${scholarship.providerName || "Official Provider"} (Verified ${formatDate(scholarship.lastVerifiedAt)})`}
             >
               <span className="text-[10px]">{verification.icon}</span>
@@ -112,13 +117,14 @@ export function ScholarshipCard({
 
           {/* Match Indicator if present */}
           {matchScore !== undefined && (
-            <div className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+            <div className={cn(
+              "flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold",
               matchScore >= 80
-                ? "bg-emerald-100 text-emerald-800"
+                ? "bg-success-100 text-success-800"
                 : matchScore >= 60
-                ? "bg-blue-100 text-blue-800"
-                : "bg-amber-100 text-amber-800"
-            }`}>
+                ? "bg-primary-100 text-primary-800"
+                : "bg-warning-100 text-warning-800"
+            )}>
               <span>{matchScore}%</span>
               <span>match</span>
             </div>
@@ -127,20 +133,20 @@ export function ScholarshipCard({
 
         {/* Title */}
         <Link href={`/scholarships/${scholarship.slug}`} className="group-hover:text-primary-600">
-          <h3 className="text-lg font-bold leading-snug text-gray-900 transition-colors">
+          <h3 className="text-lg font-bold leading-snug text-secondary-900 transition-colors">
             {scholarship.title}
           </h3>
         </Link>
 
         {/* Provider & University */}
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-secondary-600">
           {scholarship.providerName || "Official Organization"}
           {scholarship.universityName && ` • ${scholarship.universityName}`}
         </p>
 
         {/* Key Info Pills */}
-        <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-gray-600 sm:grid-cols-3">
-          <div className="flex items-center gap-1.5 rounded-lg bg-gray-50 p-2">
+        <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-secondary-600 sm:grid-cols-3">
+          <div className="flex items-center gap-1.5 rounded-lg bg-secondary-50 p-2">
             <CountryFlag
               code={scholarship.countryCode}
               name={scholarship.countryName ?? undefined}
@@ -151,13 +157,14 @@ export function ScholarshipCard({
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 rounded-lg bg-gray-50 p-2">
+          <div className="flex items-center gap-1.5 rounded-lg bg-secondary-50 p-2">
+            <GraduationCap className="h-3.5 w-3.5 text-secondary-400 shrink-0" />
             <span className="truncate" title={scholarship.degreeLevels.join(", ")}>
               {scholarship.degreeLevels.join(", ")}
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5 rounded-lg bg-gray-50 p-2 col-span-2 sm:col-span-1">
+          <div className="flex items-center gap-1.5 rounded-lg bg-secondary-50 p-2 col-span-2 sm:col-span-1">
             <span
               className={cn(
                 "truncate rounded-md px-1.5 py-0.5 font-medium",
@@ -172,41 +179,43 @@ export function ScholarshipCard({
 
         {/* Match Reasons snippet if available */}
         {matchReasons && matchReasons.length > 0 && (
-          <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/50 p-2.5 text-xs text-emerald-900">
-            <span className="font-semibold text-emerald-800">Why this matches: </span>
+          <div className="mt-3 rounded-lg border border-success-100 bg-success-50/50 p-2.5 text-xs text-success-900">
+            <span className="font-semibold text-success-800">Why this matches: </span>
             <span>{matchReasons[0]}</span>
           </div>
         )}
 
         {/* Short Description */}
-        <p className="mt-3 text-xs leading-relaxed text-gray-500 line-clamp-2">
+        <p className="mt-3 text-xs leading-relaxed text-secondary-500 line-clamp-2">
           {scholarship.description}
         </p>
       </div>
 
       {/* Footer Actions */}
-      <div className="mt-5 border-t border-gray-100 pt-3.5 flex items-center justify-between gap-2">
+      <div className="mt-5 border-t border-secondary-100 pt-3.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
           <button
             onClick={handleSave}
             title={saved ? "Remove from saved" : "Save scholarship"}
-            className={`rounded-lg p-2 transition-colors ${
+            className={cn(
+              "rounded-lg p-2 transition-colors",
               saved
                 ? "bg-primary-50 text-primary-600"
-                : "text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-            }`}
+                : "text-secondary-400 hover:bg-secondary-100 hover:text-secondary-700"
+            )}
           >
-            <Bookmark className={`h-4 w-4 ${saved ? "fill-primary-600" : ""}`} />
+            <Bookmark className={cn("h-4 w-4", saved ? "fill-primary-600" : "")} />
           </button>
 
           <button
             onClick={handleCompare}
             title={isCompared ? "Remove from comparison" : "Compare with others"}
-            className={`rounded-lg p-2 transition-colors ${
+            className={cn(
+              "rounded-lg p-2 transition-colors",
               isCompared
                 ? "bg-indigo-50 text-indigo-600"
-                : "text-gray-400 hover:bg-gray-100 hover:text-gray-700"
-            }`}
+                : "text-secondary-400 hover:bg-secondary-100 hover:text-secondary-700"
+            )}
           >
             <Layers className="h-4 w-4" />
           </button>
@@ -215,7 +224,7 @@ export function ScholarshipCard({
         <div className="flex items-center gap-2">
           <button
             onClick={handleTrack}
-            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-secondary-200 px-3 py-1.5 text-xs font-medium text-secondary-700 hover:bg-secondary-50"
           >
             Track
           </button>

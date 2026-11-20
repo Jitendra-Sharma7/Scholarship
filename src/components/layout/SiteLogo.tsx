@@ -44,7 +44,7 @@ export function SiteLogo({
       <span
         className={cn(
           "hidden text-lg font-bold sm:inline xl:text-xl",
-          tone === "light" ? "text-white" : "text-gray-900"
+          tone === "light" ? "text-white" : "text-secondary-900"
         )}
       >
         Global Scholarship Hub

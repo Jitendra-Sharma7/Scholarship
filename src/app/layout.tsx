@@ -2,7 +2,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-import { Inter, Merriweather } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { Providers } from "./providers";
 import { SiteChrome } from "@/components/layout/SiteChrome";
@@ -26,13 +26,6 @@ import {
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap",
-});
-
-const merriweather = Merriweather({
-  subsets: ["latin"],
-  weight: ["300", "400", "700"],
-  variable: "--font-merriweather",
   display: "swap",
 });
 
@@ -178,9 +171,9 @@ export default async function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${inter.variable} ${merriweather.variable}`}
+      className={`${inter.variable}`}
     >
-      <body className="font-sans antialiased bg-white text-gray-900">
+      <body className="font-sans antialiased bg-white text-secondary-900">
 
         {/* Website structured data */}
         <JsonLd data={webSiteSchema()} />
