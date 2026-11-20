@@ -110,11 +110,12 @@ const navItems: NavItem[] = [
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileOpenDropdown, setMobileOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const closeTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const isAuthenticated = useStore((s) => s.isAuthenticated);
   const userName = useStore((s) => s.user?.name ?? null);
@@ -138,12 +139,12 @@ export function Header() {
   }, [isMobileMenuOpen]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMobileMenuOpen(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setOpenDropdown(null);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMobileOpenDropdown(null);
+    const timer = setTimeout(() => {
+      setIsMobileMenuOpen(false);
+      setActiveDropdown(null);
+      setMobileOpenDropdown(null);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   const handleLogout = () => {
@@ -155,7 +156,7 @@ export function Header() {
   const handleOutsideClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement;
     let clickedInside = false;
-    
+
     Object.values(dropdownRefs.current).forEach((ref) => {
       if (ref && ref.contains(target)) {
         clickedInside = true;
@@ -173,7 +174,7 @@ export function Header() {
     }
 
     if (!clickedInside) {
-      setOpenDropdown(null);
+      setActiveDropdown(null);
       setMobileOpenDropdown(null);
     }
   };
@@ -185,7 +186,7 @@ export function Header() {
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Escape") {
-      setOpenDropdown(null);
+      setActiveDropdown(null);
       setMobileOpenDropdown(null);
       setIsMobileMenuOpen(false);
     }
@@ -193,6 +194,20 @@ export function Header() {
 
   const isActive = (href: string) => {
     return pathname === href || pathname?.startsWith(href + "/");
+  };
+
+  const handleMouseEnter = (label: string) => {
+    if (closeTimerRef.current[label]) {
+      clearTimeout(closeTimerRef.current[label]);
+      closeTimerRef.current[label] = null as unknown as NodeJS.Timeout;
+    }
+    setActiveDropdown(label);
+  };
+
+  const handleMouseLeave = (label: string) => {
+    closeTimerRef.current[label] = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 100);
   };
 
   return (
@@ -211,17 +226,17 @@ export function Header() {
             {navItems.map((item) => {
               const Icon = item.icon;
               const hasDropdown = item.dropdown && item.dropdown.length > 0;
-              const isOpen = openDropdown === item.label;
+              const isOpen = activeDropdown === item.label;
 
               return (
                 <div
                   key={item.label}
                   className="relative"
                   role="menuitem"
-                  onMouseEnter={() => hasDropdown && setOpenDropdown(item.label)}
-                  onMouseLeave={() => hasDropdown && setOpenDropdown(null)}
-                  onFocus={() => hasDropdown && setOpenDropdown(item.label)}
-                  onBlur={() => hasDropdown && setTimeout(() => setOpenDropdown(null), 100)}
+                  onMouseEnter={() => hasDropdown && handleMouseEnter(item.label)}
+                  onMouseLeave={() => hasDropdown && handleMouseLeave(item.label)}
+                  onFocus={() => hasDropdown && handleMouseEnter(item.label)}
+                  onBlur={() => hasDropdown && handleMouseLeave(item.label)}
                 >
                   <Link
                     href={item.href}
@@ -229,7 +244,8 @@ export function Header() {
                       "flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                       isActive(item.href)
                         ? "bg-primary-50 text-primary-700"
-                        : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
+                        : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900",
+                      isOpen && "bg-primary-50 text-primary-700"
                     )}
                     aria-haspopup={hasDropdown}
                     aria-expanded={isOpen}
@@ -239,7 +255,7 @@ export function Header() {
                     {hasDropdown && (
                       <ChevronDown
                         className={cn(
-                          "h-4 w-4 transition-transform",
+                          "h-4 w-4 transition-transform duration-200",
                           isOpen && "rotate-180"
                         )}
                         aria-hidden="true"
@@ -250,10 +266,10 @@ export function Header() {
                   {hasDropdown && (
                     <div
                       ref={(el) => { dropdownRefs.current[item.label] = el; }}
-                      className="absolute left-0 top-full mt-1.5 min-w-[220px] rounded-xl border border-secondary-200 bg-white py-2 shadow-card-elevated animate-slide-in z-50"
+                      className="absolute left-0 top-full mt-1.5 min-w-[220px] rounded-xl border border-secondary-200 bg-white py-2 shadow-card-elevated z-50 animate-slide-in"
                       role="menu"
-                      onMouseEnter={() => setOpenDropdown(item.label)}
-                      onMouseLeave={() => setOpenDropdown(null)}
+                      onMouseEnter={() => handleMouseEnter(item.label)}
+                      onMouseLeave={() => handleMouseLeave(item.label)}
                     >
                       {item.dropdown?.map((ddItem) => (
                         <Link
@@ -266,7 +282,7 @@ export function Header() {
                               ? "bg-primary-50 text-primary-700 font-medium"
                               : "hover:bg-secondary-50 hover:text-secondary-900"
                           )}
-                          onClick={() => setOpenDropdown(null)}
+                          onClick={() => setActiveDropdown(null)}
                         >
                           <span className="relative">
                             {isActive(ddItem.href) && (
@@ -350,13 +366,17 @@ export function Header() {
 
                 return (
                   <div key={item.label} className="relative">
-                    <Link
-                      href={item.href}
+                    <button
+                      type="button"
                       onClick={() => {
-                        if (!hasDropdown) setIsMobileMenuOpen(false);
+                        if (!hasDropdown) {
+                          setIsMobileMenuOpen(false);
+                        } else {
+                          setMobileOpenDropdown(isMobileOpen ? null : item.label);
+                        }
                       }}
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium",
+                        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-left",
                         isActive(item.href)
                           ? "bg-primary-50 text-primary-700"
                           : "text-secondary-600 hover:bg-secondary-100"
@@ -369,13 +389,13 @@ export function Header() {
                       {hasDropdown && (
                         <ChevronRight
                           className={cn(
-                            "ml-auto h-5 w-5 shrink-0 transition-transform",
+                            "ml-auto h-5 w-5 shrink-0 transition-transform duration-200",
                             isMobileOpen && "rotate-90"
                           )}
                           aria-hidden="true"
                         />
                       )}
-                    </Link>
+                    </button>
 
                     {hasDropdown && (
                       <div
