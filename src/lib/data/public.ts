@@ -564,7 +564,16 @@ export async function getPublicUniversities({
     },
   });
 
-  return rows.map((u) => ({
+  // De-duplicate by name (case-insensitive) to prevent duplicate universities.
+  const seen = new Set<string>();
+  const uniqueRows = rows.filter((u) => {
+    const key = (u.name ?? "").trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return uniqueRows.map((u) => ({
     id: u.id,
     name: u.name,
     country: u.country?.name ?? u.countryNameLegacy ?? "",
