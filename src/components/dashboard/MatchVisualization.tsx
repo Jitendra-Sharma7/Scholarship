@@ -173,7 +173,6 @@ function calculateMatchBreakdown(
     const studentField = profile.field.toLowerCase().trim();
     const scholarshipFields = [
       ...(scholarship.fields || []).map((f: string) => f.toLowerCase()),
-      ...(scholarship.fieldLabels || []).map((f: string) => f.toLowerCase()),
     ].filter(Boolean);
 
     const fieldMatch = scholarshipFields.some((sf: string) =>

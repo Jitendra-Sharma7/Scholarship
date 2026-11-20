@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bookmark, Target, TrendingUp, Calendar, Award, Settings, LogOut, Search, AlertCircle } from "lucide-react";
+import { Bookmark, Target, TrendingUp, Calendar, Award, Settings, LogOut, Search, AlertCircle, Brain } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { useStore } from "@/lib/store/useStore";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
@@ -11,6 +11,7 @@ import { fetchPublicScholarshipsByIds } from "@/app/actions/public-actions";
 import type { PublicScholarship } from "@/lib/data/public";
 import { formatDate } from "@/lib/utils";
 import { useNow, daysUntilFrom } from "@/lib/useNow";
+import { MatchVisualization } from "@/components/dashboard/MatchVisualization";
 
 /**
  * The student's dashboard. The recommended shortlist is supplied by the server
@@ -211,6 +212,14 @@ export function DashboardClient({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content: 2 cols */}
           <div className="lg:col-span-2 space-y-8">
+            {/* Smart Match Visualization */}
+            <div>
+              <MatchVisualization
+                scholarships={recommendedScholarships}
+                maxItems={5}
+              />
+            </div>
+
             {/* Recommended For You */}
             <div>
               <div className="mb-4 flex items-center justify-between">
