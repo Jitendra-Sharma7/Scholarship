@@ -18,7 +18,6 @@ import { HowItWorks } from "@/app/HowItWorks";
 import { VerificationTransparency } from "@/app/VerificationTransparency";
 import { DeadlineAlerts } from "@/app/DeadlineAlerts";
 import { NewsletterSection } from "@/app/NewsletterSection";
-import { Footer } from "@/components/layout/Footer";
 
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -305,8 +304,6 @@ export default async function HomePage() {
       />
 
       <NewsletterSection />
-
-      <Footer />
     </div>
   );
 }

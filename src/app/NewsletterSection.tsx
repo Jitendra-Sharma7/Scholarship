@@ -106,7 +106,7 @@ export function NewsletterSection() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email address"
+                      placeholder=""
                       className="w-full rounded-xl border border-secondary-200 bg-white px-4 py-3.5 text-base text-secondary-900 placeholder:text-secondary-400 transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none disabled:bg-secondary-50"
                       disabled={status === "loading" || status === "success"}
                       autoComplete="email"
@@ -126,7 +126,6 @@ export function NewsletterSection() {
                     ) : (
                       <>
                         <Mail className="h-5 w-5" />
-                        Subscribe
                         <ArrowRight className="h-5 w-5" />
                       </>
                     )}

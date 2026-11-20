@@ -30,7 +30,7 @@ export function DeadlineAlertsSignup() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email address"
+          placeholder=""
           aria-label="Email address"
           className="w-full rounded-xl bg-gray-800 border border-gray-700 px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
         />
@@ -38,11 +38,10 @@ export function DeadlineAlertsSignup() {
           type="submit"
           className="rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-700 shrink-0"
         >
-          Subscribe
         </button>
       </form>
 
-      {prompted ? (
+      {prompted && (
         <p className="mx-auto mt-3 max-w-md text-center text-xs text-gray-300">
           Deadline alerts are tied to an account so they can be sent to you.{" "}
           <Link href="/auth/register" className="font-semibold text-primary-300 underline">
@@ -53,10 +52,6 @@ export function DeadlineAlertsSignup() {
             sign in
           </Link>{" "}
           if you already have one.
-        </p>
-      ) : (
-        <p className="mx-auto mt-3 max-w-md text-center text-xs text-gray-400">
-          Alerts are managed from your account. We never sell or share your address.
         </p>
       )}
     </div>
