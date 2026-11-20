@@ -27,6 +27,7 @@ import {
   getPublicScholarships,
   getPublicStats,
   getPublicUniversities,
+  getPublicIntakes,
   type ScholarshipQuery,
   type PublicCountry,
   type PublicField,
@@ -111,6 +112,10 @@ export async function fetchPublicUniversities(limit?: number): Promise<PublicUni
 
 export async function fetchPublicProviders(): Promise<PublicProvider[]> {
   return getPublicProviders();
+}
+
+export async function fetchPublicIntakes() {
+  return getPublicIntakes();
 }
 
 export async function fetchPublicStats(): Promise<PublicStats> {

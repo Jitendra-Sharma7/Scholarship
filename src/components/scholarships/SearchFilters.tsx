@@ -11,6 +11,7 @@ interface FilterState {
   field: string;
   degree: string;
   funding: string;
+  intake: string;
 }
 
 interface SearchFiltersProps {
@@ -24,6 +25,7 @@ interface SearchFiltersProps {
    */
   countries: PublicCountryOption[];
   fields: PublicField[];
+  intakes: { id: string; name: string; slug: string }[];
 }
 
 export function SearchFilters({
@@ -31,7 +33,8 @@ export function SearchFilters({
   onChange,
   onReset,
   countries,
-  fields
+  fields,
+  intakes
 }: SearchFiltersProps) {
   const germany = countries.find((c) => c.id === "de");
   const computerScience = fields.find((f) => f.id === "cs");
@@ -53,6 +56,11 @@ export function SearchFilters({
     { value: "stipend", label: "Monthly Stipend / Allowance" },
   ];
 
+  const intakeOptions = [
+    { value: "", label: "All Intakes" },
+    ...intakes.map((i) => ({ value: i.slug, label: i.name })),
+  ];
+
   const handleSelect = (key: keyof FilterState, value: string) => {
     onChange({
       ...filters,
@@ -70,7 +78,7 @@ export function SearchFilters({
   const controlId = (name: string) => `${id}-filter-${name}`;
 
   const hasActiveFilters = Boolean(
-    filters.query || filters.country || filters.field || filters.degree || filters.funding
+    filters.query || filters.country || filters.field || filters.degree || filters.funding || filters.intake
   );
 
   return (
@@ -154,6 +162,28 @@ export function SearchFilters({
           {fields.map((f) => (
             <option key={f.id} value={f.id}>
               {f.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Intake */}
+      <div className="space-y-2">
+        <label
+          htmlFor={controlId("intake")}
+          className="text-xs font-semibold uppercase tracking-wider text-gray-500"
+        >
+          Academic Intake
+        </label>
+        <select
+          id={controlId("intake")}
+          value={filters.intake}
+          onChange={(e) => handleSelect("intake", e.target.value)}
+          className="w-full rounded-xl border border-gray-200 bg-gray-50/50 p-2.5 text-sm text-gray-800 transition-colors focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
+        >
+          {intakeOptions.map((i) => (
+            <option key={i.value} value={i.value}>
+              {i.label}
             </option>
           ))}
         </select>

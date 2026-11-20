@@ -4,6 +4,7 @@ import {
   getPublicCountryOptions,
   getPublicFields,
   getPublicScholarships,
+  getPublicIntakes,
 } from "@/lib/data/public";
 import { SCHOLARSHIP_PAGE_SIZE } from "@/lib/page-size";
 import { ScholarshipsBrowser } from "./ScholarshipsBrowser";
@@ -167,9 +168,10 @@ export default async function ScholarshipsPage({
 }) {
   const filters = await resolveFilters(await searchParams);
 
-  const [countries, fields, initialResult] = await Promise.all([
+  const [countries, fields, intakes, initialResult] = await Promise.all([
     getCountries(),
     getFields(),
+    getPublicIntakes(),
     getPublicScholarships({ ...filters, page: 1, limit: SCHOLARSHIP_PAGE_SIZE }),
   ]);
 
@@ -193,6 +195,7 @@ export default async function ScholarshipsPage({
       <ScholarshipsBrowser
         countries={countries}
         fields={fields}
+        intakes={intakes}
         initialResult={initialResult}
       />
     </Suspense>

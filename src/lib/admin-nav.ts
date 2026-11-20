@@ -1,5 +1,6 @@
 import {
   Activity,
+  ArrowUpDown,
   Building2,
   FileText,
   Flag,
@@ -10,6 +11,7 @@ import {
   LayoutDashboard,
   Library,
   Newspaper,
+  RefreshCw,
   Settings,
   Users,
 } from "lucide-react";
@@ -102,6 +104,14 @@ export const ADMIN_NAV: NavSection[] = [
         matchPrefix: true,
         description: "Manage fields, categories and subfields",
       },
+      {
+        href: "/admin/intakes",
+        label: "Intakes",
+        icon: ArrowUpDown,
+        minRole: "EDITOR",
+        matchPrefix: true,
+        description: "Manage academic intake periods",
+      },
     ],
   },
   {
@@ -152,6 +162,14 @@ export const ADMIN_NAV: NavSection[] = [
         matchPrefix: true,
         description: "Accounts, roles and access",
       },
+      {
+        href: "/admin/sync",
+        label: "Data Sync",
+        icon: RefreshCw,
+        minRole: "ADMIN",
+        matchPrefix: true,
+        description: "Synchronize scholarships from external sources",
+      },
     ],
   },
   {
@@ -199,6 +217,8 @@ export const QUICK_ACTIONS = [
   { href: "/admin/fields/new", label: "Add Field", icon: Library },
   { href: "/admin/blog/new", label: "Write Blog Post", icon: Newspaper },
   { href: "/admin/resources/new", label: "Add Resource", icon: FileText },
+  { href: "/admin/intakes/new", label: "Add Intake", icon: ArrowUpDown },
+  { href: "/admin/sync", label: "Run Data Sync", icon: RefreshCw },
 ] as const;
 
 export const ADMIN_HOME = "/admin/dashboard";

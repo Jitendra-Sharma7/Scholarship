@@ -247,6 +247,7 @@ const scholarshipInclude = {
   university: { select: { id: true, name: true, slug: true, city: true } },
   provider: { select: { id: true, name: true } },
   fields: { include: { field: { select: { id: true, name: true, slug: true } } } },
+  intakes: { include: { intake: { select: { id: true, name: true, slug: true, startMonth: true, startYear: true } } } },
 } as const;
 
 type ScholarshipRow = Awaited<
@@ -270,6 +271,20 @@ export function toPublicScholarship(
   // so the same label never renders twice.
   const linkedNames = row.fields.map((link) => link.field.name);
   const fields = [...new Set([...linkedNames, ...row.fieldLabels])];
+
+  // Get intakes from the relation
+  const intakes = row.intakes
+    .filter((link) => link.intake)
+    .map((link) => ({
+      id: link.intake!.id,
+      name: link.intake!.name,
+      slug: link.intake!.slug,
+      startMonth: link.intake!.startMonth,
+      startYear: link.intake!.startYear,
+    }));
+
+  const primaryIntake = intakes.find((i) => i.id === row.intakes.find((l) => l.isPrimary)?.intakeId);
+  const intakeDisplay = primaryIntake?.name || intakes[0]?.name || row.intake;
 
   return {
     id: row.id,
@@ -326,7 +341,7 @@ export function toPublicScholarship(
     ieltsReq: row.ieltsReq,
     toeflReq: row.toeflReq,
     ageRequirement: row.ageRequirement,
-    intake: row.intake,
+    intake: intakeDisplay,
     otherBenefits: row.otherBenefits,
     annualStipend: row.annualStipend,
     monthlyStipend: row.monthlyStipend,
@@ -550,6 +565,18 @@ export async function getPublicProviders(): Promise<PublicProvider[]> {
   }));
 }
 
+// --- Intakes --------------------------------------------------------------
+
+export async function getPublicIntakes() {
+  const rows = await prisma.intake.findMany({
+    where: { isActive: true, deletedAt: null },
+    orderBy: [{ startYear: "desc" }, { startMonth: "desc" }],
+    select: { id: true, name: true, slug: true },
+  });
+
+  return rows;
+}
+
 // --- Scholarships ---------------------------------------------------------
 
 export interface ScholarshipQuery {
@@ -562,6 +589,7 @@ export interface ScholarshipQuery {
   fullyFunded?: boolean;
   featured?: boolean;
   university?: string;
+  intake?: string;
   page?: number;
   limit?: number;
   /** Internal: the Top Opportunities section. */
@@ -591,6 +619,7 @@ export async function getPublicScholarships(
     fullyFunded,
     featured,
     university,
+    intake,
     page = 1,
     limit = 12,
     featuredOnly = false,
@@ -616,6 +645,7 @@ export async function getPublicScholarships(
   if (funding) where.fundingType = funding.toUpperCase().replace(/-/g, "_");
   if (degree) where.degreeLevels = { has: degree };
   if (field && field !== "all") where.fields = { some: { fieldId: field } };
+  if (intake) where.intakes = { some: { intake: { slug: intake } } };
 
   // Status is derived from the deadline, so it is filtered in SQL rather than
   // in memory. Filtering after pagination would let a page of already-expired

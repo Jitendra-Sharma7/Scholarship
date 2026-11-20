@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Inbox, RotateCcw } from "lucide-react";
+import { Search, SlidersHorizontal, Inbox, RotateCcw, Calendar } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { SearchFilters } from "@/components/scholarships/SearchFilters";
-import { fetchPublicScholarships } from "@/app/actions/public-actions";
+import { fetchPublicScholarships, fetchPublicIntakes } from "@/app/actions/public-actions";
 import type { Paginated, PublicCountryOption, PublicField, PublicScholarship } from "@/lib/data/public";
 
 import { SCHOLARSHIP_PAGE_SIZE } from "@/lib/page-size";
@@ -20,10 +20,12 @@ import { SCHOLARSHIP_PAGE_SIZE } from "@/lib/page-size";
 export function ScholarshipsBrowser({
   countries,
   fields,
+  intakes,
   initialResult,
 }: {
   countries: PublicCountryOption[];
   fields: PublicField[];
+  intakes: { id: string; name: string; slug: string }[];
   initialResult: Paginated<PublicScholarship>;
 }) {
   const searchParams = useSearchParams();
@@ -36,6 +38,7 @@ export function ScholarshipsBrowser({
     field: searchParams.get("field") || "",
     degree: searchParams.get("degree") || "",
     funding: searchParams.get("funding") || "",
+    intake: searchParams.get("intake") || "",
   });
 
   const [sortOption, setSortOption] = useState("relevance");
@@ -60,6 +63,7 @@ export function ScholarshipsBrowser({
       field: searchParams.get("field") || "",
       degree: searchParams.get("degree") || "",
       funding: searchParams.get("funding") || "",
+      intake: searchParams.get("intake") || "",
     });
     setPage(1);
   }
@@ -125,11 +129,12 @@ export function ScholarshipsBrowser({
     if (newFilters.field) params.set("field", newFilters.field);
     if (newFilters.degree) params.set("degree", newFilters.degree);
     if (newFilters.funding) params.set("funding", newFilters.funding);
+    if (newFilters.intake) params.set("intake", newFilters.intake);
     router.push(`/scholarships?${params.toString()}`);
   };
 
   const handleResetFilters = () => {
-    const empty = { query: "", country: "", field: "", degree: "", funding: "" };
+    const empty = { query: "", country: "", field: "", degree: "", funding: "", intake: "" };
     handleFilterChange(empty);
   };
 
@@ -229,6 +234,7 @@ export function ScholarshipsBrowser({
               onReset={handleResetFilters}
               countries={countries}
               fields={fields}
+              intakes={intakes}
             />
           </div>
 
@@ -247,6 +253,7 @@ export function ScholarshipsBrowser({
                 }}
                 countries={countries}
                 fields={fields}
+                intakes={intakes}
               />
             </div>
           )}
