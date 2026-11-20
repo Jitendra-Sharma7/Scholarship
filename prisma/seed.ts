@@ -21,6 +21,7 @@ import { seedFields } from "./seed-data/fields";
 import { seedUniversities } from "./seed-data/universities";
 import { seedProviders } from "./seed-data/providers";
 import { seedScholarships } from "./seed-data/scholarships";
+import { sept2027Scholarships } from "./seed-data/sept2027-scholarships";
 import { guides, posts, faqs } from "./seed-data/content";
 import {
   toPrismaDeadlineStatus,
@@ -389,6 +390,132 @@ async function persistScholarships(
   return n;
 }
 
+async function persistSept2027Scholarships(
+  countryIds: Set<string>,
+  universityIds: Set<string>,
+  providerIds: Set<string>,
+  fieldNamesById: Map<string, string>
+) {
+  // First, ensure the September 2027 intake exists
+  const sept2027Intake = await prisma.intake.upsert({
+    where: { slug: "september-2027" },
+    update: {},
+    create: {
+      name: "September 2027",
+      slug: "september-2027",
+      startMonth: 9,
+      startYear: 2027,
+      sortOrder: 1,
+      isActive: true,
+    },
+  });
+
+  let n = 0;
+  for (const s of sept2027Scholarships) {
+    const countryId = countryIds.has(s.countryId) ? s.countryId : null;
+    const universityId = s.universityId && universityIds.has(s.universityId) ? s.universityId : null;
+    const providerId = providerIds.has(s.providerId) ? s.providerId : null;
+
+    // Split legacy field labels into real Field relations vs free text.
+    const labels = s.fields ?? [];
+    const matchedFieldIds: string[] = [];
+    const extraLabels: string[] = [];
+    for (const label of labels) {
+      const found = [...fieldNamesById.entries()].find(([, name]) => name === label);
+      if (found) matchedFieldIds.push(found[0]);
+      else extraLabels.push(label);
+    }
+
+    const slug = await uniqueSlug(
+      async (s) => (await prisma.scholarship.findUnique({ where: { slug: s } })) !== null,
+      slugify(s.title)
+    );
+
+    const data = {
+      title: s.title,
+      slug,
+      shortDescription: s.description ? s.description.slice(0, 200) : null,
+      description: s.description ?? null,
+      providerId,
+      universityId,
+      countryId,
+      fundingType: toPrismaFundingType(s.fundingType),
+      isFullyFunded: s.fundingType === "fully-funded",
+      currency: s.currency ?? null,
+      fundingAmount: s.fundingAmount ?? null,
+      monthlyStipend: s.livingStipend ?? null,
+      applicationFee: s.applicationFee ?? null,
+      tuitionCoverage: Boolean(s.tuitionCoverage),
+      accommodationCoverage: Boolean(s.accommodationCoverage),
+      travelAllowance: Boolean(s.travelAllowance),
+      healthInsurance: Boolean(s.healthInsurance),
+      visaSupport: Boolean(s.visaSupport),
+      degreeLevels: s.degreeLevels ?? [],
+      fieldLabels: extraLabels,
+      eligibleCountries: s.eligibleCountries ?? [],
+      minGpa: s.minGpa ?? null,
+      openingDate: toDate(s.openingDate),
+      deadline: toDate(s.deadline),
+      duration: s.duration ?? null,
+      numAwards: s.numAwards ?? null,
+      languageReqs: s.languageReqs ?? [],
+      documentsRequired: s.documentsRequired ?? [],
+      applicationUrl: s.applicationUrl ?? null,
+      officialUrl: s.officialUrl ?? null,
+      lastVerifiedAt: toDate(s.lastVerifiedAt),
+      source: "Global Scholarship Point (globalscholarshippoint.com)",
+      verificationStatus: toPrismaVerificationStatus(s.verificationStatus),
+      publishStatus: "PUBLISHED" as const,
+      deadlineStatus: toPrismaDeadlineStatus(s.status),
+      featured: Boolean(s.featured),
+      includeInSitemap: true,
+      intake: s.intake ?? "September 2027",
+    };
+
+    const created = await prisma.scholarship.upsert({
+      where: { id: s.id },
+      update: data,
+      create: { id: s.id, ...data },
+    });
+
+    // Link scholarship to the September 2027 intake
+    await prisma.scholarshipIntake.upsert({
+      where: { scholarshipId_intakeId: { scholarshipId: created.id, intakeId: sept2027Intake.id } },
+      create: {
+        scholarshipId: created.id,
+        intakeId: sept2027Intake.id,
+        deadline: toDate(s.deadline),
+        openingDate: toDate(s.openingDate),
+        isPrimary: true,
+      },
+      update: {
+        deadline: toDate(s.deadline),
+        openingDate: toDate(s.openingDate),
+        isPrimary: true,
+      },
+    });
+
+    // Rebuild field join rows
+    await prisma.scholarshipField.deleteMany({ where: { scholarshipId: s.id } });
+    if (matchedFieldIds.length) {
+      await prisma.scholarshipField.createMany({
+        data: matchedFieldIds.map((fieldId) => ({ scholarshipId: s.id, fieldId })),
+        skipDuplicates: true,
+      });
+    }
+    // Rebuild country join rows
+    await prisma.scholarshipCountry.deleteMany({ where: { scholarshipId: s.id } });
+    if (countryId) {
+      await prisma.scholarshipCountry.create({
+        data: { scholarshipId: s.id, countryId },
+      });
+    }
+    n += 1;
+  }
+  console.log(`  september 2027 scholarships: ${n}`);
+  return n;
+}
+
 async function seedEditorial() {
   // Legacy posts and guides are keyed by slug, not by a stable id. Resolve the
   // existing row by that key FIRST and update it, rather than asking
@@ -591,6 +718,7 @@ async function main() {
 
   await persistUniversities(countryByName);
   await persistScholarships(countryIds, universityIds, providerIds, fieldNamesById);
+  await persistSept2027Scholarships(countryIds, universityIds, providerIds, fieldNamesById);
   await seedEditorial();
   await seedSettings();
   await seedAdmin();

@@ -41,6 +41,7 @@
 
 import { readFileSync, existsSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
+import { countryReference } from "../prisma/seed-data/country-reference.js";
 
 const prisma = new PrismaClient();
 
@@ -55,7 +56,7 @@ const value = (name) => {
 };
 
 if (!file) {
-  console.error("Usage: node scripts/import-scholarships.mjs <file.json|file.csv> --source \"<label>\"");
+  console.error("Usage: node scripts/import-scholarships.mjs <file.json|file.csv> --source \"<label>\" [--auto-create] [--update] [--publish]");
   process.exit(1);
 }
 if (!existsSync(file)) {
@@ -65,6 +66,8 @@ if (!existsSync(file)) {
 
 const sourceLabel = value("source") ?? "imported";
 const publish = flag("publish");
+const autoCreate = flag("auto-create") || flag("create-relations");
+const updateExisting = flag("update") || flag("upsert");
 
 // --- Parsing ---------------------------------------------------------------
 
@@ -246,6 +249,148 @@ const providerByName = byName(providers);
 const universityByName = byName(universities);
 const fieldByName = byName(fields);
 
+// Special multi-national destinations
+const SPECIAL_COUNTRIES = [
+  { name: "Europe", code: "EU", code3: "EUR", region: "Europe", continent: "Europe", currency: "EUR", capital: "Brussels" },
+  { name: "Multiple Countries", code: "GLOBAL", code3: "GLB", region: "Global", continent: "Global", currency: "USD", capital: "Global" }
+];
+
+const refByNormName = new Map();
+const refByNormCode = new Map();
+for (const c of [...(countryReference ?? []), ...SPECIAL_COUNTRIES]) {
+  refByNormName.set(norm(c.name), c);
+  refByNormCode.set(norm(c.code), c);
+  if (c.code3) refByNormCode.set(norm(c.code3), c);
+}
+refByNormName.set("turkiye", refByNormName.get("turkey"));
+refByNormName.set("multiplecountries", refByNormName.get("multiplecountries"));
+
+async function resolveOrCreateCountry(rawName) {
+  if (!rawName) return null;
+  const n = norm(rawName);
+  let c = countryByName.get(n) ?? countryByCode.get(n);
+  if (c || !autoCreate) return c;
+
+  const ref = refByNormName.get(n) ?? refByNormCode.get(n);
+  const name = ref?.name ?? rawName;
+  const code = ref?.code ?? rawName.slice(0, 2).toUpperCase();
+  const code3 = ref?.code3 ?? null;
+  const region = ref?.continent ?? "International";
+  const continent = ref?.continent ?? "International";
+  const currency = ref?.currency ?? null;
+  const capital = ref?.capital ?? null;
+  const slug = slugify(name);
+
+  try {
+    c = await prisma.country.create({
+      data: { name, code, code3, slug, region, continent, currency, capital, publishStatus: "PUBLISHED" }
+    });
+  } catch {
+    c = await prisma.country.findFirst({ where: { OR: [{ code }, { slug }] } });
+  }
+  if (c) {
+    countryByName.set(norm(c.name), c);
+    countryByCode.set(norm(c.code), c);
+    if (c.code3) countryByCode.set(norm(c.code3), c);
+  }
+  return c;
+}
+
+async function resolveOrCreateUniversity(rawName, country) {
+  if (!rawName) return null;
+  const n = norm(rawName);
+  let u = universityByName.get(n);
+  if (u || !autoCreate) return u;
+
+  const slug = slugify(rawName);
+  try {
+    u = await prisma.university.create({
+      data: {
+        name: rawName,
+        slug,
+        countryId: country?.id ?? null,
+        countryNameLegacy: country?.name ?? null,
+        publishStatus: "PUBLISHED"
+      }
+    });
+  } catch {
+    u = await prisma.university.findFirst({ where: { slug } });
+  }
+  if (u) {
+    universityByName.set(norm(u.name), u);
+  }
+  return u;
+}
+
+async function resolveOrCreateProvider(rawName, countryName) {
+  if (!rawName) return null;
+  const n = norm(rawName);
+  let p = providerByName.get(n);
+  if (p || !autoCreate) return p;
+
+  let type = "University";
+  const lower = rawName.toLowerCase();
+  if (lower.includes("government") || lower.includes("ministry") || lower.includes("state") || lower.includes("embassy") || lower.includes("daad") || lower.includes("csc") || lower.includes("niied") || lower.includes("mext")) {
+    type = "Government";
+  } else if (lower.includes("foundation") || lower.includes("trust") || lower.includes("gates") || lower.includes("yoneyama") || lower.includes("fellows") || lower.includes("fund")) {
+    type = "Foundation";
+  } else if (lower.includes("commission") || lower.includes("world bank") || lower.includes("erasmus") || lower.includes("un") || lower.includes("consortium") || lower.includes("vlir")) {
+    type = "International Organization";
+  }
+
+  try {
+    p = await prisma.provider.create({
+      data: {
+        name: rawName,
+        type,
+        country: countryName ?? null,
+        verified: true
+      }
+    });
+  } catch {
+    p = await prisma.provider.findFirst({ where: { name: rawName } });
+  }
+  if (p) {
+    providerByName.set(norm(p.name), p);
+  }
+  return p;
+}
+
+async function resolveOrCreateField(rawLabel) {
+  if (!rawLabel || /^all\b/i.test(rawLabel.trim())) return null;
+  const label = rawLabel.trim();
+  const n = norm(label);
+  let f = fieldByName.get(n);
+  if (f || !autoCreate) return f;
+
+  const slug = slugify(label);
+  let category = "General";
+  const l = label.toLowerCase();
+  if (l.includes("engin") || l.includes("tech") || l.includes("comput") || l.includes("data") || l.includes("math") || l.includes("physic") || l.includes("chem") || l.includes("bio") || l.includes("science")) {
+    category = "STEM";
+  } else if (l.includes("busin") || l.includes("econom") || l.includes("financ") || l.includes("manage")) {
+    category = "Business";
+  } else if (l.includes("law") || l.includes("polic") || l.includes("relat") || l.includes("govern") || l.includes("soci")) {
+    category = "Social Sciences";
+  } else if (l.includes("art") || l.includes("human") || l.includes("cultur") || l.includes("ling") || l.includes("media") || l.includes("journ")) {
+    category = "Humanities";
+  } else if (l.includes("health") || l.includes("nurs") || l.includes("medic")) {
+    category = "Health Sciences";
+  }
+
+  try {
+    f = await prisma.field.create({
+      data: { name: label, slug, category, publishStatus: "PUBLISHED" }
+    });
+  } catch {
+    f = await prisma.field.findFirst({ where: { slug } });
+  }
+  if (f) {
+    fieldByName.set(norm(f.name), f);
+  }
+  return f;
+}
+
 const taken = new Set(existingSlugs.map((s) => s.slug));
 async function uniqueSlug(title) {
   const base = slugify(title) || "scholarship";
@@ -262,6 +407,7 @@ async function uniqueSlug(title) {
 // --- Import ----------------------------------------------------------------
 
 let created = 0;
+let updated = 0;
 let duplicates = 0;
 let invalid = 0;
 const unresolved = { country: 0, provider: 0, university: 0, field: 0 };
@@ -275,36 +421,23 @@ for (const [index, row] of rows.entries()) {
     continue;
   }
 
-  const slug = slugify(title);
-  if (taken.has(slug)) {
-    duplicates += 1;
-    continue;
-  }
-
   const countryName = pick(row, "country", "location", "hostCountry", "studyIn");
-  const country =
-    (countryName ? countryByName.get(norm(countryName)) : undefined) ??
-    (countryName ? countryByCode.get(norm(countryName)) : undefined);
+  const country = await resolveOrCreateCountry(countryName);
   if (countryName && !country) unresolved.country += 1;
 
-  const providerName = pick(row, "provider", "organisation", "organization", "sponsor", "offeredBy");
-  const provider = providerName ? providerByName.get(norm(providerName)) : undefined;
-  if (providerName && !provider) unresolved.provider += 1;
-
   const universityName = pick(row, "university", "institution", "school", "college");
-  const university = universityName ? universityByName.get(norm(universityName)) : undefined;
+  const university = await resolveOrCreateUniversity(universityName, country);
   if (universityName && !university) unresolved.university += 1;
 
-  // Fields are linked where a Field row exists; the original labels are kept in
-  // `fieldLabels` either way, so nothing is lost when a subject is not in the
-  // taxonomy yet.
+  const providerName = pick(row, "provider", "organisation", "organization", "sponsor", "offeredBy") ?? (university ? university.name : null);
+  const provider = await resolveOrCreateProvider(providerName, country?.name);
+  if (providerName && !provider) unresolved.provider += 1;
+
   const fieldLabels = list(pick(row, "fieldLabels", "subjects", "fields", "discipline", "major"));
   const fieldIds = [];
   for (const label of fieldLabels) {
-    const f = fieldByName.get(norm(label));
+    const f = await resolveOrCreateField(label);
     if (f) fieldIds.push(f.id);
-    // "All fields" is a catch-all, not a subject that is missing from the
-    // taxonomy, so it is not reported.
     else if (!/^all\b/i.test(label)) unresolved.field += 1;
   }
 
@@ -312,97 +445,128 @@ for (const [index, row] of rows.entries()) {
   const degrees = list(pick(row, "degreeLevels", "degrees", "degreeLevel", "level"));
   const sourceUrl = pick(row, "sourceUrl", "url", "link", "applicationUrl");
 
-  const record = await prisma.scholarship.create({
-    data: {
-      title,
-      slug: await uniqueSlug(title),
-      description: pick(row, "description", "details", "about"),
-      shortDescription: pick(row, "shortDescription", "summary"),
-      countryId: country?.id ?? null,
-      // Kept even when the relation resolved, so a later rename of the country
-      // does not erase what the source actually said.
-      countryNameLegacy: country?.name ?? countryName ?? null,
-      universityId: university?.id ?? null,
-      universityNameLegacy: university?.name ?? universityName ?? null,
-      providerId: provider?.id ?? null,
-      region: pick(row, "region"),
-      city: pick(row, "city"),
+  const slug = slugify(title);
+  let record;
 
-      fundingType: type ?? "MIXED",
-      isFullyFunded: type === "FULLY_FUNDED",
-      fundingAmount: num(pick(row, "fundingAmount", "amount", "value")),
-      currency: pick(row, "currency") ?? null,
-      monthlyStipend: num(pick(row, "monthlyStipend", "stipend")),
-      annualStipend: num(pick(row, "annualStipend")),
-      tuitionCoverage: truthy(pick(row, "tuitionCoverage", "coversTuition", "fullTuition")),
-      accommodationCoverage: truthy(pick(row, "accommodationCoverage", "coversAccommodation")),
-      travelAllowance: truthy(pick(row, "travelAllowance", "coversTravel")),
-      healthInsurance: truthy(pick(row, "healthInsurance", "coversHealth")),
-      visaSupport: truthy(pick(row, "visaSupport", "coversVisa")),
-      researchFunding: truthy(pick(row, "researchFunding")),
-      otherBenefits: pick(row, "otherBenefits") ?? null,
+  if (taken.has(slug)) {
+    if (!updateExisting) {
+      duplicates += 1;
+      continue;
+    }
+    const existing = await prisma.scholarship.findUnique({ where: { slug } });
+    if (existing) {
+      record = await prisma.scholarship.update({
+        where: { id: existing.id },
+        data: {
+          countryId: country?.id ?? existing.countryId,
+          countryNameLegacy: country?.name ?? existing.countryNameLegacy ?? countryName,
+          universityId: university?.id ?? existing.universityId,
+          universityNameLegacy: university?.name ?? existing.universityNameLegacy ?? universityName,
+          providerId: provider?.id ?? existing.providerId,
+          fieldLabels: fieldLabels.length ? fieldLabels : existing.fieldLabels,
+          degreeLevels: degrees.length ? degrees : existing.degreeLevels,
+          fundingType: type ?? existing.fundingType,
+          isFullyFunded: type === "FULLY_FUNDED" ? true : existing.isFullyFunded,
+          fundingAmount: num(pick(row, "fundingAmount", "amount", "value")) ?? existing.fundingAmount,
+          currency: pick(row, "currency") ?? existing.currency,
+          monthlyStipend: num(pick(row, "monthlyStipend", "stipend")) ?? existing.monthlyStipend,
+          tuitionCoverage: truthy(pick(row, "tuitionCoverage", "coversTuition")) || existing.tuitionCoverage,
+          accommodationCoverage: truthy(pick(row, "accommodationCoverage", "coversAccommodation")) || existing.accommodationCoverage,
+          deadline: date(pick(row, "deadline", "closingDate")) ?? existing.deadline,
+          openingDate: date(pick(row, "openingDate", "opens")) ?? existing.openingDate,
+          applicationUrl: pick(row, "applicationUrl", "applyUrl") ?? existing.applicationUrl,
+          officialUrl: pick(row, "officialUrl", "providerUrl", "website") ?? existing.officialUrl,
+        }
+      });
+      updated += 1;
+    }
+  } else {
+    record = await prisma.scholarship.create({
+      data: {
+        title,
+        slug: await uniqueSlug(title),
+        description: pick(row, "description", "details", "about"),
+        shortDescription: pick(row, "shortDescription", "summary"),
+        countryId: country?.id ?? null,
+        countryNameLegacy: country?.name ?? countryName ?? null,
+        universityId: university?.id ?? null,
+        universityNameLegacy: university?.name ?? universityName ?? null,
+        providerId: provider?.id ?? null,
+        region: pick(row, "region"),
+        city: pick(row, "city"),
 
-      degreeLevels: degrees,
-      fieldLabels,
-      eligibleCountries: list(pick(row, "eligibleCountries", "openTo")),
-      nationalityRestrictions: list(pick(row, "nationalityRestrictions", "nationalities")),
-      minGpa: num(pick(row, "minGpa", "gpa", "minimumGpa")),
-      minPercentage: num(pick(row, "minPercentage", "percentage")),
-      ageRequirement: int(pick(row, "ageRequirement", "maxAge")),
-      workExpReq: pick(row, "workExpReq", "workExperience") ?? null,
-      otherRequirements: pick(row, "otherRequirements", "requirements") ?? null,
+        fundingType: type ?? "MIXED",
+        isFullyFunded: type === "FULLY_FUNDED",
+        fundingAmount: num(pick(row, "fundingAmount", "amount", "value")),
+        currency: pick(row, "currency") ?? null,
+        monthlyStipend: num(pick(row, "monthlyStipend", "stipend")),
+        annualStipend: num(pick(row, "annualStipend")),
+        tuitionCoverage: truthy(pick(row, "tuitionCoverage", "coversTuition", "fullTuition")),
+        accommodationCoverage: truthy(pick(row, "accommodationCoverage", "coversAccommodation")),
+        travelAllowance: truthy(pick(row, "travelAllowance", "coversTravel")),
+        healthInsurance: truthy(pick(row, "healthInsurance", "coversHealth")),
+        visaSupport: truthy(pick(row, "visaSupport", "coversVisa")),
+        researchFunding: truthy(pick(row, "researchFunding")),
+        otherBenefits: pick(row, "otherBenefits") ?? null,
 
-      studyMode: studyMode(pick(row, "studyMode", "mode")),
-      studyType: pick(row, "studyType") ?? null,
-      subField: pick(row, "subField", "subfield") ?? null,
-      duration: pick(row, "duration") ?? null,
-      intake: pick(row, "intake") ?? null,
+        degreeLevels: degrees,
+        fieldLabels,
+        eligibleCountries: list(pick(row, "eligibleCountries", "openTo")),
+        nationalityRestrictions: list(pick(row, "nationalityRestrictions", "nationalities")),
+        minGpa: num(pick(row, "minGpa", "gpa", "minimumGpa")),
+        minPercentage: num(pick(row, "minPercentage", "percentage")),
+        ageRequirement: int(pick(row, "ageRequirement", "maxAge")),
+        workExpReq: pick(row, "workExpReq", "workExperience") ?? null,
+        otherRequirements: pick(row, "otherRequirements", "requirements") ?? null,
 
-      openingDate: date(pick(row, "openingDate", "opens", "startDate")) ?? null,
-      deadline: date(pick(row, "deadline", "closingDate", "applicationDeadline")) ?? null,
-      deadlineType: pick(row, "deadlineType") ?? null,
-      applicationFee: num(pick(row, "applicationFee", "fee")),
-      applicationMethod: pick(row, "applicationMethod", "howToApply") ?? null,
-      documentsRequired: list(pick(row, "documentsRequired", "documents")),
-      applicationProcess: list(pick(row, "applicationProcess", "process", "steps")),
-      applicationUrl: pick(row, "applicationUrl", "applyUrl") ?? sourceUrl ?? null,
-      officialUrl: pick(row, "officialUrl", "providerUrl", "website") ?? sourceUrl ?? null,
-      providerContact: pick(row, "providerContact", "contact") ?? null,
+        studyMode: studyMode(pick(row, "studyMode", "mode")),
+        studyType: pick(row, "studyType") ?? null,
+        subField: pick(row, "subField", "subfield") ?? null,
+        duration: pick(row, "duration") ?? null,
+        intake: pick(row, "intake") ?? null,
 
-      languageReqs: list(pick(row, "languageReqs", "languageRequirements", "languages")),
-      ieltsReq: num(pick(row, "ieltsReq", "ielts")),
-      toeflReq: num(pick(row, "toeflReq", "toefl")),
-      greReq: num(pick(row, "greReq", "gre")),
-      gmatReq: num(pick(row, "gmatReq", "gmat")),
-      otherTestReqs: list(pick(row, "otherTestReqs", "otherTests")),
-      academicReqs: list(pick(row, "academicReqs", "academicRequirements")),
-      selectionCriteria: list(pick(row, "selectionCriteria", "criteria")),
-      financialNeedReq: truthy(pick(row, "financialNeedReq", "financialNeed")),
+        openingDate: date(pick(row, "openingDate", "opens", "startDate")) ?? null,
+        deadline: date(pick(row, "deadline", "closingDate", "applicationDeadline")) ?? null,
+        deadlineType: pick(row, "deadlineType") ?? null,
+        applicationFee: num(pick(row, "applicationFee", "fee")),
+        applicationMethod: pick(row, "applicationMethod", "howToApply") ?? null,
+        documentsRequired: list(pick(row, "documentsRequired", "documents")),
+        applicationProcess: list(pick(row, "applicationProcess", "process", "steps")),
+        applicationUrl: pick(row, "applicationUrl", "applyUrl") ?? sourceUrl ?? null,
+        officialUrl: pick(row, "officialUrl", "providerUrl", "website") ?? sourceUrl ?? null,
+        providerContact: pick(row, "providerContact", "contact") ?? null,
 
-      numAwards: int(pick(row, "numAwards", "numberOfAwards", "numberOfRecipients", "awards")),
-      logo: pick(row, "logo") ?? null,
-      coverImage: pick(row, "coverImage") ?? null,
+        languageReqs: list(pick(row, "languageReqs", "languageRequirements", "languages")),
+        ieltsReq: num(pick(row, "ieltsReq", "ielts")),
+        toeflReq: num(pick(row, "toeflReq", "toefl")),
+        greReq: num(pick(row, "greReq", "gre")),
+        gmatReq: num(pick(row, "gmatReq", "gmat")),
+        otherTestReqs: list(pick(row, "otherTestReqs", "otherTests")),
+        academicReqs: list(pick(row, "academicReqs", "academicRequirements")),
+        selectionCriteria: list(pick(row, "selectionCriteria", "criteria")),
+        financialNeedReq: truthy(pick(row, "financialNeedReq", "financialNeed")),
 
-      seoTitle: pick(row, "seoTitle") ?? null,
-      seoDescription: pick(row, "seoDescription") ?? null,
-      canonicalUrl: pick(row, "canonicalUrl") ?? null,
+        numAwards: int(pick(row, "numAwards", "numberOfAwards", "numberOfRecipients", "awards")),
+        logo: pick(row, "logo") ?? null,
+        coverImage: pick(row, "coverImage") ?? null,
 
-      // Provenance: which feed this came from, and where the row can be checked.
-      source: sourceUrl ? `${sourceLabel} (${sourceUrl})` : sourceLabel,
-      verificationStatus: "VERIFICATION_NEEDED",
-      lastVerifiedAt: null,
-      publishStatus: publish ? "PUBLISHED" : "DRAFT",
-      publishedAt: publish ? new Date() : null,
-      featured: false,
-      includeInSitemap: publish,
-    },
-  });
+        seoTitle: pick(row, "seoTitle") ?? null,
+        seoDescription: pick(row, "seoDescription") ?? null,
+        canonicalUrl: pick(row, "canonicalUrl") ?? null,
 
-  created += 1;
+        source: sourceUrl ? `${sourceLabel} (${sourceUrl})` : sourceLabel,
+        verificationStatus: "VERIFICATION_NEEDED",
+        lastVerifiedAt: null,
+        publishStatus: publish ? "PUBLISHED" : "DRAFT",
+        publishedAt: publish ? new Date() : null,
+        featured: false,
+        includeInSitemap: publish,
+      },
+    });
+    created += 1;
+  }
 
-  // The subject relations need the new row's id, so they are written after the
-  // create rather than nested.
-  if (fieldIds.length > 0) {
+  if (record && fieldIds.length > 0) {
     await prisma.scholarshipField.createMany({
       data: fieldIds.map((fieldId) => ({ scholarshipId: record.id, fieldId })),
       skipDuplicates: true,
@@ -412,6 +576,7 @@ for (const [index, row] of rows.entries()) {
 
 console.log(`rows read:      ${rows.length}`);
 console.log(`created:        ${created}`);
+if (updateExisting) console.log(`updated:        ${updated}`);
 console.log(`duplicates:     ${duplicates} (slug already in the database)`);
 console.log(`invalid:        ${invalid} (no title)`);
 console.log(
@@ -426,10 +591,13 @@ if (problems.length > 0) {
   if (problems.length > 20) console.log(`  ...and ${problems.length - 20} more`);
 }
 
-console.log(
-  "\nUnresolved names were left as text on the row (countryNameLegacy / " +
-    "universityNameLegacy) rather than dropped. Re-run once the matching " +
-    "Country, Provider, University or Field records exist to link them."
-);
+if (unresolved.country === 0 && unresolved.provider === 0 && unresolved.university === 0 && unresolved.field === 0) {
+  console.log("\nAll relations successfully resolved and linked!");
+} else {
+  console.log(
+    "\nUnresolved names were left as text on the row (countryNameLegacy / " +
+      "universityNameLegacy) rather than dropped. Use --auto-create to automatically create missing entities, or run: npm run link:scholarships"
+  );
+}
 
 await prisma.$disconnect();

@@ -22,6 +22,7 @@
     "verify:bundle": "node scripts/verify-client-bundle.mjs",
     "clean:test-records": "node scripts/clean-test-records.mjs --apply",
     "import:scholarships": "node scripts/import-scholarships.mjs",
+    "link:scholarships": "node scripts/with-env.mjs node scripts/link-unresolved-scholarships.mjs",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:generate": "prisma generate",
