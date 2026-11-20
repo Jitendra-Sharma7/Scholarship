@@ -224,7 +224,6 @@ export function Header() {
 
           <nav className="hidden items-center gap-1 lg:flex" role="menubar">
             {navItems.map((item) => {
-              const Icon = item.icon;
               const hasDropdown = item.dropdown && item.dropdown.length > 0;
               const isOpen = activeDropdown === item.label;
 
@@ -250,7 +249,6 @@ export function Header() {
                     aria-haspopup={hasDropdown}
                     aria-expanded={isOpen}
                   >
-                    <Icon className="h-4 w-4" />
                     {item.label}
                     {hasDropdown && (
                       <ChevronDown
@@ -263,10 +261,10 @@ export function Header() {
                     )}
                   </Link>
 
-                  {hasDropdown && (
+                  {hasDropdown && isOpen && (
                     <div
                       ref={(el) => { dropdownRefs.current[item.label] = el; }}
-                      className="absolute left-0 top-full mt-1.5 min-w-[220px] rounded-xl border border-secondary-200 bg-white py-2 shadow-card-elevated z-50 animate-slide-in"
+                      className="absolute left-0 top-full min-w-[220px] rounded-xl border border-secondary-200 bg-white py-2 shadow-card-elevated z-50 animate-slide-in"
                       role="menu"
                       onMouseEnter={() => handleMouseEnter(item.label)}
                       onMouseLeave={() => handleMouseLeave(item.label)}
