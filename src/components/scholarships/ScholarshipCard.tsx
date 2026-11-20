@@ -11,11 +11,11 @@ import {
   getDeadlineBadgeColor,
   getDeadlineLabel,
   getDeadlineUrgency,
-  getVerificationBadge,
 } from "@/lib/utils";
 import { useNow, daysUntilFrom } from "@/lib/useNow";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { VerificationInline } from "./VerificationBadge";
 
 interface ScholarshipCardProps {
   scholarship: PublicScholarship;
@@ -46,7 +46,6 @@ export function ScholarshipCard({
             : daysLeft <= 30
               ? "warning"
               : "safe";
-  const verification = getVerificationBadge(scholarship.verificationStatus);
 
   const handleSave = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -105,14 +104,8 @@ export function ScholarshipCard({
               {scholarship.fundingType.replace("-", " ")}
             </span>
 
-            {/* Verification Badge */}
-            <span
-              className="inline-flex items-center gap-1 rounded-md border border-secondary-100 bg-secondary-50 px-2 py-0.5 text-xs text-secondary-600"
-              title={`Source: ${scholarship.providerName || "Official Provider"} (Verified ${formatDate(scholarship.lastVerifiedAt)})`}
-            >
-              <span className="text-[10px]">{verification.icon}</span>
-              <span>{verification.label}</span>
-            </span>
+            {/* Verification Badge - Enhanced */}
+            <VerificationInline scholarship={scholarship} size="sm" />
           </div>
 
           {/* Match Indicator if present */}

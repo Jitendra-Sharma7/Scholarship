@@ -9,8 +9,9 @@ import { CountryFlag } from "@/components/ui/CountryFlag";
 import { fetchPublicScholarship } from "@/app/actions/public-actions";
 import type { PublicScholarship } from "@/lib/data/public";
 import { useStore } from "@/lib/store/useStore";
-import { formatDate, formatDateLong, getVerificationBadge } from "@/lib/utils";
+import { formatDate, formatDateLong } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { VerificationBadge, VerificationStatusIndicator } from "@/components/scholarships/VerificationBadge";
 
 export default function ScholarshipDetailsClient({
   initialScholarship,
@@ -61,7 +62,7 @@ export default function ScholarshipDetailsClient({
     return (
       <Container className="py-16 text-center">
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
-        <p className="mt-4 text-sm text-gray-500">Loading scholarship details...</p>
+        <p className="mt-4 text-sm text-secondary-500">Loading scholarship details...</p>
       </Container>
     );
   }
@@ -69,8 +70,8 @@ export default function ScholarshipDetailsClient({
   if (!scholarship) {
     return (
       <Container className="py-16 text-center">
-        <h2 className="text-xl font-bold text-gray-900">Scholarship Not Found</h2>
-        <p className="mt-2 text-sm text-gray-500">The scholarship you are looking for does not exist or has been removed.</p>
+        <h2 className="text-xl font-bold text-secondary-900">Scholarship Not Found</h2>
+        <p className="mt-2 text-sm text-secondary-500">The scholarship you are looking for does not exist or has been removed.</p>
         <Link
           href="/scholarships"
           className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
@@ -89,7 +90,6 @@ export default function ScholarshipDetailsClient({
 
   const saved = isSaved(scholarship.id);
   const isCompared = compareIds.includes(scholarship.id);
-  const verification = getVerificationBadge(scholarship.verificationStatus);
 
   const handleSave = () => {
     toggleSaveScholarship(scholarship.id);
@@ -112,27 +112,25 @@ export default function ScholarshipDetailsClient({
   };
 
   return (
-    <div className="bg-gray-50/50 min-h-screen py-8">
+    <div className="bg-secondary-50/50 min-h-screen py-8">
       <Container>
         {/* Back Link */}
         <Link
           href="/scholarships"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-primary-600 mb-6"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-secondary-500 hover:text-primary-600 mb-6"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Search Results
         </Link>
 
         {/* 1. TOP HERO CARD */}
-        <div className="rounded-3xl border border-gray-200 bg-white p-6 sm:p-8 shadow-sm">
+        <div className="rounded-3xl border border-secondary-200 bg-white p-6 sm:p-8 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800">
                 {scholarship.fundingType.replace("-", " ")}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700">
-                <span>{verification.icon}</span>
-                <span>{verification.label} ({formatDate(scholarship.lastVerifiedAt)})</span>
-              </span>
+              {/* Enhanced Verification Badge */}
+              <VerificationBadge scholarship={scholarship} size="md" showDetails={true} showSourceLink={true} />
               <span className="inline-flex items-center rounded-lg bg-blue-50 border border-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
                 Status: {scholarship.status}
               </span>
@@ -145,7 +143,7 @@ export default function ScholarshipDetailsClient({
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
                   saved
                     ? "border-primary-200 bg-primary-50 text-primary-700"
-                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                    : "border-secondary-200 bg-white text-secondary-700 hover:bg-secondary-50"
                 }`}
               >
                 <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-primary-600" : ""}`} />
@@ -157,7 +155,7 @@ export default function ScholarshipDetailsClient({
                 className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors ${
                   isCompared
                     ? "border-indigo-200 bg-indigo-50 text-indigo-700"
-                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                    : "border-secondary-200 bg-white text-secondary-700 hover:bg-secondary-50"
                 }`}
               >
                 <Layers className="h-3.5 w-3.5" />
@@ -166,33 +164,33 @@ export default function ScholarshipDetailsClient({
 
               <button
                 onClick={handleTrack}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-black"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-secondary-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-black"
               >
                 + Track
               </button>
             </div>
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-950 tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-4xl font-extrabold text-secondary-950 tracking-tight leading-tight">
             {scholarship.title}
           </h1>
 
           {/* Sub-header info */}
-          <div className="mt-4 flex flex-wrap items-center gap-y-2 gap-x-6 text-sm text-gray-600">
+          <div className="mt-4 flex flex-wrap items-center gap-y-2 gap-x-6 text-sm text-secondary-600">
             {scholarship.providerName && (
               <div className="flex items-center gap-1.5">
-                <Building className="h-4 w-4 text-gray-400" />
-                <span className="font-semibold text-gray-900">{scholarship.providerName}</span>
+                <Building className="h-4 w-4 text-secondary-400" />
+                <span className="font-semibold text-secondary-900">{scholarship.providerName}</span>
               </div>
             )}
             {scholarship.universityName && (
               <div className="flex items-center gap-1.5">
-                <GraduationCap className="h-4 w-4 text-gray-400" />
+                <GraduationCap className="h-4 w-4 text-secondary-400" />
                 <span>{scholarship.universityName}</span>
               </div>
             )}
             <div className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-gray-400" />
+              <MapPin className="h-4 w-4 text-secondary-400" />
               <CountryFlag
                 code={scholarship.countryCode}
                 name={scholarship.countryName ?? undefined}
@@ -202,7 +200,7 @@ export default function ScholarshipDetailsClient({
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="h-4 w-4 text-amber-500" />
-              <span className="font-semibold text-gray-900">Deadline: {formatDateLong(scholarship.deadline)}</span>
+              <span className="font-semibold text-secondary-900">Deadline: {formatDateLong(scholarship.deadline)}</span>
             </div>
           </div>
 
@@ -239,42 +237,42 @@ export default function ScholarshipDetailsClient({
           {/* Left 2 Columns: Detailed Sections */}
           <div className="lg:col-span-2 space-y-8">
             {/* Overview */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
-              <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <div className="rounded-2xl border border-secondary-200 bg-white p-6 shadow-xs">
+              <h2 className="text-lg font-bold text-secondary-900 mb-3 flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary-600" />
                 Scholarship Overview
               </h2>
-              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              <p className="text-sm text-secondary-700 leading-relaxed whitespace-pre-line">
                 {scholarship.description}
               </p>
             </div>
 
             {/* Financial Coverage Breakdown */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="rounded-2xl border border-secondary-200 bg-white p-6 shadow-xs">
+              <h2 className="text-lg font-bold text-secondary-900 mb-4 flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-emerald-600" />
                 Financial Coverage & Benefits
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/60 p-3.5">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.tuitionCoverage ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
+                <div className="flex items-start gap-3 rounded-xl border border-secondary-100 bg-secondary-50/60 p-3.5">
+                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.tuitionCoverage ? 'bg-emerald-100 text-emerald-700' : 'bg-secondary-200 text-secondary-500'}`}>
                     {scholarship.tuitionCoverage ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-gray-900">Tuition Fees</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <h3 className="text-xs font-bold text-secondary-900">Tuition Fees</h3>
+                    <p className="text-xs text-secondary-500 mt-0.5">
                       {scholarship.tuitionCoverage ? "100% Tuition covered" : "Partial or not included"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/60 p-3.5">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${hasStipend ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
+                <div className="flex items-start gap-3 rounded-xl border border-secondary-100 bg-secondary-50/60 p-3.5">
+                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${hasStipend ? 'bg-emerald-100 text-emerald-700' : 'bg-secondary-200 text-secondary-500'}`}>
                     {hasStipend ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-gray-900">Living Stipend</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <h3 className="text-xs font-bold text-secondary-900">Living Stipend</h3>
+                    <p className="text-xs text-secondary-500 mt-0.5">
                       {hasStipend
                         ? `${scholarship.currency || '$'}${(scholarship.livingStipend ?? 0).toLocaleString()} / month allowance`
                         : "Self-funded"}
@@ -282,49 +280,49 @@ export default function ScholarshipDetailsClient({
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/60 p-3.5">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.accommodationCoverage ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
+                <div className="flex items-start gap-3 rounded-xl border border-secondary-100 bg-secondary-50/60 p-3.5">
+                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.accommodationCoverage ? 'bg-emerald-100 text-emerald-700' : 'bg-secondary-200 text-secondary-500'}`}>
                     {scholarship.accommodationCoverage ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-gray-900">Accommodation</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <h3 className="text-xs font-bold text-secondary-900">Accommodation</h3>
+                    <p className="text-xs text-secondary-500 mt-0.5">
                       {scholarship.accommodationCoverage ? "University housing provided" : "Covered via living stipend"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/60 p-3.5">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.travelAllowance ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
+                <div className="flex items-start gap-3 rounded-xl border border-secondary-100 bg-secondary-50/60 p-3.5">
+                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.travelAllowance ? 'bg-emerald-100 text-emerald-700' : 'bg-secondary-200 text-secondary-500'}`}>
                     {scholarship.travelAllowance ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-gray-900">Airfare & Travel</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <h3 className="text-xs font-bold text-secondary-900">Airfare & Travel</h3>
+                    <p className="text-xs text-secondary-500 mt-0.5">
                       {scholarship.travelAllowance ? "Return economy flights included" : "Not covered"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/60 p-3.5">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.healthInsurance ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
+                <div className="flex items-start gap-3 rounded-xl border border-secondary-100 bg-secondary-50/60 p-3.5">
+                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.healthInsurance ? 'bg-emerald-100 text-emerald-700' : 'bg-secondary-200 text-secondary-500'}`}>
                     {scholarship.healthInsurance ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-gray-900">Health Insurance</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <h3 className="text-xs font-bold text-secondary-900">Health Insurance</h3>
+                    <p className="text-xs text-secondary-500 mt-0.5">
                       {scholarship.healthInsurance ? "Comprehensive health cover included" : "Student responsibility"}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3 rounded-xl border border-gray-100 bg-gray-50/60 p-3.5">
-                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.visaSupport ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-500'}`}>
+                <div className="flex items-start gap-3 rounded-xl border border-secondary-100 bg-secondary-50/60 p-3.5">
+                  <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${scholarship.visaSupport ? 'bg-emerald-100 text-emerald-700' : 'bg-secondary-200 text-secondary-500'}`}>
                     {scholarship.visaSupport ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-gray-900">Visa Support & Fees</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <h3 className="text-xs font-bold text-secondary-900">Visa Support & Fees</h3>
+                    <p className="text-xs text-secondary-500 mt-0.5">
                       {scholarship.visaSupport ? "Visa sponsorship & fees reimbursed" : "Assistance letter provided"}
                     </p>
                   </div>
@@ -333,36 +331,36 @@ export default function ScholarshipDetailsClient({
             </div>
 
             {/* Eligibility & Requirements */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="rounded-2xl border border-secondary-200 bg-white p-6 shadow-xs">
+              <h2 className="text-lg font-bold text-secondary-900 mb-4 flex items-center gap-2">
                 <CheckCircle2 className="h-5 w-5 text-primary-600" />
                 Eligibility Criteria
               </h2>
-              <div className="space-y-4 text-sm text-gray-700">
-                <div className="border-b border-gray-100 pb-3">
-                  <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider text-gray-500 mb-1">
+              <div className="space-y-4 text-sm text-secondary-700">
+                <div className="border-b border-secondary-100 pb-3">
+                  <span className="font-semibold text-secondary-900 block text-xs uppercase tracking-wider text-secondary-500 mb-1">
                     Eligible Nationalities
                   </span>
                   <p>{scholarship.eligibleCountries.join(", ")}</p>
                 </div>
 
-                <div className="border-b border-gray-100 pb-3">
-                  <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider text-gray-500 mb-1">
+                <div className="border-b border-secondary-100 pb-3">
+                  <span className="font-semibold text-secondary-900 block text-xs uppercase tracking-wider text-secondary-500 mb-1">
                     Eligible Degree Levels
                   </span>
                   <p>{scholarship.degreeLevels.join(", ")}</p>
                 </div>
 
-                <div className="border-b border-gray-100 pb-3">
-                  <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider text-gray-500 mb-1">
+                <div className="border-b border-secondary-100 pb-3">
+                  <span className="font-semibold text-secondary-900 block text-xs uppercase tracking-wider text-secondary-500 mb-1">
                     Eligible Fields of Study
                   </span>
                   <p>{scholarship.fields.join(", ")}</p>
                 </div>
 
                 {scholarship.minGpa && (
-                  <div className="border-b border-gray-100 pb-3">
-                    <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider text-gray-500 mb-1">
+                  <div className="border-b border-secondary-100 pb-3">
+                    <span className="font-semibold text-secondary-900 block text-xs uppercase tracking-wider text-secondary-500 mb-1">
                       Academic Requirements / GPA
                     </span>
                     <p>Minimum GPA of {scholarship.minGpa} / 4.0 or equivalent academic distinction.</p>
@@ -370,7 +368,7 @@ export default function ScholarshipDetailsClient({
                 )}
 
                 <div>
-                  <span className="font-semibold text-gray-900 block text-xs uppercase tracking-wider text-gray-500 mb-1">
+                  <span className="font-semibold text-secondary-900 block text-xs uppercase tracking-wider text-secondary-500 mb-1">
                     Language Proficiency Requirements
                   </span>
                   <ul className="list-disc pl-5 space-y-1">
@@ -383,46 +381,46 @@ export default function ScholarshipDetailsClient({
             </div>
 
             {/* Application Process (Numbered Steps) */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs">
-              <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="rounded-2xl border border-secondary-200 bg-white p-6 shadow-xs">
+              <h2 className="text-lg font-bold text-secondary-900 mb-4 flex items-center gap-2">
                 <Send className="h-5 w-5 text-indigo-600" />
                 Step-by-Step Application Process
               </h2>
-              <ol className="space-y-4 text-sm text-gray-700">
+              <ol className="space-y-4 text-sm text-secondary-700">
                 <li className="flex items-start gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 font-bold text-xs text-primary-700">1</span>
                   <div>
-                    <span className="font-bold text-gray-900">Verify Eligibility:</span> Check that your country of origin, degree level, and academic records satisfy the criteria.
+                    <span className="font-bold text-secondary-900">Verify Eligibility:</span> Check that your country of origin, degree level, and academic records satisfy the criteria.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 font-bold text-xs text-primary-700">2</span>
                   <div>
-                    <span className="font-bold text-gray-900">Prepare Required Documents:</span> Assemble official transcripts, reference letters, proof of language test scores, and Statement of Purpose.
+                    <span className="font-bold text-secondary-900">Prepare Required Documents:</span> Assemble official transcripts, reference letters, proof of language test scores, and Statement of Purpose.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 font-bold text-xs text-primary-700">3</span>
                   <div>
-                    <span className="font-bold text-gray-900">Apply for University Admission:</span> Secure an unconditional or conditional offer letter if university nomination is required.
+                    <span className="font-bold text-secondary-900">Apply for University Admission:</span> Secure an unconditional or conditional offer letter if university nomination is required.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 font-bold text-xs text-primary-700">4</span>
                   <div>
-                    <span className="font-bold text-gray-900">Submit Scholarship Form:</span> Complete the application through the official portal before the closing deadline.
+                    <span className="font-bold text-secondary-900">Submit Scholarship Form:</span> Complete the application through the official portal before the closing deadline.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 font-bold text-xs text-primary-700">5</span>
                   <div>
-                    <span className="font-bold text-gray-900">Interview & Assessment:</span> Shortlisted candidates will be invited for online or embassy interviews.
+                    <span className="font-bold text-secondary-900">Interview & Assessment:</span> Shortlisted candidates will be invited for online or embassy interviews.
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100 font-bold text-xs text-primary-700">6</span>
                   <div>
-                    <span className="font-bold text-gray-900">Award Notification & Visa:</span> Successful applicants receive formal scholarship contracts and visa sponsorship letters.
+                    <span className="font-bold text-secondary-900">Award Notification & Visa:</span> Successful applicants receive formal scholarship contracts and visa sponsorship letters.
                   </div>
                 </li>
               </ol>
@@ -432,27 +430,27 @@ export default function ScholarshipDetailsClient({
           {/* Right Sidebar: Key Facts & Required Documents */}
           <div className="space-y-6">
             {/* Quick Summary Card */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs space-y-4">
-              <h3 className="font-bold text-gray-900 text-sm border-b border-gray-100 pb-2">
+            <div className="rounded-2xl border border-secondary-200 bg-white p-5 shadow-xs space-y-4">
+              <h3 className="font-bold text-secondary-900 text-sm border-b border-secondary-100 pb-2">
                 Key Opportunity Details
               </h3>
               <div className="space-y-3 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Duration:</span>
-                  <span className="font-semibold text-gray-900">{scholarship.duration}</span>
+                  <span className="text-secondary-500">Duration:</span>
+                  <span className="font-semibold text-secondary-900">{scholarship.duration}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Number of Awards:</span>
-                  <span className="font-semibold text-gray-900">{scholarship.numAwards || 'Varies'}</span>
+                  <span className="text-secondary-500">Number of Awards:</span>
+                  <span className="font-semibold text-secondary-900">{scholarship.numAwards || 'Varies'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Application Fee:</span>
-                  <span className="font-semibold text-gray-900">
+                  <span className="text-secondary-500">Application Fee:</span>
+                  <span className="font-semibold text-secondary-900">
                     {scholarship.applicationFee === 0 ? "Free ($0)" : `$${scholarship.applicationFee}`}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Application Deadline:</span>
+                  <span className="text-secondary-500">Application Deadline:</span>
                   <span className="font-semibold text-primary-600">{formatDate(scholarship.deadline)}</span>
                 </div>
               </div>
@@ -462,7 +460,7 @@ export default function ScholarshipDetailsClient({
                   href={scholarship.officialUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-gray-200 py-2.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-secondary-200 py-2.5 text-xs font-semibold text-secondary-700 hover:bg-secondary-50"
                 >
                   <span>Visit Official Website</span>
                   <ExternalLink className="h-3.5 w-3.5" />
@@ -471,11 +469,11 @@ export default function ScholarshipDetailsClient({
             </div>
 
             {/* Required Documents Checklist */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
-              <h3 className="font-bold text-gray-900 text-sm border-b border-gray-100 pb-2 mb-3">
+            <div className="rounded-2xl border border-secondary-200 bg-white p-5 shadow-xs">
+              <h3 className="font-bold text-secondary-900 text-sm border-b border-secondary-100 pb-2 mb-3">
                 Required Documents Checklist
               </h3>
-              <ul className="space-y-2 text-xs text-gray-700">
+              <ul className="space-y-2 text-xs text-secondary-700">
                 {scholarship.documentsRequired.map((doc, i) => (
                   <li key={i} className="flex items-center gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
@@ -485,22 +483,8 @@ export default function ScholarshipDetailsClient({
               </ul>
             </div>
 
-            {/* Trust & Source Card */}
-            <div className="rounded-2xl border border-primary-100 bg-primary-50/50 p-5 text-xs text-gray-600 space-y-2">
-              <div className="flex items-center gap-1.5 font-bold text-primary-900">
-                <ShieldCheck className="h-4 w-4 text-primary-600" />
-                <span>Verified Official Source</span>
-              </div>
-              <p>
-                Provider: <span className="font-semibold text-gray-900">{scholarship.providerName || "Verified Organization"}</span>
-              </p>
-              <p>
-                Last verified: <span className="font-semibold text-gray-900">{formatDate(scholarship.lastVerifiedAt)}</span>
-              </p>
-              <p className="text-[11px] text-gray-500 pt-2 border-t border-primary-100">
-                Disclaimer: Requirements can change. Always confirm directly on the official portal before applying.
-              </p>
-            </div>
+            {/* Trust & Source Card - Enhanced */}
+            <VerificationStatusIndicator scholarship={scholarship} />
           </div>
         </div>
       </Container>
