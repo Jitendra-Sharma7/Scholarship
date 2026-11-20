@@ -13,7 +13,6 @@ import type {
   UniversityFilterOptions,
 } from "@/lib/data/public";
 import type { DirectoryState } from "@/components/public/UniversityDirectory";
-import type { DirectoryState } from "@/components/public/UniversityDirectory";
 
 export const metadata = pageMetadata({
   title: "University Directory - Top Universities Offering Scholarships",

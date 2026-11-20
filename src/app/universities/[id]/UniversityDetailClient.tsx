@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter as useAppRouter } from "next/navigation";
 import {
@@ -128,22 +128,12 @@ export function UniversityDetailClient({
       : "overview"
   );
 
-  // Keep the tab in the URL so a direct link (and the browser back button)
-  // opens the right section without reloading the page.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const current = params.get("tab");
-    if (current && validTabIds.has(current as TabId) && current !== tab) {
-      setTab(current as TabId);
-    }
-  }, []);
-
   const navigateTab = useCallback(
     (next: TabId) => {
       setTab(next);
       const params = new URLSearchParams(window.location.search);
       params.set("tab", next);
-      router.replace(`?${params.toString()}`, undefined, { scroll: false });
+      router.replace(`?${params.toString()}`, { scroll: false });
     },
     [router]
   );
@@ -165,7 +155,7 @@ export function UniversityDetailClient({
         university: university.id,
         limit: SCHOLARSHIP_PAGE_SIZE,
         page: pageNum,
-        sort: sort as any,
+        sort: sort as "deadline" | "newest" | "title" | "featured",
       });
       setScholarships(res);
       setPage(pageNum);
@@ -661,7 +651,7 @@ function LocationSection({ university }: { university: PublicUniversity }) {
         {hasContact && (
           <article className="rounded-xl border border-gray-200 bg-white p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <Link className="h-5 w-5 text-primary-600" />
+              <Building2 className="h-5 w-5 text-primary-600" />
               Contact Information
             </h3>
             <dl className="space-y-3">
@@ -1065,18 +1055,18 @@ function ScholarshipRow({ scholarship }: { scholarship: PublicScholarship }) {
         <div className="text-xs font-semibold text-gray-900">
           {scholarship.fundingAmount ? (
             <>
-              {formatCurrency(scholarship.fundingAmount, scholarship.currency)}
+              {formatCurrency(scholarship.fundingAmount, scholarship.currency ?? "USD")}
               {scholarship.monthlyStipend && (
                 <>
                   <br />
                   <span className="text-gray-500 font-normal">
-                    + {formatCurrency(scholarship.monthlyStipend, scholarship.currency)}/mo
+                    + {formatCurrency(scholarship.monthlyStipend, scholarship.currency ?? "USD")}/mo
                   </span>
                 </>
               )}
             </>
           ) : scholarship.monthlyStipend ? (
-            formatCurrency(scholarship.monthlyStipend, scholarship.currency) + "/mo"
+            formatCurrency(scholarship.monthlyStipend, scholarship.currency ?? "USD") + "/mo"
           ) : (
             "Amount not stated"
           )}

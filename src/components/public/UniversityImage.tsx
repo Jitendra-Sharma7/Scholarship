@@ -56,15 +56,15 @@ export function UniversityImage({
       {!showFallback && (
         // eslint-disable-next-line @next/next/no-img-element
         <Image
+          fill
           src={src!}
           alt={alt}
           priority={priority}
           loading={priority ? "eager" : "lazy"}
           decoding="async"
           onError={() => setFailed(true)}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           style={{
-            width: "100%",
-            height: "100%",
             objectFit: "cover",
             display: "block",
           }}
