@@ -1,29 +1,120 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, GraduationCap, Globe, Building2, BookOpen, Award, FileText } from "lucide-react";
+import { Menu, X, Search, GraduationCap, Building2, Globe, BookOpen, Award, FileText, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SiteLogo } from "@/components/layout/SiteLogo";
 import { Container, Flex } from "@/components/layout/Layout";
 import { useStore } from "@/lib/store/useStore";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { label: "Scholarships", href: "/scholarships", icon: GraduationCap },
-  { label: "Universities", href: "/universities", icon: Building2 },
-  { label: "Countries", href: "/countries", icon: Globe },
-  { label: "Fields of Study", href: "/fields", icon: BookOpen },
-  { label: "Fully Funded", href: "/fully-funded", icon: Award },
-  { label: "Resources", href: "/resources", icon: FileText },
+interface DropdownItem {
+  label: string;
+  href: string;
+}
+
+interface NavItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  dropdown?: DropdownItem[];
+}
+
+const navItems: NavItem[] = [
+  {
+    label: "Scholarships",
+    href: "/scholarships",
+    icon: GraduationCap,
+    dropdown: [
+      { label: "All Scholarships", href: "/scholarships" },
+      { label: "Fully Funded Scholarships", href: "/scholarships?funding=fully" },
+      { label: "Partially Funded Scholarships", href: "/scholarships?funding=partially" },
+      { label: "Undergraduate Scholarships", href: "/scholarships?level=undergraduate" },
+      { label: "Master's Scholarships", href: "/scholarships?level=masters" },
+      { label: "PhD Scholarships", href: "/scholarships?level=phd" },
+      { label: "Postdoctoral Scholarships", href: "/scholarships?level=postdoc" },
+      { label: "Government Scholarships", href: "/scholarships?type=government" },
+    ],
+  },
+  {
+    label: "Universities",
+    href: "/universities",
+    icon: Building2,
+    dropdown: [
+      { label: "Top Universities", href: "/universities?sort=ranking" },
+      { label: "Universities by Country", href: "/universities/by-country" },
+      { label: "Universities by Ranking", href: "/universities/by-ranking" },
+      { label: "University Scholarships", href: "/universities/scholarships" },
+      { label: "Popular Universities", href: "/universities?sort=popular" },
+    ],
+  },
+  {
+    label: "Countries",
+    href: "/countries",
+    icon: Globe,
+    dropdown: [
+      { label: "Scholarships in United Kingdom", href: "/countries/united-kingdom" },
+      { label: "Scholarships in USA", href: "/countries/usa" },
+      { label: "Scholarships in Canada", href: "/countries/canada" },
+      { label: "Scholarships in Australia", href: "/countries/australia" },
+      { label: "Scholarships in Germany", href: "/countries/germany" },
+      { label: "Scholarships in Europe", href: "/countries/europe" },
+      { label: "View All Countries", href: "/countries" },
+    ],
+  },
+  {
+    label: "Fields",
+    href: "/fields",
+    icon: BookOpen,
+    dropdown: [
+      { label: "Engineering & Technology", href: "/fields/engineering-technology" },
+      { label: "Computer Science & IT", href: "/fields/computer-science-it" },
+      { label: "Business & Management", href: "/fields/business-management" },
+      { label: "Medicine & Health Sciences", href: "/fields/medicine-health" },
+      { label: "Social Sciences", href: "/fields/social-sciences" },
+      { label: "Arts & Humanities", href: "/fields/arts-humanities" },
+      { label: "Natural Sciences", href: "/fields/natural-sciences" },
+      { label: "Law", href: "/fields/law" },
+    ],
+  },
+  {
+    label: "Fully Funded",
+    href: "/fully-funded",
+    icon: Award,
+    dropdown: [
+      { label: "Fully Funded Bachelor's", href: "/fully-funded?level=bachelors" },
+      { label: "Fully Funded Master's", href: "/fully-funded?level=masters" },
+      { label: "Fully Funded PhD", href: "/fully-funded?level=phd" },
+      { label: "Government-Funded Scholarships", href: "/fully-funded?type=government" },
+      { label: "International Scholarships", href: "/fully-funded?type=international" },
+    ],
+  },
+  {
+    label: "Resources",
+    href: "/resources",
+    icon: FileText,
+    dropdown: [
+      { label: "Scholarship Guides", href: "/resources/guides" },
+      { label: "Application Tips", href: "/resources/application-tips" },
+      { label: "SOP & Personal Statement", href: "/resources/sop-personal-statement" },
+      { label: "Recommendation Letters", href: "/resources/recommendation-letters" },
+      { label: "IELTS & TOEFL Preparation", href: "/resources/ielts-toefl" },
+      { label: "Visa Guides", href: "/resources/visa-guides" },
+      { label: "FAQs", href: "/faq" },
+    ],
+  },
 ];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileOpenDropdown, setMobileOpenDropdown] = useState<string | null>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isAuthenticated = useStore((s) => s.isAuthenticated);
   const userName = useStore((s) => s.user?.name ?? null);
@@ -37,12 +128,6 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const [lastPathname, setLastPathname] = useState(pathname);
-  if (pathname !== lastPathname) {
-    setLastPathname(pathname);
-    setIsMobileMenuOpen(false);
-  }
-
   useEffect(() => {
     if (!isMobileMenuOpen) return;
     const previous = document.body.style.overflow;
@@ -52,10 +137,62 @@ export function Header() {
     };
   }, [isMobileMenuOpen]);
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMobileMenuOpen(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOpenDropdown(null);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMobileOpenDropdown(null);
+  }, [pathname]);
+
   const handleLogout = () => {
     logout();
     setIsMobileMenuOpen(false);
     router.push("/");
+  };
+
+  const handleOutsideClick = (event: MouseEvent) => {
+    const target = event.target as HTMLElement;
+    let clickedInside = false;
+    
+    Object.values(dropdownRefs.current).forEach((ref) => {
+      if (ref && ref.contains(target)) {
+        clickedInside = true;
+      }
+    });
+
+    const mobileMenu = document.getElementById("mobile-nav");
+    if (mobileMenu && mobileMenu.contains(target)) {
+      clickedInside = true;
+    }
+
+    const mobileToggle = document.querySelector('[aria-label="Toggle menu"]');
+    if (mobileToggle && mobileToggle.contains(target)) {
+      clickedInside = true;
+    }
+
+    if (!clickedInside) {
+      setOpenDropdown(null);
+      setMobileOpenDropdown(null);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, []);
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Escape") {
+      setOpenDropdown(null);
+      setMobileOpenDropdown(null);
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  const isActive = (href: string) => {
+    return pathname === href || pathname?.startsWith(href + "/");
   };
 
   return (
@@ -64,36 +201,91 @@ export function Header() {
         "sticky top-0 z-50 w-full border-b border-secondary-200 bg-white/95 backdrop-blur-sm transition-shadow",
         isScrolled && "shadow-sm"
       )}
+      onKeyDown={handleKeyDown}
     >
       <Container>
         <Flex justify="between" align="center" className="h-16 lg:h-20">
           <SiteLogo tone="dark" size={40} />
 
-          <nav className="hidden items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-1 lg:flex" role="menubar">
             {navItems.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
               const Icon = item.icon;
+              const hasDropdown = item.dropdown && item.dropdown.length > 0;
+              const isOpen = openDropdown === item.label;
+
               return (
-                <Link
+                <div
                   key={item.label}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-primary-50 text-primary-700"
-                      : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
-                  )}
+                  className="relative"
+                  role="menuitem"
+                  onMouseEnter={() => hasDropdown && setOpenDropdown(item.label)}
+                  onMouseLeave={() => hasDropdown && setOpenDropdown(null)}
+                  onFocus={() => hasDropdown && setOpenDropdown(item.label)}
+                  onBlur={() => hasDropdown && setTimeout(() => setOpenDropdown(null), 100)}
                 >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      isActive(item.href)
+                        ? "bg-primary-50 text-primary-700"
+                        : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900"
+                    )}
+                    aria-haspopup={hasDropdown}
+                    aria-expanded={isOpen}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                    {hasDropdown && (
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 transition-transform",
+                          isOpen && "rotate-180"
+                        )}
+                        aria-hidden="true"
+                      />
+                    )}
+                  </Link>
+
+                  {hasDropdown && (
+                    <div
+                      ref={(el) => { dropdownRefs.current[item.label] = el; }}
+                      className="absolute left-0 top-full mt-1.5 min-w-[220px] rounded-xl border border-secondary-200 bg-white py-2 shadow-card-elevated animate-slide-in z-50"
+                      role="menu"
+                      onMouseEnter={() => setOpenDropdown(item.label)}
+                      onMouseLeave={() => setOpenDropdown(null)}
+                    >
+                      {item.dropdown?.map((ddItem) => (
+                        <Link
+                          key={ddItem.label}
+                          href={ddItem.href}
+                          role="menuitem"
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-2.5 text-sm text-secondary-700 transition-colors",
+                            isActive(ddItem.href)
+                              ? "bg-primary-50 text-primary-700 font-medium"
+                              : "hover:bg-secondary-50 hover:text-secondary-900"
+                          )}
+                          onClick={() => setOpenDropdown(null)}
+                        >
+                          <span className="relative">
+                            {isActive(ddItem.href) && (
+                              <span className="absolute -left-4 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary-600" />
+                            )}
+                            {ddItem.label}
+                          </span>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </nav>
 
           <Flex align="center" gap="sm">
             <Link href="/scholarships" className="hidden sm:flex">
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" leftIcon={<Search className="h-4 w-4" />}>
                 Search Scholarships
               </Button>
             </Link>
@@ -144,26 +336,85 @@ export function Header() {
         </Flex>
 
         {isMobileMenuOpen && (
-          <div id="mobile-nav" className="lg:hidden animate-slide-down">
+          <div
+            id="mobile-nav"
+            className="lg:hidden animate-slide-down"
+            role="navigation"
+            aria-label="Mobile navigation"
+          >
             <div className="max-h-[calc(100dvh-4rem)] space-y-1 overflow-y-auto border-t border-secondary-200 py-4 lg:max-h-none">
               {navItems.map((item) => {
-                const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
                 const Icon = item.icon;
+                const hasDropdown = item.dropdown && item.dropdown.length > 0;
+                const isMobileOpen = mobileOpenDropdown === item.label;
+
                 return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium",
-                      isActive
-                        ? "bg-primary-50 text-primary-700"
-                        : "text-secondary-600 hover:bg-secondary-100"
+                  <div key={item.label} className="relative">
+                    <Link
+                      href={item.href}
+                      onClick={() => {
+                        if (!hasDropdown) setIsMobileMenuOpen(false);
+                      }}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium",
+                        isActive(item.href)
+                          ? "bg-primary-50 text-primary-700"
+                          : "text-secondary-600 hover:bg-secondary-100"
+                      )}
+                      aria-haspopup={hasDropdown}
+                      aria-expanded={isMobileOpen}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      {item.label}
+                      {hasDropdown && (
+                        <ChevronRight
+                          className={cn(
+                            "ml-auto h-5 w-5 shrink-0 transition-transform",
+                            isMobileOpen && "rotate-90"
+                          )}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </Link>
+
+                    {hasDropdown && (
+                      <div
+                        ref={(el) => { dropdownRefs.current[`mobile-${item.label}`] = el; }}
+                        className={cn(
+                          "overflow-hidden transition-all duration-200 ease-out",
+                          isMobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                        )}
+                        role="menu"
+                      >
+                        <div className="ml-8 mt-1 space-y-0.5 pl-2 border-l border-secondary-200">
+                          {item.dropdown?.map((ddItem) => (
+                            <Link
+                              key={ddItem.label}
+                              href={ddItem.href}
+                              role="menuitem"
+                              onClick={() => {
+                                setMobileOpenDropdown(null);
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-2 text-sm text-secondary-700 transition-colors rounded-r-lg",
+                                isActive(ddItem.href)
+                                  ? "bg-primary-50 text-primary-700 font-medium"
+                                  : "hover:bg-secondary-50 hover:text-secondary-900"
+                              )}
+                            >
+                              <span className="relative">
+                                {isActive(ddItem.href) && (
+                                  <span className="absolute -left-3 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary-600" />
+                                )}
+                                {ddItem.label}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                  >
-                    <Icon className="h-5 w-5 shrink-0" />
-                    {item.label}
-                  </Link>
+                  </div>
                 );
               })}
               <div className="mt-4 flex flex-col gap-2 border-t border-secondary-200 pt-4">
@@ -183,6 +434,7 @@ export function Header() {
                   <>
                     <Link href="/auth/login" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start gap-2">
+                        <Search className="h-4 w-4" />
                         Sign In
                       </Button>
                     </Link>
