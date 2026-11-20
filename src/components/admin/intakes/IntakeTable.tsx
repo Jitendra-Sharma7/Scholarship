@@ -102,7 +102,7 @@ export function IntakeTable({
       hideBelow: "lg",
       cell: (intake) => (
         <span className="whitespace-nowrap text-xs tabular-nums text-slate-600">
-          {formatDate(intake.createdAt)}
+          {formatDate(intake.createdAt ?? null)}
         </span>
       ),
     },

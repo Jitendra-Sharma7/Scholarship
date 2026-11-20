@@ -2,6 +2,27 @@ import { prisma } from "@/lib/prisma";
 import { evaluateDeadlineSync } from "@/lib/deadline";
 import { getSettingNumber } from "@/lib/settings";
 
+interface ScholarshipForMatching {
+  id: string;
+  title: string;
+  country?: { name: string; code: string } | null;
+  countryNameLegacy?: string | null;
+  university?: { name: string } | null;
+  universityNameLegacy?: string | null;
+  fields: { field: { name: string } }[];
+  fieldLabels: string[];
+  degreeLevels: string[];
+  eligibleCountries: string[];
+  fundingType: string;
+  isFullyFunded: boolean;
+  minGpa: number | null;
+  ieltsReq: number | null;
+  toeflReq: number | null;
+  deadline: Date | null;
+  openingDate: Date | null;
+  deadlineStatusOverride: string | null;
+}
+
 export interface StudentProfile {
   id: string;
   country?: string | null;
@@ -57,7 +78,7 @@ function normalizeField(field: string): string {
 
 function calculateMatchScore(
   profile: StudentProfile,
-  scholarship: any
+  scholarship: ScholarshipForMatching
 ): { score: number; reasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
@@ -129,7 +150,7 @@ function calculateMatchScore(
   if (profile.fieldOfStudy) {
     const studentField = normalizeField(profile.fieldOfStudy);
     const scholarshipFields = [
-      ...(scholarship.fields || []).map((f: any) => f.field?.name || "").map(normalizeField),
+      ...(scholarship.fields || []).map((f: { field?: { name?: string } }) => f.field?.name || "").map(normalizeField),
       ...(scholarship.fieldLabels || []).map(normalizeField),
     ].filter(Boolean);
     
@@ -193,7 +214,7 @@ function calculateMatchScore(
 }
 
 export async function findMatches(profile: MatchProfile): Promise<MatchResult[]> {
-  const where: any = {
+  const where: Record<string, unknown> = {
     publishStatus: "PUBLISHED",
     deletedAt: null,
   };

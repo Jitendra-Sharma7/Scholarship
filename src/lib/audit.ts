@@ -22,7 +22,9 @@ export type ActivityEntity =
   | "Media"
   | "Setting"
   | "Redirect"
-  | "Auth";
+  | "Auth"
+  | "Intake"
+  | "SyncLog";
 
 export interface ActivityInput {
   action: string; // e.g. "scholarship.create", "user.role_change"

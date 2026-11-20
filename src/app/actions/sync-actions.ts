@@ -4,9 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
+import type { SyncLog } from "@prisma/client";
 import { atLeast, getCurrentUser, isStaff } from "@/lib/auth";
 import { recordActivity } from "@/lib/audit";
 import { scrapeGlobalScholarshipPoint, mapScrapedToPrisma } from "@/lib/scraping/globalscholarshippoint";
+
+export type { SyncLog };
 
 export interface SyncActionState {
   error?: string;
@@ -108,7 +112,7 @@ export async function runSyncNow(
         totalNew,
         totalUpdated,
         totalErrors,
-        errorDetails: errors.length > 0 ? errors : null,
+        errorDetails: errors.length > 0 ? (errors as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
       },
     });
 
@@ -190,12 +194,10 @@ export async function retryFailedSync(id: string): Promise<SyncActionState> {
     return { error: "Sync log not found" };
   }
 
-  return runSyncNow(
-    {},
-    new FormData([
-      ["sourceUrl", existingLog.sourceUrl],
-      ["sourceName", existingLog.sourceName],
-      ["targetIntake", "September 2027"],
-    ])
-  );
+  const formData = new FormData();
+  formData.append("sourceUrl", existingLog.sourceUrl);
+  formData.append("sourceName", existingLog.sourceName);
+  formData.append("targetIntake", "September 2027");
+
+  return runSyncNow({}, formData);
 }

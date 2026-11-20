@@ -110,7 +110,7 @@ export async function fetchPublicFields(): Promise<PublicField[]> {
 }
 
 export async function fetchPublicUniversities(limit?: number): Promise<PublicUniversity[]> {
-  return getPublicUniversities(clampLimit(limit));
+  return getPublicUniversities({ limit: clampLimit(limit) });
 }
 
 export async function fetchPublicProviders(): Promise<PublicProvider[]> {

@@ -30,7 +30,7 @@ async function requireEditor() {
   return user;
 }
 
-export async function createIntakeAction(formData: FormData) {
+export async function createIntakeAction(_prevState: { error?: string } | undefined, formData: FormData) {
   let actor;
   try {
     actor = await requireEditor();
@@ -85,7 +85,7 @@ export async function createIntakeAction(formData: FormData) {
   redirect(`/admin/intakes/${intake.id}/edit?saved=1`);
 }
 
-export async function updateIntakeAction(id: string, formData: FormData) {
+export async function updateIntakeAction(id: string, _prevState: { error?: string } | undefined, formData: FormData) {
   let actor;
   try {
     actor = await requireEditor();

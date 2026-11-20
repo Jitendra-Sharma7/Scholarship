@@ -12,6 +12,7 @@ export interface IntakeData {
   sortOrder: number;
   description?: string | null;
   scholarshipCount?: number;
+  createdAt?: Date | string;
 }
 
 export async function getIntakes(includeInactive = false) {
@@ -188,10 +189,11 @@ export async function seedDefaultIntakes() {
   ];
 
   for (const intake of defaultIntakes) {
+    const slug = intake.name.toLowerCase().replace(/\s+/g, "-");
     await prisma.intake.upsert({
-      where: { slug: intake.name.toLowerCase().replace(/\s+/g, "-") },
+      where: { slug },
       update: {},
-      create: intake,
+      create: { ...intake, slug },
     });
   }
 }

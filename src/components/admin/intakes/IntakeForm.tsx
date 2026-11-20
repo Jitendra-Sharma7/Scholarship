@@ -2,6 +2,7 @@
 
 import { useActionState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Loader2, Save, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -15,14 +16,18 @@ import {
 import { Panel } from "@/components/admin/ui/primitives";
 import { createIntakeAction, updateIntakeAction } from "@/app/actions/intake-actions";
 
-const INITIAL_STATE = {};
+interface IntakeFormState {
+  error?: string;
+}
+
+const INITIAL_STATE: IntakeFormState = {};
 
 export function IntakeForm({ mode, intake }: { mode: "create" | "edit"; intake?: any }) {
   const isEdit = mode === "edit" && Boolean(intake);
   const record = intake;
 
   const action = isEdit ? updateIntakeAction.bind(null, record!.id) : createIntakeAction;
-  const [state, formAction, pending] = useActionState(action, INITIAL_STATE);
+  const [state, formAction, pending] = useActionState<IntakeFormState, FormData>(action, INITIAL_STATE);
 
   const error = state.error;
   const router = useRouter();
@@ -54,7 +59,6 @@ export function IntakeForm({ mode, intake }: { mode: "create" | "edit"; intake?:
               <NumberInput
                 label="Start Month (1-12)"
                 name="startMonth"
-                required
                 defaultValue={record?.startMonth ?? 9}
                 min={1}
                 max={12}
@@ -62,7 +66,6 @@ export function IntakeForm({ mode, intake }: { mode: "create" | "edit"; intake?:
               <NumberInput
                 label="Start Year"
                 name="startYear"
-                required
                 defaultValue={record?.startYear ?? new Date().getFullYear()}
                 min={2020}
                 max={2035}

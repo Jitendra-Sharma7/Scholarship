@@ -1,4 +1,6 @@
 import { chromium } from "playwright";
+import { PublishStatus } from "@prisma/client";
+import { slugify } from "@/lib/slug";
 
 export interface ScrapedScholarship {
   title: string;
@@ -173,8 +175,8 @@ async function scrapeScholarshipPage(page: any, url: string): Promise<ScrapedSch
       nationalityRequirements,
       academicRequirements,
       englishRequirements,
-      openingDate,
-      deadline,
+      openingDate: openingDate || undefined,
+      deadline: deadline || undefined,
       intake,
       officialUrl,
       sourceUrl: url,
@@ -207,7 +209,7 @@ async function getScholarshipLinks(page: any, listingUrl: string): Promise<strin
         .filter((href) => !href.includes("#") && !href.includes("?replytocom"));
     });
 
-    return [...new Set(links)];
+    return Array.from(new Set(links));
   } catch (error) {
     console.error(`Error getting links from ${listingUrl}:`, error);
     return [];
@@ -253,7 +255,7 @@ export async function scrapeGlobalScholarshipPoint(
 
           const scholarship = await scrapeScholarshipPage(page, link);
           if (scholarship) {
-            if (scholarship.intake.includes("2027") || scholarship.deadline?.getFullYear() >= 2026) {
+            if (scholarship.intake?.includes("2027") || (scholarship.deadline && scholarship.deadline.getFullYear() >= 2026)) {
               scholarships.push(scholarship);
             }
           }
@@ -274,6 +276,7 @@ export async function scrapeGlobalScholarshipPoint(
 export function mapScrapedToPrisma(scraped: ScrapedScholarship) {
   return {
     title: scraped.title,
+    slug: slugify(scraped.title),
     shortTitle: scraped.title.length > 80 ? scraped.title.slice(0, 77) + "..." : undefined,
     description: scraped.description,
     shortDescription: scraped.description.slice(0, 400),
@@ -302,8 +305,8 @@ export function mapScrapedToPrisma(scraped: ScrapedScholarship) {
     applicationUrl: scraped.officialUrl,
     officialUrl: scraped.officialUrl,
     source: scraped.sourceUrl,
-    verificationStatus: "VERIFICATION_NEEDED",
-    publishStatus: "DRAFT",
+    verificationStatus: "VERIFICATION_NEEDED" as const,
+    publishStatus: PublishStatus.DRAFT,
     intake: scraped.intake,
   };
 }

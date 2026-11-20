@@ -123,7 +123,7 @@ export default function SyncManagementPage({
       hideBelow: "md",
       cell: (log) => (
         <Badge tone={log.triggeredBy === "manual" ? "blue" : log.triggeredBy === "scheduled" ? "purple" : "neutral"}>
-          {TRIGGER_LABELS[log.triggeredBy] ?? log.triggeredBy}
+          {TRIGGER_LABELS[log.triggeredBy ?? ""] ?? log.triggeredBy}
         </Badge>
       ),
     },
@@ -192,7 +192,6 @@ export default function SyncManagementPage({
     {
       name: "status",
       label: "Status",
-      type: "select",
       options: [
         { value: "", label: "All Statuses" },
         { value: "COMPLETED", label: "Completed" },
@@ -205,7 +204,6 @@ export default function SyncManagementPage({
     {
       name: "triggeredBy",
       label: "Trigger",
-      type: "select",
       options: [
         { value: "", label: "All Triggers" },
         { value: "manual", label: "Manual" },

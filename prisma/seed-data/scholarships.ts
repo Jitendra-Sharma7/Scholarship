@@ -13,20 +13,20 @@ export interface ScholarshipData {
   fields: string[];
   eligibleCountries: string[]; // ["All", "Developing", "Africa", "Asia", specific codes...]
   fundingType: "fully-funded" | "fully-tuition" | "partial-tuition" | "stipend" | "mixed";
-  fundingAmount?: number;
-  currency?: string;
+  fundingAmount?: number | null;
+  currency?: string | null;
   tuitionCoverage: boolean;
   accommodationCoverage: boolean;
-  livingStipend: number;
+  livingStipend: number | null;
   travelAllowance: boolean;
   healthInsurance: boolean;
   visaSupport: boolean;
-  applicationFee: number;
+  applicationFee: number | null;
   deadline: string; // ISO date string
   openingDate?: string;
   duration: string;
-  numAwards: number;
-  minGpa?: number;
+  numAwards?: number | null;
+  minGpa?: number | null;
   languageReqs: string[];
   documentsRequired: string[];
   applicationUrl: string | null;
