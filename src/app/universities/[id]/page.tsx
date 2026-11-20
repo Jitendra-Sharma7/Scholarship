@@ -59,8 +59,20 @@ function universitySchema(university: Awaited<ReturnType<typeof getPublicUnivers
   };
 }
 
-export default async function UniversityDetailPage({ params }: { params: Promise<{ id: string }> }) {
+function asString(value: string | string[] | undefined, fallback: string): string {
+  if (value === undefined || value === "") return fallback;
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export default async function UniversityDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const { id } = await params;
+  const paramsSearch = await searchParams;
   const university = await getPublicUniversityById(id);
 
   if (!university) {
@@ -86,6 +98,7 @@ export default async function UniversityDetailPage({ params }: { params: Promise
       <UniversityDetailClient 
         university={university} 
         initialScholarships={scholarshipsResult}
+        initialTab={asString(paramsSearch.tab, "overview")}
       />
     </div>
   );

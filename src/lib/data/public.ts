@@ -193,6 +193,13 @@ export interface PublicField {  id: string;
   children: { id: string; name: string; slug: string }[];
 }
 
+export interface PublicUniversityScholarship {
+  id: string;
+  degreeLevels: string[];
+  deadline: Date | null;
+  intakes: { intake: { name: string; slug: string } }[];
+}
+
 export interface PublicUniversity {
   id: string;
   name: string;
@@ -209,11 +216,14 @@ export interface PublicUniversity {
   tuitionInfo: string | null;
   admissionInfo: string | null;
   internationalInfo: string | null;
+  /** Count of published, non-deleted scholarships only. */
   scholarshipCount: number;
   establishedYear: number | null;
   studentCount: number | null;
   internationalStudentPercent: number | null;
   countryId: string | null;
+  /** ISO 3166-1 alpha-2 code of the university's country, for flag rendering. */
+  countryCode: string | null;
   slug: string;
   coverImage: string | null;
   type: string | null;
@@ -226,6 +236,17 @@ export interface PublicUniversity {
   contactEmail: string | null;
   contactPhone: string | null;
   featured: boolean;
+  createdAt: Date;
+  /** Populated when the caller requests related scholarships. */
+  scholarships?: PublicUniversityScholarship[];
+}
+
+export interface UniversityFilterOptions {
+  countries: { id: string; name: string }[];
+  types: string[];
+  fields: string[];
+  intakes: { id: string; name: string; slug: string }[];
+  studyLevels: { value: string; label: string }[];
 }
 
 export interface PublicProvider {
@@ -502,14 +523,43 @@ export async function getPublicFields(): Promise<PublicField[]> {
 
 // --- Universities ---------------------------------------------------------
 
-export async function getPublicUniversities(limit?: number): Promise<PublicUniversity[]> {
+export interface GetPublicUniversitiesOptions {
+  limit?: number;
+  /** When true, each university includes its published scholarships so the
+   *  directory can filter by study level, intake and scholarship availability
+   *  without additional round trips. */
+  includeScholarships?: boolean;
+}
+
+export async function getPublicUniversities({
+  limit,
+  includeScholarships = false,
+}: GetPublicUniversitiesOptions = {}): Promise<PublicUniversity[]> {
   const rows = await prisma.university.findMany({
     where: VISIBLE,
     orderBy: [{ qsRanking: "asc" }, { name: "asc" }],
     take: limit,
     include: {
-      country: { select: { id: true, name: true } },
-      _count: { select: { scholarships: true } },
+      country: { select: { id: true, name: true, code: true } },
+      ...(includeScholarships
+        ? {
+            scholarships: {
+              where: VISIBLE,
+              select: {
+                id: true,
+                degreeLevels: true,
+                deadline: true,
+                intakes: {
+                  include: { intake: true },
+                },
+              },
+              orderBy: [{ deadline: "asc" }, { createdAt: "asc" }],
+            },
+          }
+        : {}),
+      _count: {
+        select: { scholarships: { where: VISIBLE } },
+      },
     },
   });
 
@@ -529,11 +579,13 @@ export async function getPublicUniversities(limit?: number): Promise<PublicUnive
     tuitionInfo: u.tuitionInfo,
     admissionInfo: u.admissionInfo,
     internationalInfo: u.internationalInfo,
+    // Only published, non-deleted scholarships count as "available".
     scholarshipCount: u._count.scholarships,
     establishedYear: u.foundedYear,
     studentCount: u.studentCount,
     internationalStudentPercent: u.internationalStudentPercent,
     countryId: u.countryId,
+    countryCode: u.country?.code ?? null,
     slug: u.slug,
     coverImage: u.coverImage,
     type: u.type,
@@ -546,7 +598,61 @@ export async function getPublicUniversities(limit?: number): Promise<PublicUnive
     contactEmail: u.contactEmail,
     contactPhone: u.contactPhone,
     featured: u.featured,
+    createdAt: u.createdAt,
+    ...(includeScholarships
+      ? {
+          scholarships: u.scholarships.map((s) => ({
+            id: s.id,
+            degreeLevels: s.degreeLevels,
+            deadline: s.deadline,
+            intakes: (s.intakes as { intake: { name: string; slug: string } }[]).map((link) => ({
+              intake: { name: link.intake.name, slug: link.intake.slug },
+            })),
+          })),
+        }
+      : {}),
   }));
+}
+
+export async function getPublicUniversityFilterOptions(): Promise<UniversityFilterOptions> {
+  const [countryRows, typeRows, intakes, universityRows] = await Promise.all([
+    prisma.university.findMany({
+      where: VISIBLE,
+      select: { country: { select: { id: true, name: true } } },
+      distinct: ["countryId"],
+      orderBy: { country: { name: "asc" } },
+    }),
+    prisma.university.findMany({
+      where: { ...VISIBLE, type: { not: null } },
+      select: { type: true },
+      distinct: ["type"],
+      orderBy: { type: "asc" },
+    }),
+    getPublicIntakes(),
+    prisma.university.findMany({
+      where: VISIBLE,
+      select: { popularFields: true },
+    }),
+  ]);
+
+  const countries = countryRows
+    .map((row) => row.country)
+    .filter((c): c is { id: string; name: string } => Boolean(c))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const types = typeRows.map((row) => row.type).filter(Boolean) as string[];
+
+  const fields = [
+    ...new Set(universityRows.flatMap((row) => (row.popularFields ?? []).filter(Boolean))),
+  ].sort((a, b) => a.localeCompare(b));
+
+  const studyLevels: { value: string; label: string }[] = [
+    { value: "ug", label: "Undergraduate" },
+    { value: "pg", label: "Postgraduate" },
+    { value: "phd", label: "PhD / Doctoral" },
+  ];
+
+  return { countries, types, fields, intakes, studyLevels };
 }
 
 export async function getPublicUniversityById(id: string): Promise<PublicUniversity | null> {
@@ -554,7 +660,7 @@ export async function getPublicUniversityById(id: string): Promise<PublicUnivers
     where: { ...VISIBLE, OR: [{ id }, { slug: id }] },
     include: {
       country: { select: { id: true, name: true, code: true } },
-      _count: { select: { scholarships: true } },
+      _count: { select: { scholarships: { where: VISIBLE } } },
     },
   });
 
@@ -580,6 +686,7 @@ export async function getPublicUniversityById(id: string): Promise<PublicUnivers
     studentCount: row.studentCount,
     internationalStudentPercent: row.internationalStudentPercent,
     countryId: row.countryId,
+    countryCode: row.country?.code ?? null,
     slug: row.slug,
     coverImage: row.coverImage,
     type: row.type,
@@ -592,6 +699,7 @@ export async function getPublicUniversityById(id: string): Promise<PublicUnivers
     contactEmail: row.contactEmail,
     contactPhone: row.contactPhone,
     featured: row.featured,
+    createdAt: row.createdAt,
   };
 }
 
