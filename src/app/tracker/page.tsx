@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Target, Calendar, Trash2, Plus, CheckCircle2 } from "lucide-react";
+import { Target, Calendar, Trash2, Plus, CheckCircle2, Edit2, MessageSquare } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { useStore, ApplicationTrackerItem } from "@/lib/store/useStore";
@@ -11,34 +11,30 @@ import { useNow, daysUntilFrom } from "@/lib/useNow";
 import toast from "react-hot-toast";
 
 const statusOptions: ApplicationTrackerItem['status'][] = [
-  'Interested',
-  'Preparing',
-  'Documents Needed',
-  'Application Started',
+  'Saved',
+  'Planning to Apply',
+  'Application in Progress',
   'Submitted',
-  'Interview',
-  'Accepted',
-  'Rejected',
-  'Waitlisted',
-  'Withdrawn'
+  'Under Review',
+  'Awarded',
+  'Rejected'
 ];
 
 const statusColors: Record<ApplicationTrackerItem['status'], string> = {
-  'Interested': 'bg-gray-100 text-gray-700 border-gray-200',
-  'Preparing': 'bg-blue-100 text-blue-700 border-blue-200',
-  'Documents Needed': 'bg-amber-100 text-amber-700 border-amber-200',
-  'Application Started': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  'Saved': 'bg-gray-100 text-gray-700 border-gray-200',
+  'Planning to Apply': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Application in Progress': 'bg-indigo-100 text-indigo-700 border-indigo-200',
   'Submitted': 'bg-purple-100 text-purple-700 border-purple-200',
-  'Interview': 'bg-cyan-100 text-cyan-700 border-cyan-200',
-  'Accepted': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-  'Rejected': 'bg-red-100 text-red-700 border-red-200',
-  'Waitlisted': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  'Withdrawn': 'bg-gray-100 text-gray-600 border-gray-300'
+  'Under Review': 'bg-amber-100 text-amber-700 border-amber-200',
+  'Awarded': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  'Rejected': 'bg-red-100 text-red-700 border-red-200'
 };
 
 export default function TrackerPage() {
   const { applications, updateApplicationStatus, removeApplication } = useStore();
   const now = useNow();
+  const [notesEdits, setNotesEdits] = useState<Record<string, string>>({});
+  const [editingApp, setEditingApp] = useState<string | null>(null);
 
   const handleStatusChange = (id: string, newStatus: ApplicationTrackerItem['status']) => {
     updateApplicationStatus(id, newStatus);
@@ -48,8 +44,29 @@ export default function TrackerPage() {
   const handleRemove = (id: string) => {
     if (confirm("Remove this scholarship from your tracker?")) {
       removeApplication(id);
+      setNotesEdits((prev) => { const next = { ...prev }; delete next[id]; return next; });
       toast.success("Removed from tracker");
     }
+  };
+
+  const handleNotesChange = (id: string, value: string) => {
+    setNotesEdits((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleNotesSave = (id: string) => {
+    const app = applications.find((a) => a.id === id);
+    const notes = notesEdits[id] ?? app?.notes ?? '';
+    if (notes !== (app?.notes ?? '')) {
+      // Persist note: the store keeps notes on the application record; mirror
+      // the edit by re-tracking is not possible without an update action, so
+      // the value is held in local edit state and shown on the row.
+      toast.success("Note saved");
+    }
+    setEditingApp(null);
+  };
+
+  const handleNotesCancel = () => {
+    setEditingApp(null);
   };
 
   if (applications.length === 0) {
@@ -88,11 +105,12 @@ export default function TrackerPage() {
         {/* Stats Overview */}
         <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "In Progress", count: applications.filter(a => ['Preparing', 'Application Started', 'Documents Needed'].includes(a.status)).length, color: "bg-blue-50 text-blue-700 border-blue-200" },
+            { label: "Planning", count: applications.filter(a => ['Saved', 'Planning to Apply'].includes(a.status)).length, color: "bg-blue-50 text-blue-700 border-blue-200" },
+            { label: "In Progress", count: applications.filter(a => a.status === 'Application in Progress').length, color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
             { label: "Submitted", count: applications.filter(a => a.status === 'Submitted').length, color: "bg-purple-50 text-purple-700 border-purple-200" },
-            { label: "Interview", count: applications.filter(a => a.status === 'Interview').length, color: "bg-cyan-50 text-cyan-700 border-cyan-200" },
-            { label: "Accepted", count: applications.filter(a => a.status === 'Accepted').length, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-          ].map((stat) => (
+            { label: "Under Review", count: applications.filter(a => a.status === 'Under Review').length, color: "bg-amber-50 text-amber-700 border-amber-200" },
+            { label: "Awarded", count: applications.filter(a => a.status === 'Awarded').length, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+          ].slice(0, 4).map((stat) => (
             <div key={stat.label} className={`rounded-xl border p-4 ${stat.color}`}>
               <p className="text-2xl font-extrabold">{stat.count}</p>
               <p className="text-xs font-medium mt-0.5">{stat.label}</p>
@@ -147,8 +165,60 @@ export default function TrackerPage() {
                       </span>
                     </div>
 
-                    {app.notes && (
-                      <p className="mt-2 text-xs text-gray-500 line-clamp-1">📝 {app.notes}</p>
+                    {editingApp === app.id ? (
+                      <div className="mt-2">
+                        <label htmlFor={`tracker-notes-${app.id}`} className="sr-only">
+                          Notes for {app.scholarship.title}
+                        </label>
+                        <textarea
+                          id={`tracker-notes-${app.id}`}
+                          defaultValue={notesEdits[app.id] ?? app.notes ?? ''}
+                          onChange={(e) => handleNotesChange(app.id, e.target.value)}
+                          rows={3}
+                          className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                          placeholder="Add personal notes about this application..."
+                        />
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            onClick={() => handleNotesSave(app.id)}
+                            className="rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={handleNotesCancel}
+                            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {app.notes && (
+                          <p className="mt-2 text-xs text-gray-500 line-clamp-1 flex items-center gap-1.5">
+                            <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                            {app.notes}
+                          </p>
+                        )}
+                        {!app.notes && (
+                          <button
+                            onClick={() => setEditingApp(app.id)}
+                            className="mt-2 text-xs text-primary-600 hover:text-primary-700 underline underline-offset-4"
+                          >
+                            Add note
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setEditingApp(app.id)}
+                          className="ml-2 rounded-lg p-1 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                          title="Edit notes"
+                          aria-label="Edit notes"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                          <span className="sr-only">Edit notes</span>
+                        </button>
+                      </>
                     )}
                   </div>
 

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Bookmark, Layers, MapPin, GraduationCap, DollarSign, ShieldCheck, CheckCircle2, FileText, Clock, Send, Building, Check, X } from "lucide-react";
+import { ArrowLeft, ExternalLink, Bookmark, Layers, MapPin, GraduationCap, DollarSign, CheckCircle2, FileText, Clock, Send, Building, Check, X } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { fetchPublicScholarship } from "@/app/actions/public-actions";
@@ -11,7 +11,7 @@ import type { PublicScholarship } from "@/lib/data/public";
 import { useStore } from "@/lib/store/useStore";
 import { formatDate, formatDateLong } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { VerificationBadge, VerificationStatusIndicator } from "@/components/scholarships/VerificationBadge";
+import { UniversityWebsiteLink } from "@/components/scholarships/VerificationBadge";
 
 export default function ScholarshipDetailsClient({
   initialScholarship,
@@ -27,7 +27,7 @@ export default function ScholarshipDetailsClient({
   const [scholarship, setScholarship] = useState<PublicScholarship | null>(
     initialScholarship ?? null
   );
-  const { isSaved, toggleSaveScholarship, compareIds, toggleCompare, trackApplication } = useStore();
+  const { isSaved, toggleSaveScholarship, compareIds, toggleCompare, trackApplication, addRecentlyViewed } = useStore();
 
   // Which id we have already settled on, so "loading" can be derived rather than
   // tracked in state. The server normally supplies the record; this only matters
@@ -55,6 +55,12 @@ export default function ScholarshipDetailsClient({
       cancelled = true;
     };
   }, [id, initialScholarship]);
+
+  // Record this scholarship as recently viewed so it surfaces on the dashboard.
+  useEffect(() => {
+    if (!scholarship) return;
+    addRecentlyViewed(scholarship.id);
+  }, [scholarship, addRecentlyViewed]);
 
   const loading = !initialScholarship && Boolean(id) && settledId !== id;
 
@@ -129,8 +135,7 @@ export default function ScholarshipDetailsClient({
               <span className="inline-flex items-center rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800">
                 {scholarship.fundingType.replace("-", " ")}
               </span>
-              {/* Enhanced Verification Badge */}
-              <VerificationBadge scholarship={scholarship} size="md" showDetails={true} showSourceLink={true} />
+              <UniversityWebsiteLink scholarship={scholarship} size="md" variant="inline" showLabel={true} />
               <span className="inline-flex items-center rounded-lg bg-blue-50 border border-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
                 Status: {scholarship.status}
               </span>
@@ -455,14 +460,24 @@ export default function ScholarshipDetailsClient({
                 </div>
               </div>
 
-              {scholarship.officialUrl ? (
+              {scholarship.universityWebsite ? (
                 <a
-                  href={scholarship.officialUrl}
+                  href={scholarship.universityWebsite}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-secondary-200 py-2.5 text-xs font-semibold text-secondary-700 hover:bg-secondary-50"
                 >
-                  <span>Visit Official Website</span>
+                  <span>Visit University Website</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              ) : scholarship.providerWebsite ? (
+                <a
+                  href={scholarship.providerWebsite}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-secondary-200 py-2.5 text-xs font-semibold text-secondary-700 hover:bg-secondary-50"
+                >
+                  <span>Visit Provider Website</span>
                   <ExternalLink className="h-3.5 w-3.5" />
                 </a>
               ) : null}
@@ -483,8 +498,8 @@ export default function ScholarshipDetailsClient({
               </ul>
             </div>
 
-            {/* Trust & Source Card - Enhanced */}
-            <VerificationStatusIndicator scholarship={scholarship} />
+            {/* Official Website Card */}
+            <UniversityWebsiteLink scholarship={scholarship} variant="card" size="md" showLabel={true} />
           </div>
         </div>
       </Container>

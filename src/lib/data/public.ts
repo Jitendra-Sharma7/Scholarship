@@ -64,7 +64,9 @@ export interface PublicScholarship {
   studyMode: string | null;
   city: string | null;
   universityName: string | null;
+  universityWebsite: string | null;
   providerName: string | null;
+  providerWebsite: string | null;
   countryName: string | null;
   /** ISO 3166-1 alpha-2, used to render /flags/{code}.png. */
   countryCode: string | null;
@@ -351,7 +353,9 @@ export function toPublicScholarship(
     studyMode: fromPrismaStudyMode(row.studyMode),
     city: row.city,
     universityName: row.university?.name ?? row.universityNameLegacy ?? null,
+    universityWebsite: row.university?.website ?? null,
     providerName: row.provider?.name ?? null,
+    providerWebsite: row.provider?.website ?? null,
     countryName: row.country?.name ?? row.countryNameLegacy ?? null,
     countryCode: row.country?.code ?? null,
     logo: row.logo,

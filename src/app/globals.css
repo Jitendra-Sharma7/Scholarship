@@ -69,6 +69,9 @@
   .animate-slide-down {
     animation: slideDown 0.2s ease-out;
   }
+  .animate-slide-in {
+    animation: slideIn 0.2s ease-out;
+  }
   .animate-fade-in {
     animation: fadeIn 0.2s ease-out;
   }
@@ -81,6 +84,17 @@
   from {
     opacity: 0;
     transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
   to {
     opacity: 1;

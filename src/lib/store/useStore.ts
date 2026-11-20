@@ -5,10 +5,19 @@ import type { PublicScholarship } from '../data/public';
 export interface ApplicationTrackerItem {
   id: string; // Scholarship ID
   scholarship: PublicScholarship;
-  status: 'Interested' | 'Preparing' | 'Documents Needed' | 'Application Started' | 'Submitted' | 'Interview' | 'Accepted' | 'Rejected' | 'Waitlisted' | 'Withdrawn';
+  status: 'Saved' | 'Planning to Apply' | 'Application in Progress' | 'Submitted' | 'Under Review' | 'Awarded' | 'Rejected';
   notes: string;
   reminderDate?: string;
   addedAt: string;
+}
+
+export interface StudentNotification {
+  id: string;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  link?: string;
 }
 
 interface UserProfile {
@@ -44,6 +53,17 @@ interface AppState {
   updateApplicationStatus: (id: string, status: ApplicationTrackerItem['status']) => void;
   removeApplication: (id: string) => void;
 
+  // Recently viewed scholarships, most recent first.
+  recentlyViewed: string[];
+  addRecentlyViewed: (id: string) => void;
+  clearRecentlyViewed: () => void;
+
+  // Student notifications.
+  notifications: StudentNotification[];
+  addNotification: (notification: Omit<StudentNotification, 'id'>) => void;
+  markNotificationRead: (id: string) => void;
+  removeNotification: (id: string) => void;
+
   // Search State
   recentSearches: string[];
   addRecentSearch: (query: string) => void;
@@ -70,6 +90,8 @@ interface PersistedState {
   applications: ApplicationTrackerItem[];
   recentSearches: string[];
   compareIds: string[];
+  recentlyViewed: string[];
+  notifications: StudentNotification[];
 }
 
 export const useStore = create<AppState>()(
@@ -113,7 +135,7 @@ export const useStore = create<AppState>()(
       clearCompare: () => set({ compareIds: [] }),
 
       applications: [],
-      trackApplication: (scholarship, status = 'Interested') => set((state) => {
+      trackApplication: (scholarship, status = 'Planning to Apply') => set((state) => {
         const exists = state.applications.some(app => app.id === scholarship.id);
         if (exists) return state;
 
@@ -136,6 +158,37 @@ export const useStore = create<AppState>()(
         applications: state.applications.filter(app => app.id !== id)
       })),
 
+      recentlyViewed: [],
+      addRecentlyViewed: (id) => set((state) => {
+        const exists = state.recentlyViewed.includes(id);
+        if (exists) {
+          return { recentlyViewed: [id, ...state.recentlyViewed.filter(sId => sId !== id)] };
+        }
+        return { recentlyViewed: [id, ...state.recentlyViewed].slice(0, 10) };
+      }),
+      clearRecentlyViewed: () => set({ recentlyViewed: [] }),
+
+      notifications: [],
+      addNotification: (notification) => set((state) => {
+        const next: StudentNotification = {
+          id: crypto.randomUUID(),
+          title: notification.title,
+          message: notification.message,
+          read: false,
+          createdAt: new Date().toISOString(),
+          link: notification.link
+        };
+        return { notifications: [next, ...state.notifications].slice(0, 50) };
+      }),
+      markNotificationRead: (id) => set((state) => ({
+        notifications: state.notifications.map(n =>
+          n.id === id ? { ...n, read: true } : n
+        )
+      })),
+      removeNotification: (id) => set((state) => ({
+        notifications: state.notifications.filter(n => n.id !== id)
+      })),
+
       recentSearches: [],
       addRecentSearch: (query) => set((state) => {
         if (!query.trim()) return state;
@@ -156,7 +209,9 @@ export const useStore = create<AppState>()(
         savedScholarshipIds: state.savedScholarshipIds,
         applications: state.applications,
         recentSearches: state.recentSearches,
-        compareIds: state.compareIds
+        compareIds: state.compareIds,
+        recentlyViewed: state.recentlyViewed,
+        notifications: state.notifications
       }),
       // Guard against a corrupt or stale payload breaking app start-up.
       merge: (persisted, current) => {
@@ -173,6 +228,8 @@ export const useStore = create<AppState>()(
           applications: Array.isArray(saved.applications) ? saved.applications : [],
           recentSearches: Array.isArray(saved.recentSearches) ? saved.recentSearches : [],
           compareIds: Array.isArray(saved.compareIds) ? saved.compareIds : [],
+          recentlyViewed: Array.isArray(saved.recentlyViewed) ? saved.recentlyViewed : [],
+          notifications: Array.isArray(saved.notifications) ? saved.notifications : [],
         };
       },
       version: 2,
@@ -187,6 +244,8 @@ export const useStore = create<AppState>()(
           applications: old.applications ?? [],
           recentSearches: old.recentSearches ?? [],
           compareIds: old.compareIds ?? [],
+          recentlyViewed: old.recentlyViewed ?? [],
+          notifications: old.notifications ?? [],
         };
       },
     }

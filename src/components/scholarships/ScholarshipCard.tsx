@@ -15,7 +15,6 @@ import {
 import { useNow, daysUntilFrom } from "@/lib/useNow";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { VerificationInline } from "./VerificationBadge";
 
 interface ScholarshipCardProps {
   scholarship: PublicScholarship;
@@ -103,9 +102,6 @@ export function ScholarshipCard({
             <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs uppercase tracking-wider ${getFundingBadgeStyle(scholarship.fundingType)}`}>
               {scholarship.fundingType.replace("-", " ")}
             </span>
-
-            {/* Verification Badge - Enhanced */}
-            <VerificationInline scholarship={scholarship} size="sm" />
           </div>
 
           {/* Match Indicator if present */}

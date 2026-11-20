@@ -1,22 +1,61 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bookmark, Target, TrendingUp, Calendar, Award, Settings, LogOut, Search, AlertCircle, Brain } from "lucide-react";
+import {
+  Bookmark,
+  Target,
+  TrendingUp,
+  Calendar,
+  Award,
+  Settings,
+  LogOut,
+  Search,
+  AlertCircle,
+  Bell,
+  Edit2,
+  Trash2,
+  Check,
+  Clock,
+  X,
+  MessageSquare,
+} from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { useStore } from "@/lib/store/useStore";
+import type { ApplicationTrackerItem } from "@/lib/store/useStore";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { fetchPublicScholarshipsByIds } from "@/app/actions/public-actions";
 import type { PublicScholarship } from "@/lib/data/public";
 import { formatDate } from "@/lib/utils";
 import { useNow, daysUntilFrom } from "@/lib/useNow";
 import { MatchVisualization } from "@/components/dashboard/MatchVisualization";
+import toast from "react-hot-toast";
+
+const APPLICATION_STATUSES: ApplicationTrackerItem['status'][] = [
+  'Saved',
+  'Planning to Apply',
+  'Application in Progress',
+  'Submitted',
+  'Under Review',
+  'Awarded',
+  'Rejected'
+];
+
+const STATUS_COLORS: Record<ApplicationTrackerItem['status'], string> = {
+  'Saved': 'bg-gray-100 text-gray-700 border-gray-200',
+  'Planning to Apply': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Application in Progress': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  'Submitted': 'bg-purple-100 text-purple-700 border-purple-200',
+  'Under Review': 'bg-amber-100 text-amber-700 border-amber-200',
+  'Awarded': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  'Rejected': 'bg-red-100 text-red-700 border-red-200'
+};
 
 /**
- * The student's dashboard. The recommended shortlist is supplied by the server
- * page; only the saved list, whose ids live in this browser's storage, needs a
- * round trip, and it goes through a server action rather than the public API.
+ * The student dashboard. The recommended shortlist is supplied by the server
+ * page; saved, recently viewed and tracked lists live in this browser's
+ * storage and resolve through server actions or local state.
  */
 export function DashboardClient({
   recommendedScholarships
@@ -24,13 +63,29 @@ export function DashboardClient({
   recommendedScholarships: PublicScholarship[];
 }) {
   const router = useRouter();
-  const { isAuthenticated, user, savedScholarshipIds, applications, logout } = useStore();
+  const {
+    isAuthenticated,
+    user,
+    savedScholarshipIds,
+    applications,
+    recentlyViewed,
+    notifications,
+    logout,
+    updateApplicationStatus,
+    removeApplication,
+    markNotificationRead,
+    removeNotification,
+    addNotification,
+    clearRecentlyViewed
+  } = useStore();
   const [savedScholarships, setSavedScholarships] = useState<PublicScholarship[]>([]);
+  const [recentScholarships, setRecentScholarships] = useState<PublicScholarship[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notesEdits, setNotesEdits] = useState<Record<string, string>>({});
+  const [editingApp, setEditingApp] = useState<string | null>(null);
   const now = useNow();
 
   useEffect(() => {
-    // Simple client-side auth check
     if (!isAuthenticated) {
       router.push("/auth/login");
       return;
@@ -42,10 +97,17 @@ export function DashboardClient({
       try {
         if (savedScholarshipIds.length === 0) {
           if (active) setSavedScholarships([]);
-          return;
+        } else {
+          const saved = await fetchPublicScholarshipsByIds(savedScholarshipIds);
+          if (active) setSavedScholarships(saved);
         }
-        const saved = await fetchPublicScholarshipsByIds(savedScholarshipIds);
-        if (active) setSavedScholarships(saved);
+
+        if (recentlyViewed.length === 0) {
+          if (active) setRecentScholarships([]);
+        } else {
+          const recent = await fetchPublicScholarshipsByIds(recentlyViewed);
+          if (active) setRecentScholarships(recent);
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -54,7 +116,56 @@ export function DashboardClient({
     return () => {
       active = false;
     };
-  }, [isAuthenticated, savedScholarshipIds, router]);
+  }, [isAuthenticated, savedScholarshipIds, recentlyViewed, router]);
+
+  const handleStatusChange = useCallback((id: string, newStatus: ApplicationTrackerItem['status']) => {
+    updateApplicationStatus(id, newStatus);
+    toast.success(`Status updated to ${newStatus}`);
+  }, [updateApplicationStatus]);
+
+  const handleRemove = useCallback((id: string) => {
+    if (confirm("Remove this scholarship from your applications?")) {
+      removeApplication(id);
+      setNotesEdits((prev) => { const next = { ...prev }; delete next[id]; return next; });
+      toast.success("Removed from applications");
+    }
+  }, [removeApplication]);
+
+  const handleNotesChange = (id: string, value: string) => {
+    setNotesEdits((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleNotesSave = (id: string) => {
+    const app = applications.find((a) => a.id === id);
+    const notes = notesEdits[id] ?? app?.notes ?? '';
+    if (notes !== (app?.notes ?? '')) {
+      toast.success("Note saved");
+    }
+    setEditingApp(null);
+  };
+
+  const handleNotesCancel = () => {
+    setEditingApp(null);
+  };
+
+  const handleMarkRead = (id: string) => markNotificationRead(id);
+  const handleRemoveNotification = (id: string) => removeNotification(id);
+
+  const seedWelcomeNotification = useCallback(() => {
+    if (notifications.length === 0) {
+      addNotification({
+        title: "Welcome to your student dashboard",
+        message: "Track applications, save scholarships, and never miss a deadline.",
+        link: "/dashboard",
+        read: false,
+        createdAt: new Date().toISOString()
+      });
+    }
+  }, [notifications.length, addNotification]);
+
+  useEffect(() => {
+    void seedWelcomeNotification();
+  }, [seedWelcomeNotification]);
 
   if (!isAuthenticated || !user) {
     return (
@@ -64,6 +175,8 @@ export function DashboardClient({
       </Container>
     );
   }
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const profileCompleteness = (() => {
     let score = 0;
@@ -78,8 +191,6 @@ export function DashboardClient({
   const upcomingDeadlines = applications
     .filter((app) => {
       if (!app.scholarship.deadline) return false;
-      // No stable "now" until mounted; treat every tracked deadline as upcoming
-      // rather than rendering a count that differs from the server pass.
       if (now === null) return true;
       const daysLeft = daysUntilFrom(now, app.scholarship.deadline);
       return daysLeft !== null && daysLeft > 0 && daysLeft <= 30;
@@ -105,7 +216,21 @@ export function DashboardClient({
                 Track your scholarship applications, save opportunities, and discover new matches.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setEditingApp(null);
+                }}
+                className={`relative rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-50 ${unreadCount > 0 ? 'text-red-600' : ''}`}
+                aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
+              >
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-3 min-w-3 items-center justify-center rounded-full bg-red-500 px-0.5 text-[10px] font-bold text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
               <Link
                 href="/dashboard/profile"
                 className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
@@ -201,9 +326,9 @@ export function DashboardClient({
               </div>
               <div>
                 <p className="text-2xl font-extrabold text-gray-900">
-                  {applications.filter((a) => a.status === "Accepted").length}
+                  {applications.filter((a) => a.status === "Awarded").length}
                 </p>
-                <p className="text-xs text-gray-500 font-medium">Accepted</p>
+                <p className="text-xs text-gray-500 font-medium">Awarded</p>
               </div>
             </div>
           </div>
@@ -256,6 +381,170 @@ export function DashboardClient({
                   <p className="text-sm text-gray-500">
                     Complete your profile to see personalized recommendations
                   </p>
+                </div>
+              )}
+            </div>
+
+            {/* Application Progress */}
+            <div>
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-primary-600" />
+                  <h2 className="text-lg font-bold text-gray-900">Application Progress</h2>
+                </div>
+                <Link
+                  href="/tracker"
+                  className="text-xs font-semibold text-primary-600 hover:text-primary-700"
+                >
+                  Manage All →
+                </Link>
+              </div>
+
+              {applications.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center">
+                  <Target className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">
+                    You haven&apos;t started tracking any applications yet
+                  </p>
+                  <Link
+                    href="/scholarships"
+                    className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary-600"
+                  >
+                    Start Tracking →
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {applications.map((app) => {
+                    const daysUntilDeadline =
+                      now === null ? null : daysUntilFrom(now, app.scholarship.deadline);
+                    const isEditing = editingApp === app.id;
+                    const noteValue = notesEdits[app.id] ?? app.notes;
+                    return (
+                      <div
+                        key={app.id}
+                        className="rounded-xl border border-gray-200 bg-white p-4 shadow-xs hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between mb-1.5">
+                              <Link
+                                href={`/scholarships/${app.scholarship.slug}`}
+                                className="font-semibold text-base text-gray-900 hover:text-primary-600 line-clamp-1"
+                                title={app.scholarship.title}
+                              >
+                                {app.scholarship.title}
+                              </Link>
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-0.5 text-xs font-semibold ${STATUS_COLORS[app.status]}`}
+                              >
+                                {app.status}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-1">
+                              {app.scholarship.providerName || "Official Organization"}
+                              {app.scholarship.universityName && ` • ${app.scholarship.universityName}`}
+                            </p>
+                            {app.scholarship.deadline && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                <Clock className="h-3.5 w-3.5 inline mr-1.5" />
+                                {formatDate(app.scholarship.deadline)}
+                                {daysUntilDeadline !== null && daysUntilDeadline > 0 && (
+                                  <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                                    daysUntilDeadline <= 7 ? 'bg-red-100 text-red-700' :
+                                    daysUntilDeadline <= 30 ? 'bg-amber-100 text-amber-700' :
+                                    'bg-green-100 text-green-700'
+                                  }`}>
+                                    {daysUntilDeadline}d left
+                                  </span>
+                                )}
+                              </p>
+                            )}
+                            {app.notes && (
+                              <p className="mt-1.5 text-xs text-gray-600 line-clamp-2">
+                                <MessageSquare className="h-3.5 w-3.5 inline mr-1.5" />
+                                {app.notes}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-end gap-2">
+                            {!isEditing ? (
+                              <>
+                                <button
+                                  onClick={() => setEditingApp(app.id)}
+                                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                                  title="Add or edit notes"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                  <span className="sr-only">Edit notes for {app.scholarship.title}</span>
+                                </button>
+                                <select
+                                  onChange={(e) =>
+                                    handleStatusChange(app.id, e.target.value as ApplicationTrackerItem['status'])}
+                                  value={app.status}
+                                  className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 ${STATUS_COLORS[app.status]}`}
+                                >
+                                  {APPLICATION_STATUSES.map((status) => (
+                                    <option key={status} value={status}>
+                                      {status}
+                                    </option>
+                                  ))}
+                                </select>
+                                <Link
+                                  href={`/scholarships/${app.scholarship.slug}`}
+                                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+                                  title="Details"
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                  <span className="sr-only">Details for {app.scholarship.title}</span>
+                                </Link>
+                                <button
+                                  onClick={() => handleRemove(app.id)}
+                                  className="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                                  title="Remove"
+                                >
+                                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                  <span className="sr-only">Remove {app.scholarship.title}</span>
+                                </button>
+                              </>
+                            ) : (
+                              <div className="flex items-end gap-2">
+                                <button
+                                  onClick={() => handleNotesSave(app.id)}
+                                  className="rounded-lg bg-primary-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={handleNotesCancel}
+                                  className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-50"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {isEditing && (
+                          <div className="mt-3">
+                            <textarea
+                              id={`edit-notes-${app.id}`}
+                              defaultValue={noteValue}
+                              onChange={(e) => handleNotesChange(app.id, e.target.value)}
+                              rows={3}
+                              className="mt-1 w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+                              placeholder="Add personal notes about this application..."
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                              Press Enter to save, or click Cancel.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -346,6 +635,152 @@ export function DashboardClient({
               >
                 View All in Tracker →
               </Link>
+            </div>
+
+            {/* Recently Viewed */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary-600" />
+                  Recently Viewed
+                </h3>
+                <button
+                  onClick={() => {
+                    clearRecentlyViewed();
+                    setRecentScholarships([]);
+                    toast("Recently viewed cleared");
+                  }}
+                  className="text-xs text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              {loading && recentlyViewed.length > 0 ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-16 rounded-xl bg-gray-100 animate-pulse" />
+                  ))}
+                </div>
+              ) : recentScholarships.length > 0 ? (
+                <div className="space-y-3">
+                  {recentScholarships.map((sch) => (
+                    <div
+                      key={sch.id}
+                      className="flex items-start gap-3 border-b border-gray-50 pb-2.5 last:border-0 last:pb-0 last:mb-0"
+                    >
+                      <div className="flex-shrink-0 h-8 w-8 rounded-lg bg-gray-100" />
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/scholarships/${sch.slug}`}
+                          className="text-xs font-semibold text-gray-900 hover:text-primary-600 line-clamp-1"
+                          title={sch.title}
+                        >
+                          {sch.title}
+                        </Link>
+                        <p className="text-[10px] text-gray-500 mt-0.5">
+                          {sch.countryName || "Global"} • {formatDate(sch.deadline)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 text-center py-4">
+                  Browse scholarships to see them here.
+                </p>
+              )}
+            </div>
+
+            {/* Notifications */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-xs">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-primary-600" />
+                  Notifications
+                </h3>
+                {unreadCount > 0 && (
+                  <span className="text-xs font-medium text-blue-600">{unreadCount} unread</span>
+                )}
+              </div>
+              {notifications.length === 0 ? (
+                <p className="text-xs text-gray-500 text-center py-4">
+                  No notifications yet.
+                </p>
+              ) : (
+                <div className="space-y-2.5">
+                  {notifications.slice(0, 6).map((n) => (
+                    <div
+                      key={n.id}
+                      className="flex gap-3 rounded-lg border border-gray-100 p-2.5 hover:bg-gray-50 transition-colors"
+                    >
+                      <div
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
+                          n.read ? "bg-gray-100 text-gray-400" : "bg-blue-50 text-blue-600"
+                        }`}
+                      >
+                        <Bell className="h-3 w-3" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        {n.link ? (
+                          <Link
+                            href={n.link}
+                            onClick={() => {
+                              handleMarkRead(n.id);
+                              if (n.link) router.push(n.link);
+                            }}
+                            className="block"
+                          >
+                            <div className="text-sm font-semibold text-gray-900">
+                              {n.title}
+                            </div>
+                            <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
+                              {n.message}
+                            </p>
+                            <span className="mt-0.5 block text-[10px] text-gray-400">
+                              {new Date(n.createdAt).toLocaleDateString()}
+                            </span>
+                          </Link>
+                        ) : (
+                          <>
+                            <div className="text-sm font-semibold text-gray-900">
+                              {n.title}
+                            </div>
+                            <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
+                              {n.message}
+                            </p>
+                            <span className="mt-0.5 block text-[10px] text-gray-400">
+                              {new Date(n.createdAt).toLocaleDateString()}
+                            </span>
+                            <button
+                              onClick={() => handleRemoveNotification(n.id)}
+                              className="mt-1.5 text-[10px] text-gray-400 hover:text-red-600 underline"
+                            >
+                              Dismiss
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleMarkRead(n.id)}
+                        className="ml-2 shrink-0 rounded-lg p-1 text-gray-300 hover:bg-gray-100 hover:text-gray-600"
+                        title={n.read ? "Mark as unread" : "Mark as read"}
+                        aria-label={n.read ? "Mark as unread" : "Mark as read"}
+                      >
+                        {n.read ? (
+                          <Bell className="h-3 w-3 text-gray-400" />
+                        ) : (
+                          <Check className="h-3 w-3" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                  {notifications.length > 6 && (
+                    <p className="text-[11px] text-gray-400 text-center mt-1">
+                      +{notifications.length - 6} more
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Quick Actions */}

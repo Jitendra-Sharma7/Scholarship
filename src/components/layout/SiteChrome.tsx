@@ -3,11 +3,17 @@
 import { usePathname } from "next/navigation";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
+import { DirectoryHeader } from "@/components/directory/DirectoryHeader";
 import type { SiteBranding } from "@/lib/site-branding";
 
 /** The staff panel and its sign-in page live under this prefix. */
 function isStaffArea(pathname: string): boolean {
   return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+/** Check if we're on the directory page */
+function isDirectoryPage(pathname: string): boolean {
+  return pathname === "/directory" || pathname.startsWith("/directory/");
 }
 
 /**
@@ -32,7 +38,7 @@ export function SiteChrome({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Header />
+      {isDirectoryPage(pathname) ? <DirectoryHeader /> : <Header />}
       <main className="flex-1">{children}</main>
       <Footer branding={branding} />
     </div>
