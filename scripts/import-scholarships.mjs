@@ -1,43 +1,43 @@
 /**
- * Bulk scholarship importer.
- *
- * Reads a JSON or CSV export and maps it onto the Scholarship model, linking the
- * Country, Provider, University and Field relations by name where they exist.
- *
- *   node scripts/import-scholarships.mjs <file> --source "<label>" [--publish]
- *
- * Every row is written as `DRAFT` / `VERIFICATION_NEEDED` unless `--publish` is
- * passed. That default is deliberate: imported rows come from a third party, and
- * this project never presents an unverified listing as a confirmed one. Nothing
- * reaches the public site until a member of staff has checked it.
- *
- * Expected columns (aliases in parentheses, case/space insensitive):
- *   title (name, scholarship)            required
- *   country (location, hostCountry)      matched against Country.name / code
- *   university (institution)             matched against University.name
- *   provider (organisation, sponsor)     matched against Provider.name
- *   fundingType (funding)                fully-funded | fully-tuition |
- *                                        partial-tuition | stipend | mixed
- *   fundingAmount, currency, monthlyStipend, annualStipend
- *   tuitionCoverage, accommodationCoverage, travelAllowance, healthInsurance,
- *   visaSupport, researchFunding         "yes"/"true"/1
- *   otherBenefits
- *   degreeLevels (degrees)               "Bachelor, Master"
- *   fieldLabels (subjects, fields)       "Computer Science, Law"
- *   eligibleCountries, nationalityRestrictions
- *   minGpa, minPercentage, ageRequirement, workExpReq, otherRequirements
- *   studyMode, studyType, subField, duration, intake
- *   openingDate, deadline                ISO date or YYYY-MM-DD
- *   deadlineType, applicationFee, applicationMethod
- *   documentsRequired, applicationProcess
- *   applicationUrl, officialUrl, providerContact
- *   languageReqs, ieltsReq, toeflReq, greReq, gmatReq, otherTestReqs,
- *   academicReqs, selectionCriteria, financialNeedReq
- *   numAwards (numberOfRecipients, numberOfAwards, awards)
- *   region, city, logo, coverImage
- *   description, shortDescription, seoTitle, seoDescription
- *   sourceUrl                           recorded on the row
- */
+* Bulk scholarship importer.
+*
+* Reads a JSON or CSV export and maps it onto the Scholarship model, linking the
+* Country, Provider, University and Field relations by name where they exist.
+*
+*   node scripts/import-scholarships.mjs <file> --source "<label>" [--publish]
+*
+* Every row is written as `DRAFT` / `VERIFICATION_NEEDED` unless `--publish` is
+* passed. That default is deliberate: imported rows come from a third party, and
+* this project never presents an unverified listing as a confirmed one. Nothing
+* reaches the public site until a member of staff has checked it.
+*
+* Expected columns (aliases in parentheses, case/space insensitive):
+*   title (name, scholarship)            required
+*   country (location, hostCountry)      matched against Country.name / code
+*   university (institution)             matched against University.name
+*   provider (organisation, sponsor)     matched against Provider.name
+*   fundingType (funding)                fully-funded | fully-tuition |
+*                                        partial-tuition | stipend | mixed
+*   fundingAmount, currency, monthlyStipend, annualStipend
+*   tuitionCoverage, accommodationCoverage, travelAllowance, healthInsurance,
+*   visaSupport, researchFunding         "yes"/"true"/1
+*   otherBenefits
+*   degreeLevels (degrees)               "Bachelor, Master"
+*   fieldLabels (subjects, fields)       "Computer Science, Law"
+*   eligibleCountries, nationalityRestrictions
+*   minGpa, minPercentage, ageRequirement, workExpReq, otherRequirements
+*   studyMode, studyType, subField, duration, intake
+*   openingDate, deadline                ISO date or YYYY-MM-DD
+*   deadlineType, applicationFee, applicationMethod
+*   documentsRequired, applicationProcess
+*   applicationUrl, officialUrl, providerContact
+*   languageReqs, ieltsReq, toeflReq, greReq, gmatReq, otherTestReqs,
+*   academicReqs, selectionCriteria, financialNeedReq
+*   numAwards (numberOfRecipients, numberOfAwards, awards)
+*   region, city, logo, coverImage
+*   description, shortDescription, seoTitle, seoDescription
+*   sourceUrl                           recorded on the row
+*/
 
 import { readFileSync, existsSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
@@ -160,9 +160,9 @@ const list = (v) =>
   v === undefined
     ? []
     : String(v)
-        .split(/[;|]/)
-        .map((s) => s.trim())
-        .filter(Boolean);
+      .split(/[;|]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
 
 const num = (v) => {
   if (v === undefined) return undefined;
@@ -581,7 +581,7 @@ console.log(`duplicates:     ${duplicates} (slug already in the database)`);
 console.log(`invalid:        ${invalid} (no title)`);
 console.log(
   `unresolved:     country ${unresolved.country}, provider ${unresolved.provider}, ` +
-    `university ${unresolved.university}, subject labels ${unresolved.field}`
+  `university ${unresolved.university}, subject labels ${unresolved.field}`
 );
 console.log(`publish state:  ${publish ? "PUBLISHED" : "DRAFT / VERIFICATION_NEEDED"}`);
 
@@ -596,7 +596,7 @@ if (unresolved.country === 0 && unresolved.provider === 0 && unresolved.universi
 } else {
   console.log(
     "\nUnresolved names were left as text on the row (countryNameLegacy / " +
-      "universityNameLegacy) rather than dropped. Use --auto-create to automatically create missing entities, or run: npm run link:scholarships"
+    "universityNameLegacy) rather than dropped. Use --auto-create to automatically create missing entities, or run: npm run link:scholarships"
   );
 }
 

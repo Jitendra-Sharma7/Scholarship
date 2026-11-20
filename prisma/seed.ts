@@ -22,6 +22,7 @@ import { seedUniversities } from "./seed-data/universities";
 import { seedProviders } from "./seed-data/providers";
 import { seedScholarships } from "./seed-data/scholarships";
 import { sept2027Scholarships } from "./seed-data/sept2027-scholarships";
+import { allScholarships } from "./seed-data/all-scholarships";
 import { guides, posts, faqs } from "./seed-data/content";
 import {
   toPrismaDeadlineStatus,
@@ -516,6 +517,153 @@ async function persistSept2027Scholarships(
   return n;
 }
 
+async function persistAllScholarships(
+  countryIds: Set<string>,
+  universityIds: Set<string>,
+  providerIds: Set<string>,
+  fieldNamesById: Map<string, string>
+) {
+  // First, ensure all required intakes exist
+  const intakeData = [
+    { name: "Autumn 2027", slug: "autumn-2027", startMonth: 9, startYear: 2027, sortOrder: 1 },
+    { name: "September 2027", slug: "september-2027", startMonth: 9, startYear: 2027, sortOrder: 2 },
+    { name: "Fall 2027", slug: "fall-2027", startMonth: 9, startYear: 2027, sortOrder: 3 },
+    { name: "October 2027", slug: "october-2027", startMonth: 10, startYear: 2027, sortOrder: 4 },
+    { name: "2027", slug: "2027", startMonth: 1, startYear: 2027, sortOrder: 5 },
+    { name: "March 2027", slug: "march-2027", startMonth: 3, startYear: 2027, sortOrder: 6 },
+    { name: "Semester 1 (Feb) or Semester 2 (Aug) 2027", slug: "semester-1-2-2027", startMonth: 2, startYear: 2027, sortOrder: 7 },
+    { name: "2027 (Trimester A/B)", slug: "trimester-ab-2027", startMonth: 2, startYear: 2027, sortOrder: 8 },
+    { name: "Winter Session (Sept 2027)", slug: "winter-session-sept-2027", startMonth: 9, startYear: 2027, sortOrder: 9 },
+    { name: "April or October 2027", slug: "april-october-2027", startMonth: 4, startYear: 2027, sortOrder: 10 },
+    { name: "Summer / Fall 2027", slug: "summer-fall-2027", startMonth: 6, startYear: 2027, sortOrder: 11 },
+    { name: "Autumn 2027", slug: "autumn-2027-2", startMonth: 9, startYear: 2027, sortOrder: 12 },
+    { name: "2027 / 2028", slug: "2027-2028", startMonth: 1, startYear: 2027, sortOrder: 13 },
+    { name: "Research Periods 1-4 (2027)", slug: "research-periods-2027", startMonth: 1, startYear: 2027, sortOrder: 14 },
+    { name: "Autumn 2027", slug: "autumn-2027-3", startMonth: 9, startYear: 2027, sortOrder: 15 },
+    { name: "September 2027", slug: "september-2027-2", startMonth: 9, startYear: 2027, sortOrder: 16 },
+    { name: "Calendar Year 2028", slug: "calendar-2028", startMonth: 1, startYear: 2028, sortOrder: 17 },
+  ];
+
+  const intakes: Record<string, string> = {};
+  for (const intake of intakeData) {
+    const created = await prisma.intake.upsert({
+      where: { slug: intake.slug },
+      update: {},
+      create: { ...intake, isActive: true },
+    });
+    intakes[intake.slug] = created.id;
+  }
+
+  let n = 0;
+  for (const s of allScholarships) {
+    const countryId = countryIds.has(s.countryId) ? s.countryId : null;
+    const universityId = s.universityId && universityIds.has(s.universityId) ? s.universityId : null;
+    const providerId = providerIds.has(s.providerId) ? s.providerId : null;
+
+    // Split legacy field labels into real Field relations vs free text.
+    const labels = s.fields ?? [];
+    const matchedFieldIds: string[] = [];
+    const extraLabels: string[] = [];
+    for (const label of labels) {
+      const found = [...fieldNamesById.entries()].find(([, name]) => name === label);
+      if (found) matchedFieldIds.push(found[0]);
+      else extraLabels.push(label);
+    }
+
+    const slug = await uniqueSlug(
+      async (s) => (await prisma.scholarship.findUnique({ where: { slug: s } })) !== null,
+      slugify(s.title)
+    );
+
+    const data = {
+      title: s.title,
+      slug,
+      shortDescription: s.description ? s.description.slice(0, 200) : null,
+      description: s.description ?? null,
+      providerId,
+      universityId,
+      countryId,
+      fundingType: toPrismaFundingType(s.fundingType),
+      isFullyFunded: s.fundingType === "fully-funded",
+      currency: s.currency ?? null,
+      fundingAmount: s.fundingAmount ?? null,
+      monthlyStipend: s.livingStipend ?? null,
+      applicationFee: s.applicationFee ?? null,
+      tuitionCoverage: Boolean(s.tuitionCoverage),
+      accommodationCoverage: Boolean(s.accommodationCoverage),
+      travelAllowance: Boolean(s.travelAllowance),
+      healthInsurance: Boolean(s.healthInsurance),
+      visaSupport: Boolean(s.visaSupport),
+      degreeLevels: s.degreeLevels ?? [],
+      fieldLabels: extraLabels,
+      eligibleCountries: s.eligibleCountries ?? [],
+      minGpa: s.minGpa ?? null,
+      openingDate: toDate(s.openingDate),
+      deadline: toDate(s.deadline),
+      duration: s.duration ?? null,
+      numAwards: s.numAwards ?? null,
+      languageReqs: s.languageReqs ?? [],
+      documentsRequired: s.documentsRequired ?? [],
+      applicationUrl: s.applicationUrl ?? null,
+      officialUrl: s.officialUrl ?? null,
+      lastVerifiedAt: toDate(s.lastVerifiedAt),
+      source: "Global Scholarship Point (globalscholarshippoint.com)",
+      verificationStatus: toPrismaVerificationStatus(s.verificationStatus),
+      publishStatus: "PUBLISHED" as const,
+      deadlineStatus: toPrismaDeadlineStatus(s.status),
+      featured: Boolean(s.featured),
+      includeInSitemap: true,
+      intake: s.intake ?? "September 2027",
+    };
+
+    const created = await prisma.scholarship.upsert({
+      where: { id: s.id },
+      update: data,
+      create: { id: s.id, ...data },
+    });
+
+    // Link scholarship to the appropriate intake
+    const intakeSlug = s.intake?.toLowerCase().replace(/\s+/g, "-").replace(/[()]/g, "") || "september-2027";
+    const intakeId = intakes[intakeSlug] || intakes["september-2027"];
+    if (intakeId) {
+      await prisma.scholarshipIntake.upsert({
+        where: { scholarshipId_intakeId: { scholarshipId: created.id, intakeId } },
+        create: {
+          scholarshipId: created.id,
+          intakeId,
+          deadline: toDate(s.deadline),
+          openingDate: toDate(s.openingDate),
+          isPrimary: true,
+        },
+        update: {
+          deadline: toDate(s.deadline),
+          openingDate: toDate(s.openingDate),
+          isPrimary: true,
+        },
+      });
+    }
+
+    // Rebuild field join rows
+    await prisma.scholarshipField.deleteMany({ where: { scholarshipId: s.id } });
+    if (matchedFieldIds.length) {
+      await prisma.scholarshipField.createMany({
+        data: matchedFieldIds.map((fieldId) => ({ scholarshipId: s.id, fieldId })),
+        skipDuplicates: true,
+      });
+    }
+    // Rebuild country join rows
+    await prisma.scholarshipCountry.deleteMany({ where: { scholarshipId: s.id } });
+    if (countryId) {
+      await prisma.scholarshipCountry.create({
+        data: { scholarshipId: s.id, countryId },
+      });
+    }
+    n += 1;
+  }
+  console.log(`  all scholarships: ${n}`);
+  return n;
+}
+
 async function seedEditorial() {
   // Legacy posts and guides are keyed by slug, not by a stable id. Resolve the
   // existing row by that key FIRST and update it, rather than asking
@@ -719,6 +867,7 @@ async function main() {
   await persistUniversities(countryByName);
   await persistScholarships(countryIds, universityIds, providerIds, fieldNamesById);
   await persistSept2027Scholarships(countryIds, universityIds, providerIds, fieldNamesById);
+  await persistAllScholarships(countryIds, universityIds, providerIds, fieldNamesById);
   await seedEditorial();
   await seedSettings();
   await seedAdmin();
