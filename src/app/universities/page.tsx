@@ -5,6 +5,7 @@ import { itemListSchema } from "@/lib/seo-jsonld";
 import { pageMetadata } from "@/lib/seo";
 import { UniversityHero } from "@/components/university-directory/UniversityHero";
 import { UniversityDirectoryClient } from "@/components/university-directory/UniversityDirectoryClient";
+import { DirectoryCta } from "@/components/university-directory/DirectoryCta";
 import { UNIVERSITY_PAGE_SIZE } from "@/lib/page-size";
 
 export const metadata = pageMetadata({
@@ -46,7 +47,12 @@ export default async function UniversitiesPage({
 
   let result: PaginatedUniversities | null = null;
   let filterOptions: UniversityFilterOptions | null = null;
-  let stats: { universities: number; countries: number; openScholarships: number } | null = null;
+  let stats: {
+    universities: number;
+    countries: number;
+    openScholarships: number;
+    totalCourses: number;
+  } | null = null;
   let error: Error | null = null;
 
   try {
@@ -87,7 +93,7 @@ export default async function UniversitiesPage({
         { value: "phd", label: "PhD / Doctoral" },
       ],
     };
-    stats = { universities: 0, countries: 0, openScholarships: 0 };
+    stats = { universities: 0, countries: 0, openScholarships: 0, totalCourses: 0 };
   }
 
   const universities = result?.data ?? [];
@@ -95,7 +101,7 @@ export default async function UniversitiesPage({
   const totalPages = result?.totalPages ?? 1;
 
   return (
-    <div className="max-w-[1240px] mx-auto px-5 min-h-screen font-onest bg-[var(--gs-bg)]">
+    <div className="max-w-[1240px] mx-auto px-5 min-h-screen font-onest bg-[#F3F7FF]">
       <JsonLd
         data={itemListSchema({
           name: "Universities offering scholarships",
@@ -109,8 +115,8 @@ export default async function UniversitiesPage({
 
       <UniversityHero
         totalUniversities={totalUniversities}
-        countriesCount={stats?.countries ?? 0}
-        scholarshipsCount={stats?.openScholarships ?? 0}
+        totalCourses={stats?.totalCourses ?? 0}
+        totalScholarships={stats?.openScholarships ?? 0}
         searchValue={q}
       />
 
@@ -130,9 +136,12 @@ export default async function UniversitiesPage({
           tuitionRange,
           sort,
           view,
+          category: "all",
         }}
         error={error}
       />
+
+      <DirectoryCta />
     </div>
   );
 }

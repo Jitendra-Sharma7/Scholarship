@@ -4,10 +4,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Bookmark, BookmarkCheck, ExternalLink, Star } from "lucide-react";
+import { ArrowRight, Bookmark, BookmarkCheck, ExternalLink, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PublicUniversity } from "@/lib/data/public";
 import { useStore } from "@/lib/store/useStore";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 
 const STUDY_LEVEL_LABELS: Record<string, string> = {
   Undergraduate: "Undergraduate",
@@ -74,6 +75,14 @@ export function UniversityCard({ university }: UniversityCardProps) {
   const hue = universityHue(university.id);
   const isActive = pathname === `/universities/${university.slug ?? university.id}`;
 
+  const initials = university.name
+    .split(/\s+/)
+    .filter((w) => w.length > 0)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase() || "U";
+
   const isAuthenticated = useStore((s) => s.isAuthenticated);
   const isSaved = useStore((s) => s.isSavedUniversity(university.id));
   const toggleSaveUniversity = useStore((s) => s.toggleSaveUniversity);
@@ -95,22 +104,15 @@ export function UniversityCard({ university }: UniversityCardProps) {
     if (university.website) window.open(university.website, "_blank", "noopener");
   };
 
-  const initials = university.name
-    .split(/\s+/)
-    .filter((w) => w.length > 0)
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase() || "U";
-
   return (
     <article
       className={cn(
-        "flex h-full flex-col overflow-hidden rounded-xl border border-[var(--gs-border)] bg-[var(--gs-surface)] shadow-card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1 font-onest",
-        isActive && "ring-2 ring-[var(--gs-brand)]",
+        "flex h-full flex-col overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-2 font-onest",
+        isActive && "ring-2 ring-[#1747D1]",
       )}
     >
-      <div className="relative h-[92px] overflow-hidden">
+      {/* Campus cover image */}
+      <div className="relative h-[150px] overflow-hidden">
         {university.coverImage ? (
           <Image
             fill
@@ -124,7 +126,7 @@ export function UniversityCard({ university }: UniversityCardProps) {
           />
         ) : (
           <div
-            className="h-full w-full flex items-center justify-center text-white font-bold text-[18px]"
+            className="h-full w-full flex items-center justify-center text-white font-bold text-[20px]"
             style={{ background: coverColor(hue) }}
           >
             {initials}
@@ -133,24 +135,24 @@ export function UniversityCard({ university }: UniversityCardProps) {
 
         {ranking && (
           <span
-            className="absolute left-3 top-3 z-20 inline-flex items-center justify-center min-w-[22px] h-7 rounded-full px-2 py-0.5 bg-[rgba(255,255,255,0.92)] text-[12px] font-semibold text-[#0f1b3d] shadow-sm"
+            className="absolute left-4 top-4 z-20 inline-flex items-center justify-center min-w-[26px] h-7 rounded-full px-2 py-0.5 bg-[#FFFFFF]/95 text-[11px] font-bold text-[#0f1b3d] shadow-sm border border-[#FFFFFF]/60"
             title={`Global ranking: #${ranking}`}
           >
             #{ranking}
           </span>
         )}
 
-        <div className="absolute left-3 bottom-3 z-20 h-14 w-14 rounded-[14px] overflow-hidden shadow-sm" style={{ backgroundColor: `hsl(${hue}, 55%, 38%)` }}>
+        <div className="absolute left-4 bottom-4 z-20 h-12 w-12 rounded-[14px] overflow-hidden shadow-sm border-2 border-[#FFFFFF]" style={{ backgroundColor: `#FFFFFF` }}>
           {university.logo ? (
             <Image
               src={university.logo}
               alt={`${university.name} crest`}
-              width={56}
-              height={56}
+              width={48}
+              height={48}
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="h-full w-full flex items-center justify-center text-[13px] font-semibold text-white">
+            <span className="h-full w-full flex items-center justify-center text-[11px] font-bold text-[#15264A]">
               {initials}
             </span>
           )}
@@ -160,17 +162,17 @@ export function UniversityCard({ university }: UniversityCardProps) {
           type="button"
           onClick={handleFavoriteClick}
           className={cn(
-            "absolute right-3 top-3 z-20 rounded-[10px] p-2 transition-all duration-200",
+            "absolute right-4 top-4 z-20 rounded-[10px] p-2 transition-all duration-200",
             isSaved
-              ? "bg-[var(--gs-brand)] text-[var(--gs-brand-text)] shadow-sm"
-              : "border border-[var(--gs-border)] bg-[var(--gs-surface)]/90 text-[var(--gs-muted)] shadow-sm hover:bg-[var(--gs-surface)]",
+              ? "bg-[#1747D1] text-[#FFFFFF] shadow-sm"
+              : "border border-[#E2E8F0] bg-[#FFFFFF]/95 text-[#64748B] shadow-sm hover:bg-[#FFFFFF]",
           )}
           aria-label={isSaved ? "Remove from saved universities" : "Save university"}
           aria-pressed={isSaved}
           disabled={isSaving}
         >
           {isSaving ? (
-            <svg className="h-5 w-5 animate-spin text-[var(--gs-brand)]" fill="none" viewBox="0 0 24 24">
+            <svg className="h-5 w-5 animate-spin text-[#1747D1]" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
@@ -182,58 +184,69 @@ export function UniversityCard({ university }: UniversityCardProps) {
         </button>
       </div>
 
-      <div className="flex-1 flex-col p-4">
+      <div className="flex-1 flex-col p-5">
         <Link
           href={`/universities/${university.slug ?? university.id}`}
           className={cn(
-            "text-[var(--gs-text)] hover:text-[var(--gs-brand)] transition-colors",
-            isActive ? "text-[var(--gs-brand)]" : undefined,
+            "text-[#15264A] hover:text-[#1747D1] transition-colors",
+            isActive ? "text-[#1747D1]" : undefined,
           )}
         >
-          <h3 className="text-[17px] font-semibold leading-tight line-clamp-2 mb-1.5">
+          <h3 className="text-[16px] font-bold leading-tight line-clamp-2 mb-2">
             {university.name}
           </h3>
         </Link>
 
-        <p className="flex items-center gap-1.5 text-[12px] text-[var(--gs-muted)] mb-2">
+        <p className="flex items-center gap-1.5 text-[12px] text-[#64748B] mb-3">
+          <MapPin className="h-3 w-3 shrink-0" />
           <span className="truncate" title={countryLabel ?? undefined}>
             {countryLabel}
           </span>
+          {university.countryCode && (
+            <CountryFlag code={university.countryCode} name={university.country} size="xs" className="ml-1" />
+          )}
         </p>
 
         {university.description && (
-          <p className="text-[14px] leading-1.5 text-[var(--gs-text)] line-clamp-2 mb-3">
+          <p className="text-[13px] leading-1.5 text-[#15264A] line-clamp-2 mb-4">
             {university.description}
           </p>
         )}
 
-        <div className="grid grid-cols-3 gap-3 mb-3">
+        {/* Info grid: ranking, tuition, courses, scholarships */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
           <div className="flex flex-col gap-0.5">
-            <span className="text-[12px] text-[var(--gs-muted)]">Tuition</span>
-            <span className="text-[13px] font-medium text-[var(--gs-text)] truncate">
+            <span className="text-[11px] text-[#64748B] uppercase tracking-wider">Ranking</span>
+            <span className="text-[13px] font-bold text-[#15264A]">
+              {ranking ? `#${ranking}` : "\u2014"}
+            </span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[11px] text-[#64748B] uppercase tracking-wider">Tuition/yr</span>
+            <span className="text-[13px] font-bold text-[#15264A] truncate">
               {university.tuitionInfo || "\u2014"}
             </span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-[12px] text-[var(--gs-muted)]">Intake</span>
-            <span className="text-[13px] font-medium text-[var(--gs-text)] truncate">
-              {intakes.length > 0 ? intakes.join(", ") : "\u2014"}
+            <span className="text-[11px] text-[#64748B] uppercase tracking-wider">Courses</span>
+            <span className="text-[13px] font-bold text-[#15264A]">
+              {university.popularFields.length}
             </span>
           </div>
           <div className="flex flex-col gap-0.5">
-            <span className="text-[12px] text-[var(--gs-muted)]">Levels</span>
-            <span className="text-[13px] font-medium text-[var(--gs-text)] truncate">
-              {levels.length > 0 ? levels.join(", ") : "\u2014"}
+            <span className="text-[11px] text-[#64748B] uppercase tracking-wider">Scholarships</span>
+            <span className="text-[13px] font-bold text-[#15264A]">
+              {university.scholarshipCount}
             </span>
           </div>
         </div>
 
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
+          <div className="flex flex-wrap gap-1.5 mb-5">
             {tags.map((field) => (
               <span
                 key={field}
-                className="rounded-full border border-[var(--gs-border)] bg-[var(--gs-soft-brand)] px-2.5 py-0.5 text-[12px] font-medium text-[var(--gs-brand)]"
+                className="rounded-full border border-[#E2E8F0] bg-[#EAF2FF] px-2.5 py-0.5 text-[11px] font-medium text-[#1747D1]"
                 title={field}
               >
                 {field}
@@ -242,34 +255,42 @@ export function UniversityCard({ university }: UniversityCardProps) {
           </div>
         )}
 
-        <div className="mb-auto flex items-center gap-1.5">
-          {university.scholarshipCount > 0 ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--gs-success-bg)] bg-[var(--gs-success-bg)] px-3 py-1.5 text-[12.5px] font-medium text-[var(--gs-success-text)]">
-              <Star className="h-3 w-3 shrink-0" />
-              {university.scholarshipCount} scholarship{university.scholarshipCount === 1 ? "" : "s"} available
+        {/* Levels + intakes chips */}
+        <div className="flex flex-wrap gap-1.5 mb-5">
+          {levels.slice(0, 2).map((level) => (
+            <span
+              key={level}
+              className="rounded-full border border-[#E2E8F0] bg-[#FFFFFF] px-2.5 py-0.5 text-[11px] text-[#64748B]"
+            >
+              {level}
             </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--gs-border)] bg-[var(--gs-muted)]/10 px-3 py-1.5 text-[12.5px] text-[var(--gs-muted)]">
-              No scholarships listed
+          ))}
+          {intakes.slice(0, 1).map((intake) => (
+            <span
+              key={intake}
+              className="rounded-full border border-[#E2E8F0] bg-[#FFFFFF] px-2.5 py-0.5 text-[11px] text-[#64748B]"
+            >
+              {intake}
             </span>
-          )}
+          ))}
         </div>
 
+        {/* Action buttons */}
         <Link
           href={`/universities/${university.slug ?? university.id}`}
-          className="mt-4 w-full inline-flex items-center justify-center rounded-[10px] border border-transparent bg-[var(--gs-brand)] px-4 py-2.5 text-[14px] font-medium text-[var(--gs-brand-text)] shadow-sm transition-colors hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gs-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gs-bg)]"
+          className="flex items-center justify-center gap-1.5 rounded-[12px] border border-[#1747D1] bg-[#1747D1] px-4 py-2.5 text-[13px] font-semibold text-[#FFFFFF] shadow-sm transition-all hover:bg-[#102B63] hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1747D1] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFFFF]"
         >
-          View university
-          <ArrowRight className="ml-2 h-4 w-4" />
+          View Details <ArrowRight className="h-3.5 w-3.5" />
         </Link>
         {university.website && (
           <button
             type="button"
             onClick={handleExternalClick}
-            className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 rounded-[10px] border border-[var(--gs-border)] bg-[var(--gs-surface)] px-3 py-2 text-[13px] font-medium text-[var(--gs-text)] transition-colors hover:bg-[var(--gs-muted)]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gs-brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--gs-bg)]"
-            aria-label={`Official website of ${university.name}`}
+            className="mt-3 flex items-center justify-center gap-1.5 w-full rounded-[12px] border border-[#E2E8F0] bg-[#FFFFFF] px-4 py-2.5 text-[13px] font-semibold text-[#15264A] transition-all hover:bg-[#F3F7FF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1747D1] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FFFFFF]"
+            aria-label={`Apply now at ${university.name}`}
           >
             <ExternalLink className="h-3.5 w-3.5" />
+            Apply Now
           </button>
         )}
       </div>

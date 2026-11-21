@@ -2,20 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { GraduationCap, Globe, Award, Search, X } from "lucide-react";
+import Image from "next/image";
+import { GraduationCap, Award, Search, X, BookOpen } from "lucide-react";
 import { formatNumber } from "@/lib/utils";
 
 interface UniversityHeroProps {
   totalUniversities: number;
-  countriesCount: number;
-  scholarshipsCount: number;
+  totalCourses: number;
+  totalScholarships: number;
   searchValue: string;
 }
 
 export function UniversityHero({
   totalUniversities,
-  countriesCount,
-  scholarshipsCount,
+  totalCourses,
+  totalScholarships,
   searchValue,
 }: UniversityHeroProps) {
   const router = useRouter();
@@ -68,47 +69,81 @@ export function UniversityHero({
 
   const stats = useMemo(
     () => [
-      { label: "Universities", value: totalUniversities, icon: GraduationCap },
-      { label: "Countries", value: countriesCount, icon: Globe },
-      { label: "Scholarships", value: scholarshipsCount, icon: Award },
+      { label: "Total Universities", value: totalUniversities, icon: GraduationCap },
+      { label: "Total Courses", value: totalCourses, icon: BookOpen },
+      { label: "Total Scholarships", value: totalScholarships, icon: Award },
     ],
-    [totalUniversities, countriesCount, scholarshipsCount],
+    [totalUniversities, totalCourses, totalScholarships],
   );
 
   return (
-    <section className="bg-[var(--gs-bg)]">
-      <div className="mx-auto px-0 py-10 lg:py-16 font-onest">
-        <div className="text-center mb-10 lg:mb-14">
+    <section
+      className="relative overflow-hidden"
+      style={{ backgroundColor: "#F3F7FF" }}
+    >
+      {/* Premium blue gradient + campus background */}
+      <div className="absolute inset-0 z-0">
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-[#1747D1] via-[#102B63] to-[#0f1b3d]"
+        />
+        <Image
+          fill
+          src="https://images.unsplash.com/photo-1523050856040-6ca556cf8789?w=1920&q=85"
+          alt="University campus"
+          priority
+          loading="eager"
+          className="absolute inset-0 w-full h-full object-cover"
+          sizes="100vw"
+          style={{
+            opacity: 0.42,
+            mixBlendMode: "multiply",
+          }}
+        />
+        <div className="absolute inset-0 bg-[#102B63]/35" />
+      </div>
+
+      <div className="relative z-10 mx-auto px-5 py-12 lg:px-8 lg:py-20 font-onest">
+        <div className="text-center mb-12 lg:mb-16">
           <h1
-            className="text-[var(--gs-text)] font-bold leading-tight tracking-tight mb-4"
-            style={{ fontSize: "clamp(28px, 4.2vw, 44px)" }}
+            className="text-white font-bold leading-tight tracking-tight mb-4"
+            style={{ fontSize: "clamp(30px, 4.6vw, 48px)" }}
           >
             University Directory
           </h1>
-          <p className="text-[15px] leading-1.5 text-[var(--gs-muted)] max-w-[460px] mx-auto">
+          <p className="text-[#d7e3ff] leading-1.6 text-[15px] max-w-[520px] mx-auto opacity-90">
             Compare universities by ranking, tuition, intake and subject area.
-            Explore real scholarship opportunities at each institution.
+            Explore real scholarship opportunities at each institution, with data
+            drawn directly from our published listings.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 gap-4 text-center">
+        {/* Statistics cards */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 gap-6 mb-14 lg:mb-16">
           {stats.map((stat) => (
-            <div key={stat.label} className="px-3">
-                <div className="text-[var(--gs-text)] font-bold mb-1" style={{ fontSize: "clamp(20px, 3vw, 32px)" }}>
-                  {formatNumber(stat.value)}
-                </div>
-                <div className="text-[12px] text-[var(--gs-muted)] uppercase tracking-wider">
-                  {stat.label}
-                </div>
-                <div className="h-px w-6 mx-auto mt-3 bg-[var(--gs-border)] hidden sm:block" />
+            <div
+              key={stat.label}
+              className="rounded-xl border border-[#E2E8F0]/30 bg-[#FFFFFF]/10 px-5 py-6 backdrop-blur-sm text-center shadow-sm"
+            >
+              <div
+                className="text-[#1747D1] font-extrabold mb-1.5"
+                style={{ fontSize: "clamp(24px, 4vw, 36px)" }}
+              >
+                {formatNumber(stat.value)}
               </div>
+              <div className="text-[#d7e3ff] text-[12px] uppercase tracking-wider font-medium opacity-90">
+                {stat.label}
+              </div>
+            </div>
           ))}
         </div>
 
-        <div className="mt-10 lg:mt-14 max-w-[640px] mx-auto">
+        {/* Search bar */}
+        <div className="mt-12 lg:mt-16 max-w-[640px] mx-auto">
           <label className="sr-only">Search universities by name, country, city or subject</label>
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--gs-muted)] shrink-0" />
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-[#d7e3ff] shrink-0">
+              <Search className="h-5 w-5" />
+            </div>
             <input
               type="search"
               value={value}
@@ -118,19 +153,22 @@ export function UniversityHero({
               aria-label="Search universities"
               spellCheck={false}
               autoComplete="off"
-              className="w-full rounded-[14px] border border-[var(--gs-border)] bg-[var(--gs-surface)] pl-11 pr-9 py-3.5 text-[15px] leading-1.5 text-[var(--gs-text)] placeholder-[var(--gs-muted)] transition-all focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)] disabled:cursor-not-allowed"
+              className="w-full rounded-full border border-[#d7e3ff]/50 bg-[#FFFFFF]/15 pl-14 pr-10 py-4 text-[15px] leading-1.5 text-white placeholder-[#9db2e8]/80 transition-all focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#0f1b3d]"
             />
             {value && (
               <button
                 type="button"
                 onClick={handleClear}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[var(--gs-muted)] transition-colors hover:bg-[var(--gs-muted)]/10 hover:text-[var(--gs-text)] focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-[#d7e3ff] transition-colors hover:bg-[#FFFFFF]/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#0f1b3d]"
                 aria-label="Clear search"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
+          <p className="mt-4 text-[12px] text-[#9db2e8] text-center opacity-90">
+            Search by university name, country, city, course or subject area.
+          </p>
         </div>
       </div>
     </section>

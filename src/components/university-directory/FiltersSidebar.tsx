@@ -8,8 +8,8 @@ import {
   Globe,
   MapPin,
   DollarSign,
-  GraduationCap,
   Clock,
+  LayoutList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +37,7 @@ const TUITION_FILTERS: { value: string; label: string }[] = [
   { value: "all", label: "All tuition ranges" },
   { value: "free", label: "Free / No tuition" },
   { value: "low", label: "Low (under $10k)" },
-  { value: "medium", label: "Moderate ($10k\u2013$30k)" },
+  { value: "medium", label: "Moderate ($10k–$30k)" },
   { value: "high", label: "High ($30k+)" },
 ];
 
@@ -56,7 +56,9 @@ export function FiltersSidebar({
   return (
     <>
       {/* Desktop: sticky filter sidebar */}
-      <div className="w-[268px] shrink-0 hidden [@media(min-width:900px)]:sticky [@media(min-width:900px)]:top-[80px] [@media(min-width:900px)]:flex [@media(min-width:900px)]:flex-col [@media(min-width:900px)]:gap-6">
+      <div
+        className="w-[268px] shrink-0 hidden [@media(min-width:900px)]:sticky [@media(min-width:900px)]:top-[80px] [@media(min-width:900px)]:flex [@media(min-width:900px)]:flex-col [@media(min-width:900px)]:gap-6"
+      >
         <FilterPanel
           countries={countries}
           fields={fields}
@@ -73,17 +75,17 @@ export function FiltersSidebar({
       {mobileOpen && (
         <>
           <div
-            className="fixed inset-0 z-50 bg-[var(--gs-text)]/25 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-[#15264A]/30 backdrop-blur-sm"
             onClick={onToggleMobile}
             aria-hidden="true"
           />
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[380px] bg-[var(--gs-surface)] border-l border-[var(--gs-border)] shadow-xl flex flex-col">
-            <div className="flex items-center justify-between border-b border-[var(--gs-border)] px-5 py-4">
-              <h2 className="text-[17px] font-semibold text-[var(--gs-text)]">Filters</h2>
+          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[380px] bg-[#FFFFFF] border-l border-[#E2E8F0] shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4">
+              <h2 className="text-[17px] font-semibold text-[#15264A]">Filters</h2>
               <button
                 type="button"
                 onClick={onToggleMobile}
-                className="rounded-[10px] p-2 text-[var(--gs-muted)] transition-colors hover:bg-[var(--gs-muted)]/10 hover:text-[var(--gs-text)] focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]"
+                className="rounded-[10px] p-2 text-[#64748B] transition-colors hover:bg-[#F3F7FF] hover:text-[#15264A] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
                 aria-label="Close filters"
               >
                 <X className="h-5 w-5" />
@@ -102,19 +104,19 @@ export function FiltersSidebar({
                 mobile
               />
             </div>
-            <div className="border-t border-[var(--gs-border)] p-4 gap-3">
+            <div className="border-t border-[#E2E8F0] p-4 gap-3">
               <button
                 type="button"
                 onClick={onClearAll}
                 disabled={!hasActiveFilters}
-                className="flex-1 rounded-[10px] border border-[var(--gs-border)] bg-[var(--gs-surface)] px-4 py-2.5 text-sm font-medium text-[var(--gs-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--gs-muted)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]"
+                className="flex-1 rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-4 py-2.5 text-sm font-medium text-[#15264A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
               >
                 Clear all
               </button>
               <button
                 type="button"
                 onClick={onToggleMobile}
-                className="flex-1 rounded-[10px] border border-transparent bg-[var(--gs-brand)] px-4 py-2.5 text-sm font-medium text-[var(--gs-brand-text)] transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]"
+                className="flex-1 rounded-[10px] border border-transparent bg-[#1747D1] px-4 py-2.5 text-sm font-medium text-[#FFFFFF] transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
               >
                 Show results
               </button>
@@ -152,12 +154,12 @@ function FilterPanel({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-[var(--gs-muted)]" />
-        <span className="text-[12px] font-semibold text-[var(--gs-muted)] uppercase tracking-wider">
+        <Filter className="h-4 w-4 text-[#64748B]" />
+        <span className="text-[12px] font-semibold text-[#64748B] uppercase tracking-wider">
           Filters
         </span>
         {hasActiveFilters && (
-          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--gs-soft-brand)] px-1.5 text-[10px] font-bold text-[var(--gs-brand)]">
+          <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#E2F2FF] px-1.5 text-[10px] font-bold text-[#1747D1]">
             {activeFilterCount(values)}
           </span>
         )}
@@ -207,7 +209,7 @@ function FilterPanel({
         </select>
       </FilterField>
 
-      <FilterField label="Study level" icon={<GraduationCap className="h-4 w-4" />} id="filter-study-level">
+      <FilterField label="Popular categories" icon={<LayoutList className="h-4 w-4" />} id="filter-study-level">
         <div className="flex gap-2">
           {[{ value: "all", label: "All" }, ...studyLevels].map((chip) => {
             const selected =
@@ -221,10 +223,10 @@ function FilterPanel({
                 onClick={() => onFilterChange({ studyLevel: chip.value })}
                 aria-pressed={selected}
                 className={cn(
-                  "flex-1 cursor-pointer rounded-full border py-1.5 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]",
+                  "flex-1 cursor-pointer rounded-full border py-1.5 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]",
                   selected
-                    ? "border-[var(--gs-brand)] bg-[var(--gs-brand)] text-[var(--gs-brand-text)]"
-                    : "border-[var(--gs-border)] bg-[var(--gs-surface)] text-[var(--gs-text)] hover:bg-[var(--gs-muted)]/10 hover:text-[var(--gs-text)]",
+                    ? "border-[#1747D1] bg-[#1747D1] text-[#FFFFFF]"
+                    : "border-[#E2E8F0] bg-[#FFFFFF] text-[#15264A] hover:bg-[#F3F7FF] hover:text-[#15264A]",
                 )}
               >
                 {chip.label}
@@ -234,17 +236,17 @@ function FilterPanel({
         </div>
       </FilterField>
 
-      <FilterField label="Intake" icon={<Clock className="h-4 w-4" />} id="filter-intake">
+      <FilterField label="Intakes" icon={<Clock className="h-4 w-4" />} id="filter-intake">
         <div className="flex gap-2 flex-wrap">
           <button
             type="button"
             onClick={() => onFilterChange({ intake: "all" })}
             aria-pressed={values.intake === "all"}
             className={cn(
-              "cursor-pointer rounded-full border py-1.5 px-3 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]",
+              "cursor-pointer rounded-full border py-1.5 px-3 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]",
               values.intake === "all"
-                ? "border-[var(--gs-brand)] bg-[var(--gs-brand)] text-[var(--gs-brand-text)]"
-                : "border-[var(--gs-border)] bg-[var(--gs-surface)] text-[var(--gs-text)] hover:bg-[var(--gs-muted)]/10 hover:text-[var(--gs-text)]",
+                ? "border-[#1747D1] bg-[#1747D1] text-[#FFFFFF]"
+                : "border-[#E2E8F0] bg-[#FFFFFF] text-[#15264A] hover:bg-[#F3F7FF] hover:text-[#15264A]",
             )}
           >
             All
@@ -258,10 +260,10 @@ function FilterPanel({
                 onClick={() => onFilterChange({ intake: intake.slug })}
                 aria-pressed={selected}
                 className={cn(
-                  "cursor-pointer rounded-full border py-1.5 px-3 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]",
+                  "cursor-pointer rounded-full border py-1.5 px-3 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]",
                   selected
-                    ? "border-[var(--gs-brand)] bg-[var(--gs-brand)] text-[var(--gs-brand-text)]"
-                    : "border-[var(--gs-border)] bg-[var(--gs-surface)] text-[var(--gs-text)] hover:bg-[var(--gs-muted)]/10 hover:text-[var(--gs-text)]",
+                    ? "border-[#1747D1] bg-[#1747D1] text-[#FFFFFF]"
+                    : "border-[#E2E8F0] bg-[#FFFFFF] text-[#15264A] hover:bg-[#F3F7FF] hover:text-[#15264A]",
                 )}
               >
                 {intake.name}
@@ -271,18 +273,22 @@ function FilterPanel({
         </div>
       </FilterField>
 
-      <div className="border-t border-[var(--gs-border)] pt-4">
+      <div className="border-t border-[#E2E8F0] pt-4">
         <div className="flex items-center gap-3">
           <input
             id="filter-scholarships"
             type="checkbox"
             checked={values.scholarships === "with"}
-            onChange={() => onFilterChange({ scholarships: values.scholarships === "with" ? "all" : "with" })}
-            className="rounded-[10px] border-[var(--gs-border)] bg-[var(--gs-surface)] text-[var(--gs-brand)] focus:ring-0 h-5 w-5 shrink-0 appearance-none checked:bg-[var(--gs-brand)] checked:border-[var(--gs-brand)]"
+            onChange={() =>
+              onFilterChange({
+                scholarships: values.scholarships === "with" ? "all" : "with",
+              })
+            }
+            className="rounded-[10px] border-[#E2E8F0] bg-[#FFFFFF] text-[#1747D1] focus:ring-0 h-5 w-5 shrink-0 appearance-none checked:bg-[#1747D1] checked:border-[#1747D1]"
           />
           <label
             htmlFor="filter-scholarships"
-            className="text-[14px] leading-1.5 text-[var(--gs-text)] cursor-pointer"
+            className="text-[14px] leading-1.5 text-[#15264A] cursor-pointer"
           >
             Only with scholarships
           </label>
@@ -295,9 +301,9 @@ function FilterPanel({
             type="button"
             onClick={onClearAll}
             disabled={!hasActiveFilters}
-            className="w-full rounded-[10px] border border-[var(--gs-border)] bg-[var(--gs-surface)] px-4 py-2.5 text-sm font-medium text-[var(--gs-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--gs-muted)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]"
+            className="w-full rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-4 py-2.5 text-sm font-medium text-[#15264A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
           >
-            Clear all
+            Reset all
           </button>
         </div>
       )}
@@ -328,7 +334,7 @@ function FilterField({
   children: React.ReactElement<HTMLSelectElement>;
 }) {
   const selectClasses =
-    "w-full appearance-none rounded-[10px] border border-[var(--gs-border)] bg-[var(--gs-surface)] pl-3 pr-10 py-2.5 text-sm text-[var(--gs-text)] shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus:border-[var(--gs-brand)] focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)]/20 focus:ring-offset-1";
+    "w-full appearance-none rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] pl-3 pr-10 py-2.5 text-sm text-[#15264A] shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus:border-[#1747D1] focus:outline-none focus:ring-2 focus:ring-[#1747D1]/20 focus:ring-offset-1";
 
   return (
     <div className="space-y-2">
@@ -336,7 +342,7 @@ function FilterField({
         {icon}
         <label
           htmlFor={id}
-          className="text-[12px] font-semibold text-[var(--gs-muted)] uppercase tracking-wider"
+          className="text-[12px] font-semibold text-[#64748B] uppercase tracking-wider"
         >
           {label}
         </label>
@@ -349,7 +355,7 @@ function FilterField({
           ),
         })}
         <ChevronDown
-          className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--gs-muted)] pointer-events-none"
+          className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] pointer-events-none"
         />
       </div>
     </div>

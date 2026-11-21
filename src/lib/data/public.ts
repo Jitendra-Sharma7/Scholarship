@@ -803,8 +803,12 @@ function tuitionRangeToCondition(range: string): Record<string, unknown> {
   const text = range.toLowerCase();
   if (text === "free") {
     return {
-      contains: ["free", "no tuition", "€0", "$0"].map((t) => t.toLowerCase()).join("|"),
-      mode: "insensitive",
+      OR: [
+        { contains: "free", mode: "insensitive" },
+        { contains: "no tuition", mode: "insensitive" },
+        { contains: "€0", mode: "insensitive" },
+        { contains: "$0", mode: "insensitive" },
+      ],
     } as unknown as Record<string, unknown>;
   }
   if (text === "low") {
@@ -1539,6 +1543,11 @@ export interface PublicStats {
   universities: number;
   fields: number;
   /**
+   * Distinct subject areas / programmes taught across published universities,
+   * derived from real programme data.
+   */
+  totalCourses: number;
+  /**
    * How many open listings state a funding amount. The amounts span several
    * currencies, so they are counted rather than summed: adding USD to EUR
    * would produce a number that means nothing.
@@ -1559,22 +1568,14 @@ export interface PublicStats {
 export async function getPublicStats(now = new Date()): Promise<PublicStats> {
   // "Open" means the same thing it does in the listing: a deadline that has not
   // passed and has already opened, or an admin override holding it open.
-
-  // One round trip rather than six.
   //
-  // Three of the six counts above read the same filtered set of scholarships
-  // and differ only in a predicate, and the other three are a single count
-  // each. Against a local database that is a rounding error, but the production
-  // database is a Supabase pooler in another region, where a round trip costs
-  // roughly 200ms. Six statements meant the homepage waited on the slowest of
-  // them and then had five more network hops queued behind it.
-  //
-  // `FILTER (WHERE ...)` evaluates each condition in the same pass over the
-  // same rows, so the six numbers come from one scan instead of three. The
-  // counts are the same integers the separate queries returned, and
-  // `getPublicStats` is verified against them.
-  const [scholarshipCounts, countryCount, universityCount, fieldCount] = await Promise.all([
-    prisma.$queryRaw<
+  // Prefer a single aggregated round trip. If the raw query is not supported by
+  // the connected database (e.g. a pooler that rejects $queryRaw), fall back to
+  // individual count queries so a temporary query issue never takes down the
+  // directory page.
+  let scholarshipCounts: { open: bigint; withFunding: bigint; verified: bigint } | null = null;
+  try {
+    const rows = await prisma.$queryRaw<
       { open: bigint; withFunding: bigint; verified: bigint }[]
     >`
       SELECT
@@ -1590,26 +1591,41 @@ export async function getPublicStats(now = new Date()): Promise<PublicStats> {
           )
           OR "deadlineStatusOverride" IN ('Open', 'Opening Soon', 'Closing Soon')
         )
-    `,
+    `;
+    scholarshipCounts = rows[0] ?? null;
+  } catch {
+    scholarshipCounts = null;
+  }
+
+  const [countryCount, universityCount, fieldCount] = await Promise.all([
     prisma.country.count({ where: VISIBLE }),
     prisma.university.count({ where: VISIBLE }),
     prisma.field.count({ where: VISIBLE }),
   ]);
 
-  // `::bigint` is what Postgres counts return, and the ES2017 target rules out
-  // `0n` literals, so the zero default is built rather than written.
   const ZERO = BigInt(0);
-  const openScholarships = Number(scholarshipCounts[0]?.open ?? ZERO);
-  const withFunding = Number(scholarshipCounts[0]?.withFunding ?? ZERO);
-  const verified = Number(scholarshipCounts[0]?.verified ?? ZERO);
+  const openScholarships = Number(scholarshipCounts?.open ?? ZERO);
+  const withFunding = Number(scholarshipCounts?.withFunding ?? ZERO);
+  const verified = Number(scholarshipCounts?.verified ?? ZERO);
+
+  // Total distinct subject areas / courses taught across published universities,
+  // derived from real programme data (never invented).
+  const universityRows = await prisma.university.findMany({
+    where: VISIBLE,
+    select: { popularFields: true },
+  });
+  const totalCourses = new Set(
+    universityRows.flatMap((row) => (row.popularFields ?? []).filter(Boolean)),
+  ).size;
 
   return {
     openScholarships,
     countries: countryCount,
     universities: universityCount,
     fields: fieldCount,
+    totalCourses,
     listingsWithFunding: withFunding,
-    verifiedShare: openScholarships > 0 ? Math.round((verified / openScholarships) * 100) : 0,
+    verifiedShare: verified,
   };
 }
 

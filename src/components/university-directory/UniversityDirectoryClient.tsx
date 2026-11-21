@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { FiltersSidebar } from "@/components/university-directory/FiltersSidebar";
@@ -15,6 +15,7 @@ import type { PaginatedUniversities } from "@/lib/data/public";
 import type { PublicUniversity } from "@/lib/data/public";
 import type { UniversityFilterOptions } from "@/lib/data/public";
 import { UNIVERSITY_PAGE_SIZE } from "@/lib/page-size";
+import { cn } from "@/lib/utils";
 
 interface UniversityDirectoryClientProps {
   universities: PublicUniversity[];
@@ -32,9 +33,12 @@ interface UniversityDirectoryClientProps {
     tuitionRange: string;
     sort: string;
     view: string;
+    category: string;
   };
   error: Error | null;
 }
+
+type SortValue = "ranking" | "lowest" | "name" | "scholarships";
 
 const DEFAULT_STATE = {
   country: "all",
@@ -44,10 +48,14 @@ const DEFAULT_STATE = {
   intake: "all",
   tuitionRange: "all",
   q: "",
-  sort: "ranking" as const,
+  sort: "ranking" as SortValue,
   view: "grid" as const,
+  category: "all" as const,
   page: 1,
 };
+
+type Category = "all" | "popular" | "top-ranked" | "scholarships";
+
 export function UniversityDirectoryClient({
   universities: initialUniversities,
   filterOptions,
@@ -81,6 +89,11 @@ export function UniversityDirectoryClient({
       view: (initialFilters.view === "list" ? "list" : "grid") as
         | "grid"
         | "list",
+      category: (["all", "popular", "top-ranked", "scholarships"].includes(
+        initialFilters.category,
+      )
+        ? initialFilters.category
+        : DEFAULT_STATE.category) as Category,
       page: Math.max(Math.trunc(initialPage), 1),
     }),
     [initialFilters, initialPage],
@@ -88,52 +101,64 @@ export function UniversityDirectoryClient({
 
   const [result, setResult] = useState<PaginatedUniversities | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<Error | null>(null);
 
   const viewMode = searchParams.get("view") === "list" ? "list" : "grid";
 
-  const navigate = (patch: Partial<typeof state>, resetPage = true) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (patch.q !== undefined) {
-      if (patch.q) params.set("q", patch.q);
-      else params.delete("q");
-    }
-    if (patch.country !== undefined) {
-      if (patch.country !== "all") params.set("country", patch.country);
-      else params.delete("country");
-    }
-    if (patch.studyLevel !== undefined) {
-      if (patch.studyLevel !== "all") params.set("studyLevel", patch.studyLevel);
-      else params.delete("studyLevel");
-    }
-    if (patch.scholarships !== undefined) {
-      if (patch.scholarships !== "all") params.set("scholarships", patch.scholarships);
-      else params.delete("scholarships");
-    }
-    if (patch.field !== undefined) {
-      if (patch.field !== "all") params.set("field", patch.field);
-      else params.delete("field");
-    }
-    if (patch.intake !== undefined) {
-      if (patch.intake !== "all") params.set("intake", patch.intake);
-      else params.delete("intake");
-    }
-    if (patch.tuitionRange !== undefined) {
-      if (patch.tuitionRange !== "all") params.set("tuitionRange", patch.tuitionRange);
-      else params.delete("tuitionRange");
-    }
-    if (patch.sort !== undefined) {
-      if (patch.sort !== "ranking") params.set("sort", patch.sort);
-      else params.delete("sort");
-    }
-    if (patch.view !== undefined) {
-      if (patch.view !== "grid") params.set("view", patch.view);
-      else params.delete("view");
-    }
-    if (resetPage) params.delete("page");
+  const navigate = useCallback(
+    (patch: Partial<typeof state>, resetPage = true) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (patch.q !== undefined) {
+        if (patch.q) params.set("q", patch.q);
+        else params.delete("q");
+      }
+      if (patch.country !== undefined) {
+        if (patch.country !== "all") params.set("country", patch.country);
+        else params.delete("country");
+      }
+      if (patch.studyLevel !== undefined) {
+        if (patch.studyLevel !== "all") params.set("studyLevel", patch.studyLevel);
+        else params.delete("studyLevel");
+      }
+      if (patch.scholarships !== undefined) {
+        if (patch.scholarships !== "all") params.set("scholarships", patch.scholarships);
+        else params.delete("scholarships");
+      }
+      if (patch.field !== undefined) {
+        if (patch.field !== "all") params.set("field", patch.field);
+        else params.delete("field");
+      }
+      if (patch.intake !== undefined) {
+        if (patch.intake !== "all") params.set("intake", patch.intake);
+        else params.delete("intake");
+      }
+      if (patch.tuitionRange !== undefined) {
+        if (patch.tuitionRange !== "all") params.set("tuitionRange", patch.tuitionRange);
+        else params.delete("tuitionRange");
+      }
+      if (patch.sort !== undefined) {
+        if (patch.sort !== "ranking") params.set("sort", patch.sort);
+        else params.delete("sort");
+      }
+      if (patch.view !== undefined) {
+        if (patch.view !== "grid") params.set("view", patch.view);
+        else params.delete("view");
+      }
+      if (patch.category !== undefined) {
+        if (patch.category !== "all") params.set("category", patch.category);
+        else params.delete("category");
+      }
+      if (patch.page !== undefined) {
+        params.set("page", String(patch.page));
+      } else if (resetPage) {
+        params.delete("page");
+      }
 
-    const qs = params.toString();
-    router.replace(`/universities?${qs}`, { scroll: false });
-  };
+      const qs = params.toString();
+      router.replace(`/universities?${qs}`, { scroll: false });
+    },
+    [searchParams, router],
+  );
 
   const handleFilterChange = (patch: Partial<typeof state>) => {
     navigate(patch, true);
@@ -151,40 +176,59 @@ export function UniversityDirectoryClient({
     navigate({ view: mode }, false);
   };
 
-  const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    router.push(`/universities?${params.toString()}`, { scroll: false });
+  const handleCategoryChange = (category: string) => {
+    const cat = ["all", "popular", "top-ranked", "scholarships"].includes(category)
+      ? (category as Category)
+      : "all";
+    const sortMap: Record<Category, SortValue> = {
+      all: "ranking",
+      popular: "scholarships",
+      "top-ranked": "ranking",
+      scholarships: "scholarships",
+    };
+    navigate({ category: cat, sort: sortMap[cat] }, true);
   };
 
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      setLoading(true);
-      try {
-        const res = await fetchPublicUniversitiesPaginated({
-          query: state.q || undefined,
-          country: state.country !== "all" ? state.country : undefined,
-          studyLevel: state.studyLevel !== "all" ? state.studyLevel : undefined,
-          scholarships: state.scholarships !== "all" ? state.scholarships : undefined,
-          field: state.field !== "all" ? state.field : undefined,
-          intake: state.intake !== "all" ? state.intake : undefined,
-          tuitionRange: state.tuitionRange !== "all" ? state.tuitionRange : undefined,
-          sort: state.sort,
-          page: state.page,
-          limit: UNIVERSITY_PAGE_SIZE,
-        });
-        if (!active) return;
-        setResult(res);
-      } finally {
-        if (active) setLoading(false);
-      }
+  const handlePageChange = (page: number) => {
+    navigate({ page }, false);
+  };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setFetchError(null);
+    try {
+      const res = await fetchPublicUniversitiesPaginated({
+        query: state.q || undefined,
+        country: state.country !== "all" ? state.country : undefined,
+        studyLevel: state.studyLevel !== "all" ? state.studyLevel : undefined,
+        scholarships: state.scholarships !== "all" ? state.scholarships : undefined,
+        field: state.field !== "all" ? state.field : undefined,
+        intake: state.intake !== "all" ? state.intake : undefined,
+        tuitionRange: state.tuitionRange !== "all" ? state.tuitionRange : undefined,
+        sort: state.sort,
+        page: state.page,
+        limit: UNIVERSITY_PAGE_SIZE,
+      });
+      setResult(res);
+    } catch (err) {
+      const error =
+        err instanceof Error ? err : new Error("Failed to load universities");
+      setFetchError(error);
+      setResult(null);
+    } finally {
+      setLoading(false);
     }
-    void load();
-    return () => {
-      active = false;
-    };
   }, [state]);
+
+  useEffect(() => {
+    let _active = true;
+    (async () => {
+      await load();
+    })();
+    return () => {
+      _active = false;
+    };
+  }, [load]);
 
   const hasActiveFilters =
     state.q !== "" ||
@@ -216,10 +260,24 @@ export function UniversityDirectoryClient({
 
   const filteredCount = visible.length;
 
-  if (error) {
+  // Build visible page numbers (max 5 around current)
+  const pageNumbers = useMemo(() => {
+    const pages: number[] = [];
+    const maxVisible = 5;
+    let left = Math.max(safePage - Math.floor(maxVisible / 2), 1);
+    const right = Math.min(left + maxVisible - 1, totalPages);
+    left = Math.max(right - maxVisible + 1, 1);
+    for (let i = left; i <= right; i++) pages.push(i);
+    return pages;
+  }, [safePage, totalPages]);
+
+  if (error || fetchError) {
     return (
       <DirectoryErrorState
-        onRetry={() => window.location.reload()}
+        onRetry={() => {
+          setFetchError(null);
+          void load();
+        }}
       />
     );
   }
@@ -270,6 +328,8 @@ export function UniversityDirectoryClient({
               (state.tuitionRange !== "all" ? 1 : 0) +
               (state.q !== "" ? 1 : 0)
             }
+            onCategoryChange={handleCategoryChange}
+            activeCategory={state.category}
           />
 
           {loading ? (
@@ -283,7 +343,7 @@ export function UniversityDirectoryClient({
             <>
               <div className="transition-opacity duration-200">
                 {viewMode === "grid" ? (
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(290px,1fr))] gap-[18px]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-[22px]">
                     {visible.map((u) => (
                       <UniversityCard key={u.id} university={u} />
                     ))}
@@ -298,24 +358,45 @@ export function UniversityDirectoryClient({
               </div>
 
               {totalPages > 1 && (
-                <div className="mt-6 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-                  <div className="flex items-center gap-2 text-sm">
+                <div className="mt-8 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 text-sm text-[#64748B]">
+                    <span className="font-medium text-[#15264A]">
+                      Page {safePage} of {totalPages}
+                    </span>{" "}
+                    <span className="text-[12px]">
+                      · {dataToRender.total.toLocaleString()} universities
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
                     <button
                       type="button"
                       disabled={safePage <= 1}
                       onClick={() => handlePageChange(safePage - 1)}
-                      className="rounded-[10px] border border-[var(--gs-border)] bg-[var(--gs-surface)] px-3.5 py-2 text-sm text-[var(--gs-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--gs-muted)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]"
+                      className="rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-3 py-2 text-sm text-[#15264A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
                     >
                       <ChevronDown className="h-4 w-4 rotate-180" />
                     </button>
-                    <span className="text-[var(--gs-muted)]">
-                      Page {safePage} of {totalPages}
-                    </span>
+                    {pageNumbers.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        disabled={p === safePage}
+                        onClick={() => handlePageChange(p)}
+                        className={cn(
+                          "rounded-[10px] px-3 py-2 text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#F3F7FF]",
+                          p === safePage
+                            ? "bg-[#1747D1] text-[#FFFFFF] shadow-sm"
+                            : "text-[#15264A] hover:bg-[#F3F7FF] border border-transparent",
+                        )}
+                      >
+                        {p}
+                      </button>
+                    ))}
                     <button
                       type="button"
                       disabled={safePage >= totalPages}
                       onClick={() => handlePageChange(safePage + 1)}
-                      className="rounded-[10px] border border-[var(--gs-border)] bg-[var(--gs-surface)] px-3.5 py-2 text-sm text-[var(--gs-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--gs-muted)]/10 focus:outline-none focus:ring-2 focus:ring-[var(--gs-brand)] focus:ring-offset-2 focus:ring-offset-[var(--gs-bg)]"
+                      className="rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-3 py-2 text-sm text-[#15264A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
                     >
                       <ChevronDown className="h-4 w-4" />
                     </button>
