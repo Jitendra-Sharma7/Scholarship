@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import { Search, Globe, Trophy, GraduationCap, Award, MapPin, Star, Building2 } from "lucide-react";
-import { UniversityImage } from "@/components/public/UniversityImage";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Globe, Trophy, GraduationCap, Award, MapPin } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { UniversitySearch } from "@/components/public/UniversitySearch";
 
 interface HeroStat {
@@ -17,7 +18,7 @@ interface UniversityHeroProps {
   countriesCount: number;
   rankedCount: number;
   scholarshipOpportunities: number;
-  onSearch: (q: string) => void;
+  /** Initial search term from the server-rendered URL. */
   searchValue: string;
 }
 
@@ -26,9 +27,33 @@ export function UniversityHero({
   countriesCount,
   rankedCount,
   scholarshipOpportunities,
-  onSearch,
   searchValue,
 }: UniversityHeroProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [value, setValue] = useState(searchValue);
+
+  // Always read the freshest params inside the debounced callback so a filter
+  // changed in the directory during the debounce window is not lost.
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
+
+  // Pending debounced navigation; cleared on unmount to avoid navigating after
+  // the hero is gone.
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep the local input in sync when the URL changes (e.g. back navigation,
+  // or a filter change that re-renders the server component with a new q).
+  useEffect(() => {
+    setValue(searchValue);
+  }, [searchValue]);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, []);
+
   const stats: HeroStat[] = useMemo(
     () => [
       {
@@ -56,6 +81,33 @@ export function UniversityHero({
     [totalUniversities, countriesCount, rankedCount, scholarshipOpportunities]
   );
 
+  // Search runs entirely on the client: preserve every other filter already in
+  // the URL, update only `q`, and reset pagination. This keeps the directory's
+  // search/filter/sort/page state intact when the user types in the hero.
+  //
+  // The URL update is debounced: typing should not fire a server round-trip
+  // (which re-runs the page's DB queries) on every keystroke. The input value
+  // updates immediately for responsiveness; navigation happens after a pause.
+  const handleSearch = (q: string) => {
+    setValue(q);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      searchTimer.current = null;
+      const params = new URLSearchParams(searchParamsRef.current.toString());
+      if (q) {
+        params.set("q", q);
+      } else {
+        params.delete("q");
+      }
+      // Reset to the first page when the query changes.
+      params.delete("page");
+      const qs = params.toString();
+      router.replace(qs ? `/universities?${qs}` : "/universities", {
+        scroll: false,
+      });
+    }, 350);
+  };
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50">
       {/* Background decoration */}
@@ -75,16 +127,17 @@ export function UniversityHero({
               University Directory
             </h1>
             <p className="mt-4 text-lg text-secondary-600 max-w-2xl mx-auto leading-relaxed">
-              Discover top universities worldwide and explore their scholarships, courses and admission information.
+              Discover top universities worldwide and explore their
+              scholarships, courses and admission information.
             </p>
           </div>
 
           {/* Search */}
           <div className="max-w-3xl mx-auto mb-12 lg:mb-16">
             <UniversitySearch
-              value={searchValue}
-              onChange={onSearch}
-              onClear={() => onSearch("")}
+              value={value}
+              onChange={handleSearch}
+              onClear={() => handleSearch("")}
             />
           </div>
 
@@ -105,9 +158,7 @@ export function UniversityHero({
                   <div
                     className={cn(
                       "inline-flex items-center justify-center w-12 h-12 rounded-xl mb-3",
-                      stat.accent
-                        ? "bg-white/20"
-                        : "bg-primary-50"
+                      stat.accent ? "bg-white/20" : "bg-primary-50"
                     )}
                   >
                     <Icon
@@ -141,8 +192,4 @@ export function UniversityHero({
       </div>
     </section>
   );
-}
-
-function cn(...inputs: (string | undefined | null)[]) {
-  return inputs.filter(Boolean).join(" ");
 }

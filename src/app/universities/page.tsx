@@ -115,23 +115,6 @@ export default async function UniversitiesPage({
         countriesCount={countriesCount}
         rankedCount={rankedCount}
         scholarshipOpportunities={scholarshipOpportunities}
-        onSearch={(q) => {
-          const next = { ...initial, q, page: 1 };
-          const params = new URLSearchParams();
-          if (next.q) params.set("q", next.q);
-          if (next.country !== "all") params.set("c", next.country);
-          if (next.ranking !== "all") params.set("r", next.ranking);
-          if (next.studyLevel !== "all") params.set("l", next.studyLevel);
-          if (next.scholarships !== "all") params.set("s", next.scholarships);
-          if (next.field !== "all") params.set("f", next.field);
-          if (next.type !== "all") params.set("t", next.type);
-          if (next.intake !== "all") params.set("i", next.intake);
-          if (next.tuitionRange !== "all") params.set("tr", next.tuitionRange);
-          if (next.sort !== "ranking") params.set("sort", next.sort);
-          if (next.view !== "grid") params.set("view", next.view);
-          if (next.page > 1) params.set("page", String(next.page));
-          window.location.href = `/universities?${params.toString()}`;
-        }}
         searchValue={initial.q}
       />
 
