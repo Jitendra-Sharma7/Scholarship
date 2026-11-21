@@ -6,7 +6,7 @@ import {
   getPublicProviders,
   getPublicScholarshipById,
   getPublicStats,
-  getPublicUniversities,
+  getPublicUniversitiesList,
 } from "@/lib/data/public";
 import { getSettingNumber } from "@/lib/settings";
 
@@ -27,7 +27,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ resource: s
         const url = new URL(request.url);
         const limitParam = url.searchParams.get("limit");
         const limit = limitParam ? Math.min(200, Math.max(1, Number(limitParam) || 1)) : undefined;
-        return NextResponse.json(await getPublicUniversities({ limit }), { headers: cache });
+        return NextResponse.json(await getPublicUniversitiesList({ limit }), { headers: cache });
       }
 
       case "providers":

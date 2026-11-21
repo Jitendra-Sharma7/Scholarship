@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowRight,
   Bookmark,
@@ -9,17 +10,18 @@ import {
   ExternalLink,
   Globe,
   GraduationCap,
-  Users,
+  MapPin,
 } from "lucide-react";
-import { cn, formatNumber } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { UniversityImage } from "@/components/public/UniversityImage";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import {
-  NewlyAddedBadge,
   RankingBadge,
   ScholarshipAvailabilityBadge,
 } from "@/components/public/UniversityBadges";
+import { Button } from "@/components/ui/Button";
 import type { PublicUniversity } from "@/lib/data/public";
+import { useStore } from "@/lib/store/useStore";
 
 const STUDY_LEVEL_LABELS: Record<string, string> = {
   Undergraduate: "Undergraduate",
@@ -48,7 +50,6 @@ function studyLevelsFor(university: PublicUniversity): string[] {
 
 interface UniversityCardProps {
   university: PublicUniversity;
-  /** Render the image with high priority (first card in the viewport). */
   priority?: boolean;
 }
 
@@ -63,6 +64,22 @@ export function UniversityCard({
       : university.country || university.city;
   const levels = studyLevelsFor(university);
   const isActive = pathname === `/universities/${university.slug ?? university.id}`;
+  const tags = university.popularFields.slice(0, 3);
+
+  const isAuthenticated = useStore((s) => s.isAuthenticated);
+  const isSaved = useStore((s) => s.isSaved(university.id));
+  const toggleSaveUniversity = useStore((s) => s.toggleSaveScholarship);
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleFavoriteClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!isAuthenticated) return;
+    setIsSaving(true);
+    toggleSaveUniversity(university.id);
+    setTimeout(() => setIsSaving(false), 300);
+  };
 
   const handleExternalClick = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -70,157 +87,174 @@ export function UniversityCard({
     if (university.website) window.open(university.website, "_blank", "noopener");
   };
 
+  const ranking = university.qsRanking ?? university.theRanking ?? null;
+
   return (
-    <Link
-      href={`/universities/${university.slug ?? university.id}`}
-      prefetch={true}
-      className="block h-full"
+    <article
+      className={cn(
+        "flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1",
+        isActive && "ring-2 ring-primary-600 bg-primary-light/50"
+      )}
     >
-      <article
-        className={cn(
-          "group flex h-full flex-col overflow-hidden rounded-xl border border-secondary-200 bg-white shadow-card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1",
-          isActive && "ring-2 ring-primary-500 bg-primary-50"
+      {/* Top section: image + badges */}
+      <div className="relative aspect-[16/9] overflow-hidden rounded-t-xl bg-secondary-50">
+        <UniversityImage
+          src={university.coverImage}
+          alt={`Campus of ${university.name}`}
+          initials={university.name}
+          priority={priority}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+
+        {/* University logo overlay */}
+        {university.logo && (
+          <div className="absolute -inset-0.5 bg-gradient-to-b from-transparent via-black/40 to-black/60 pointer-events-none" />
         )}
-      >
-        {/* Top section: image + badges */}
-        <div className="relative aspect-[16/10] overflow-hidden rounded-t-xl bg-secondary-100">
-          <UniversityImage
-            src={university.coverImage}
-            alt={`Campus of ${university.name}`}
-            initials={university.name}
-            priority={priority}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        {university.logo && (
+          <img
+            src={university.logo}
+            alt={`${university.name} logo`}
+            className="absolute top-4 left-4 z-20 h-12 w-12 rounded-full bg-surface p-1 shadow-sm object-contain"
+            loading="lazy"
+            decoding="async"
           />
-          <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
-            <NewlyAddedBadge
-              createdAt={university.createdAt}
-              className="text-[9px] px-2 py-0.5"
-            />
-            <div className="flex flex-wrap gap-1.5">
-              {university.qsRanking && (
-                <RankingBadge
-                  ranking={university.qsRanking}
-                  source="qs"
-                  className="text-[9px] px-2 py-0.5"
-                />
-              )}
-              {university.theRanking && (
-                <RankingBadge
-                  ranking={university.theRanking}
-                  source="the"
-                  className="text-[9px] px-2 py-0.5"
-                />
-              )}
-            </div>
-          </div>
-          <div className="absolute top-3 right-3 z-20">
-            <ScholarshipAvailabilityBadge
-              count={university.scholarshipCount}
-              className="text-[9px] px-2 py-0.5"
-            />
-          </div>
-        </div>
+        )}
 
-        {/* Content body */}
-        <div className="flex flex-1 flex-col p-4">
-          <div className="mb-1.5">
-            <h3 className="text-base font-bold text-secondary-950 leading-tight line-clamp-2">
-              {university.name}
-            </h3>
-          </div>
-
-          <p className="flex items-center gap-1.5 text-xs text-secondary-500 mb-3">
-            <CountryFlag
-              code={university.countryCode}
-              name={university.country}
-              size="xs"
+        {/* Badges */}
+        <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
+          <RankingBadge
+            ranking={university.qsRanking}
+            source="qs"
+            className="text-[10px] px-2 py-0.5"
+          />
+          {university.theRanking && !university.qsRanking && (
+            <RankingBadge
+              ranking={university.theRanking}
+              source="the"
+              className="text-[10px] px-2 py-0.5"
             />
-            <span className="truncate" title={countryLabel ?? undefined}>
-              {countryLabel}
-            </span>
-          </p>
-
-          {university.description && (
-            <p className="text-sm text-secondary-600 leading-relaxed line-clamp-2 mb-3">
-              {university.description}
-            </p>
           )}
-
-          <div className="space-y-2 mb-auto">
-            {university.popularFields.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {university.popularFields.slice(0, 4).map((field) => (
-                  <span
-                    key={field}
-                    className="rounded-md border border-secondary-200 bg-secondary-50 px-2 py-0.5 text-[10px] font-medium text-secondary-600 uppercase tracking-wider"
-                    title={field}
-                  >
-                    {field}
-                  </span>
-                ))}
-              </div>
-            )}
-            {levels.length > 0 && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-secondary-500">
-                <GraduationCap className="h-3.5 w-3.5 shrink-0" />
-                <span className="font-medium text-secondary-700">Study levels:</span>{" "}
-                <span className="truncate">
-                  {levels.join(", ")}
-                </span>
-              </div>
-            )}
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-secondary-500">
-              <Globe className="h-3.5 w-3.5 shrink-0" />
-              <span className="font-medium text-secondary-700">International students:</span>{" "}
-              <span>
-                {university.internationalStudentPercent != null
-                  ? `${university.internationalStudentPercent}%`
-                  : "Not available"}
-              </span>
-            </div>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-secondary-500">
-              <Users className="h-3.5 w-3.5 shrink-0" />
-              <span className="font-medium text-secondary-700">Student population:</span>{" "}
-              <span>
-                {university.studentCount
-                  ? formatNumber(university.studentCount)
-                  : "Not available"}
-              </span>
-            </div>
-          </div>
         </div>
 
-        {/* Footer */}
-        <footer className="border-t border-secondary-100 bg-secondary-50/50 p-3 rounded-b-xl">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <ScholarshipAvailabilityBadge
-                count={university.scholarshipCount}
-                className="text-xs px-2.5 py-1"
-              />
+        <div className="absolute top-3 right-3 z-20">
+          <ScholarshipAvailabilityBadge
+            count={university.scholarshipCount}
+            className="text-[10px] px-2 py-0.5"
+          />
+        </div>
+
+        {/* Favorite button */}
+        <button
+          type="button"
+          onClick={handleFavoriteClick}
+          className={cn(
+            "absolute bottom-3 right-3 z-20 rounded-lg p-2 transition-all duration-200",
+            isSaved
+              ? "bg-primary-600 text-white shadow-sm"
+              : "bg-surface/90 border border-border text-muted shadow-sm hover:bg-surface hover:text-primary-600"
+          )}
+          aria-label={isSaved ? "Remove from favorites" : "Add to favorites"}
+          aria-pressed={isSaved}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : isSaved ? (
+            <BookmarkCheck className="h-5 w-5" />
+          ) : (
+            <Bookmark className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+
+      {/* Content body */}
+      <div className="flex flex-1 flex-col p-5">
+        <div className="mb-2">
+          <h3 className="text-sm font-semibold text-dark leading-tight line-clamp-2">
+            {university.name}
+          </h3>
+        </div>
+
+        <p className="flex items-center gap-1.5 text-xs text-muted mb-3">
+          <CountryFlag code={university.countryCode} name={university.country} size="xs" />
+          <span className="truncate" title={countryLabel ?? undefined}>
+            {countryLabel}
+          </span>
+        </p>
+
+        {university.description && (
+          <p className="text-sm text-muted leading-relaxed line-clamp-2 mb-4">
+            {university.description}
+          </p>
+        )}
+
+        {/* Ranking + Study levels */}
+        <div className="mb-3">
+          {ranking && (
+            <div className="flex items-center gap-1.5 text-xs text-muted mb-1">
+              <Globe className="h-3.5 w-3.5 shrink-0" />
+              <span className="font-medium text-dark">Global ranking:</span>{" "}
+              <span className="font-semibold text-dark">#{ranking}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Link
-                href={`/universities/${university.slug ?? university.id}`}
-                className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-primary-700 hover:shadow-sm"
+          )}
+          {levels.length > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-muted">
+              <GraduationCap className="h-3.5 w-3.5 shrink-0" />
+              <span className="font-medium text-dark">Study levels:</span>{" "}
+              <span className="truncate">{levels.join(", ")}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Subject tags */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {tags.map((field) => (
+              <span
+                key={field}
+                className="rounded-md border border-border bg-primary-light px-2 py-0.5 text-[10px] font-medium text-primary-dark uppercase tracking-wider"
+                title={field}
               >
-                View Profile
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-              {university.website && (
-                <button
-                  onClick={handleExternalClick}
-                  className="rounded-lg p-2 text-secondary-400 transition-colors hover:bg-secondary-100 hover:text-secondary-900"
-                  aria-label={`Official website of ${university.name}`}
-                  title="Official website"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+                {field}
+              </span>
+            ))}
           </div>
-        </footer>
-      </article>
-    </Link>
+        )}
+
+        {/* Scholarship availability */}
+        <div className="mb-auto flex items-center gap-1.5 text-xs">
+          <ScholarshipAvailabilityBadge
+            count={university.scholarshipCount}
+            className="text-xs px-2.5 py-1"
+          />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-border bg-surface/50 p-4 rounded-b-xl">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href={`/universities/${university.slug ?? university.id}`}
+            className="flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700"
+          >
+            View University
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+          {university.website && (
+            <button
+              onClick={handleExternalClick}
+              className="rounded-lg p-2 text-muted transition-colors hover:bg-surface hover:text-dark"
+              aria-label={`Official website of ${university.name}`}
+              title="Official website"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </footer>
+    </article>
   );
 }

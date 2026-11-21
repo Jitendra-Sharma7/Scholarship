@@ -27,6 +27,7 @@ import {
   getPublicScholarships,
   getPublicStats,
   getPublicUniversities,
+  getPublicUniversitiesList,
   getPublicIntakes,
   type ScholarshipQuery,
   type PublicCountry,
@@ -36,6 +37,7 @@ import {
   type PublicStats,
   type PublicUniversity,
   type Paginated,
+  type PaginatedUniversities,
 } from "@/lib/data/public";
 import {
   findMatches,
@@ -110,7 +112,27 @@ export async function fetchPublicFields(): Promise<PublicField[]> {
 }
 
 export async function fetchPublicUniversities(limit?: number): Promise<PublicUniversity[]> {
-  return getPublicUniversities({ limit: clampLimit(limit) });
+  return getPublicUniversitiesList({ limit: clampLimit(limit) });
+}
+
+export async function fetchPublicUniversitiesPaginated(
+  filters: Partial<import("@/lib/data/public").GetPublicUniversitiesOptions>
+): Promise<PaginatedUniversities> {
+  return getPublicUniversities({
+    limit: clampLimit(filters.limit),
+    page: typeof filters.page === "number" && filters.page > 0 ? Math.trunc(filters.page) : 1,
+    includeScholarships: true,
+    query: filters.query?.slice(0, 200) || undefined,
+    country: filters.country?.slice(0, 80) || undefined,
+    ranking: filters.ranking,
+    studyLevel: filters.studyLevel,
+    scholarships: filters.scholarships,
+    field: filters.field?.slice(0, 120) || undefined,
+    type: filters.type?.slice(0, 80) || undefined,
+    intake: filters.intake?.slice(0, 80) || undefined,
+    tuitionRange: filters.tuitionRange,
+    sort: filters.sort,
+  });
 }
 
 export async function fetchPublicProviders(): Promise<PublicProvider[]> {

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, Prisma as PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   fromPrismaFundingType,
@@ -529,20 +529,393 @@ export async function getPublicFields(): Promise<PublicField[]> {
 
 export interface GetPublicUniversitiesOptions {
   limit?: number;
+  page?: number;
   /** When true, each university includes its published scholarships so the
    *  directory can filter by study level, intake and scholarship availability
    *  without additional round trips. */
   includeScholarships?: boolean;
+  /** Search query matched against name, country, city, and programmes. */
+  query?: string;
+  /** Country name filter. */
+  country?: string;
+  /** Ranking tier: "top10" | "top50" | "top100" | "top500" | "unranked" | "all". */
+  ranking?: string;
+  /** Study level: "ug" | "pg" | "phd". */
+  studyLevel?: string;
+  /** "with" | "without" | "all". */
+  scholarships?: string;
+  /** Subject/field name. */
+  field?: string;
+  /** University type. */
+  type?: string;
+  /** Intake slug. */
+  intake?: string;
+  /** Tuition range: "free" | "low" | "medium" | "high". */
+  tuitionRange?: string;
+  sort?: "ranking" | "lowest" | "name" | "scholarships" | "country";
+}
+
+export interface PaginatedUniversities {
+  data: PublicUniversity[];
+  total: number;
+  page: number;
+  totalPages: number;
+  hasMore: boolean;
 }
 
 export async function getPublicUniversities({
   limit,
+  page = 1,
   includeScholarships = false,
+  query,
+  country,
+  ranking,
+  studyLevel,
+  scholarships,
+  field,
+  type,
+  intake,
+  tuitionRange,
+  sort = "ranking",
+}: GetPublicUniversitiesOptions = {}): Promise<PaginatedUniversities> {
+  const take = Math.min(Math.max(Math.trunc(limit ?? 12), 1), 60);
+  const skip = (Math.max(Math.trunc(page), 1) - 1) * take;
+
+  const where: Prisma.UniversityWhereInput = { ...VISIBLE };
+
+  if (query) {
+    const like = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+    where.OR = [
+      { name: { contains: like, mode: "insensitive" } },
+      { countryNameLegacy: { contains: like, mode: "insensitive" } },
+      { city: { contains: like, mode: "insensitive" } },
+      { country: { name: { contains: like, mode: "insensitive" } } },
+      { popularFields: { hasSome: [query] } },
+    ];
+  }
+
+  if (country) {
+    where.countryNameLegacy = country;
+    where.country = { name: country };
+  }
+
+  if (studyLevel) {
+    const LEVEL_MAP: Record<string, string[]> = {
+      ug: ["Undergraduate"],
+      pg: ["Master's", "MBA", "Doctoral", "JD", "MD"],
+      phd: ["PhD"],
+    };
+    const levels = LEVEL_MAP[studyLevel] ?? [];
+    where.scholarships = {
+      some: {
+        ...VISIBLE,
+        degreeLevels: { hasSome: levels },
+      },
+    };
+  }
+
+  if (scholarships === "with") {
+    (where as Prisma.UniversityWhereInput & { _count?: { scholarships: { where: Prisma.ScholarshipScalarWhereInput } } })._count = { scholarships: { where: VISIBLE } };
+  } else if (scholarships === "without") {
+    where.scholarships = { none: VISIBLE };
+  }
+
+  if (field) {
+    where.popularFields = { has: field };
+  }
+
+  if (type) {
+    where.type = type;
+  }
+
+  if (intake) {
+    const existing = where.scholarships as Prisma.ScholarshipListRelationFilter | undefined;
+    where.scholarships = {
+      ...(existing || {}),
+      some: {
+        ...VISIBLE,
+        intakes: { some: { intake: { slug: intake } } },
+      },
+    };
+  }
+
+  if (ranking && ranking !== "all") {
+    if (ranking === "unranked") {
+      where.qsRanking = null;
+      where.theRanking = null;
+    } else {
+      const max = RANKING_TIERS[ranking]?.max;
+      if (max != null) {
+        const existingOr = where.OR as Prisma.UniversityWhereInput[] | undefined;
+        where.OR = [
+          ...(existingOr ?? []),
+          { qsRanking: { lte: max } },
+          { theRanking: { lte: max } },
+        ];
+      }
+    }
+  }
+
+  if (tuitionRange && tuitionRange !== "all") {
+    where.tuitionInfo = tuitionRangeToCondition(tuitionRange) as Prisma.StringFilter;
+  }
+
+  const sortOrder = "asc" as const;
+  const sortOrderDesc = "desc" as const;
+  const orderBy = sort === "lowest"
+    ? [{ qsRanking: sortOrderDesc }, { theRanking: sortOrderDesc }, { name: sortOrder }]
+    : sort === "name"
+      ? { name: sortOrder }
+      : sort === "scholarships"
+        ? { _count: { scholarships: sortOrderDesc } }
+        : sort === "country"
+          ? [{ country: { name: sortOrder } }, { name: sortOrder }]
+          : [{ qsRanking: sortOrder }, { name: sortOrder }];
+
+  const [rows, total] = await Promise.all([
+    prisma.university.findMany({
+      where,
+      orderBy,
+      skip,
+      take,
+      include: {
+        country: { select: { id: true, name: true, code: true } },
+        ...(includeScholarships
+          ? {
+              scholarships: {
+                where: VISIBLE,
+                include: {
+                  intakes: {
+                    include: { intake: true },
+                  },
+                },
+                orderBy: [{ deadline: "asc" }, { createdAt: "asc" }],
+              },
+            }
+          : {}),
+        _count: {
+          select: { scholarships: { where: VISIBLE } },
+        },
+      },
+    }),
+    prisma.university.count({ where }),
+  ]);
+
+  // De-duplicate by name (case-insensitive) to prevent duplicate universities.
+  const seen = new Set<string>();
+  const uniqueRows = rows.filter((u) => {
+    const key = (u.name ?? "").trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(total / take));
+  return {
+    data: uniqueRows.map((u) => {
+      const row = u as unknown as {
+        country: { name: string; code: string } | null;
+        _count: { scholarships: number };
+        scholarships?: { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[];
+      };
+      return {
+        id: u.id,
+        name: u.name,
+        country: row.country?.name ?? u.countryNameLegacy ?? "",
+        city: u.city,
+        website: u.website,
+        admissionsWebsite: u.admissionsWebsite,
+        logo: u.logo,
+        ranking: u.qsRanking ?? 9999,
+        description: u.description,
+        programs: u.popularFields,
+        popularFields: u.popularFields,
+        tuitionInfo: u.tuitionInfo,
+        admissionInfo: u.admissionInfo,
+        internationalInfo: u.internationalInfo,
+        scholarshipCount: row._count.scholarships,
+        establishedYear: u.foundedYear,
+        studentCount: u.studentCount,
+        internationalStudentPercent: u.internationalStudentPercent,
+        countryId: u.countryId,
+        countryCode: row.country?.code ?? null,
+        slug: u.slug,
+        coverImage: u.coverImage,
+        type: u.type,
+        ownership: u.ownership,
+        qsRanking: u.qsRanking,
+        theRanking: u.theRanking,
+        acceptanceRate: u.acceptanceRate,
+        internationalStudentCount: u.internationalStudentCount,
+        address: u.address,
+        contactEmail: u.contactEmail,
+        contactPhone: u.contactPhone,
+        featured: u.featured,
+        createdAt: u.createdAt,
+        ...(includeScholarships
+          ? {
+              scholarships: (row.scholarships as unknown as { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[]).map((s) => ({
+                id: s.id,
+                degreeLevels: s.degreeLevels,
+                deadline: s.deadline,
+                intakes: s.intakes.map((link) => ({
+                  intake: { name: link.intake.name, slug: link.intake.slug },
+                })),
+              })),
+            }
+          : {}),
+      };
+    }),
+    total,
+    page: Math.max(Math.trunc(page), 1),
+    totalPages,
+    hasMore: Math.max(Math.trunc(page), 1) < totalPages,
+  };
+}
+
+const RANKING_TIERS: Record<string, { max: number } | null> = {
+  top10: { max: 10 },
+  top50: { max: 50 },
+  top100: { max: 100 },
+  top500: { max: 500 },
+  unranked: null,
+};
+
+function tuitionRangeToCondition(range: string): Record<string, unknown> {
+  const text = range.toLowerCase();
+  if (text === "free") {
+    return {
+      contains: ["free", "no tuition", "€0", "$0"].map((t) => t.toLowerCase()).join("|"),
+      mode: "insensitive",
+    } as unknown as Record<string, unknown>;
+  }
+  if (text === "low") {
+    return { contains: "low", mode: "insensitive" };
+  }
+  if (text === "medium") {
+    return { contains: "medium", mode: "insensitive" };
+  }
+  if (text === "high") {
+    return { contains: "high", mode: "insensitive" };
+  }
+  return {};
+}
+
+/**
+ * Backward-compatible list variant: returns every matching university as an
+ * array (no pagination). Used by existing callers that do not need pagination.
+ */
+export async function getPublicUniversitiesList({
+  limit,
+  includeScholarships = false,
+  query,
+  country,
+  ranking,
+  studyLevel,
+  scholarships,
+  field,
+  type,
+  intake,
+  tuitionRange,
+  sort = "ranking",
 }: GetPublicUniversitiesOptions = {}): Promise<PublicUniversity[]> {
+  const take = Math.min(Math.max(Math.trunc(limit ?? 60), 1), 60);
+
+  const where: Record<string, unknown> = { ...VISIBLE };
+
+  if (query) {
+    const like = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+    where.OR = [
+      { name: { contains: like, mode: "insensitive" } },
+      { countryNameLegacy: { contains: like, mode: "insensitive" } },
+      { city: { contains: like, mode: "insensitive" } },
+      { country: { name: { contains: like, mode: "insensitive" } } },
+      { popularFields: { hasSome: [query] } },
+    ];
+  }
+
+  if (country) {
+    where.countryNameLegacy = country;
+    where.country = { name: country };
+  }
+
+  if (studyLevel) {
+    const LEVEL_MAP: Record<string, string[]> = {
+      ug: ["Undergraduate"],
+      pg: ["Master's", "MBA", "Doctoral", "JD", "MD"],
+      phd: ["PhD"],
+    };
+    const levels = LEVEL_MAP[studyLevel] ?? [];
+    where.scholarships = {
+      some: {
+        ...VISIBLE,
+        degreeLevels: { hasSome: levels },
+      },
+    };
+  }
+
+  if (scholarships === "with") {
+    (where as Prisma.UniversityWhereInput & { _count?: { scholarships: { where: Prisma.ScholarshipScalarWhereInput } } })._count = { scholarships: { where: VISIBLE } };
+  } else if (scholarships === "without") {
+    where.scholarships = { none: VISIBLE };
+  }
+
+  if (field) {
+    where.popularFields = { has: field };
+  }
+
+  if (type) {
+    where.type = type;
+  }
+
+  if (intake) {
+    const existing = where.scholarships as Prisma.ScholarshipListRelationFilter | undefined;
+    where.scholarships = {
+      ...(existing || {}),
+      some: {
+        ...VISIBLE,
+        intakes: { some: { intake: { slug: intake } } },
+      },
+    };
+  }
+
+  if (ranking && ranking !== "all") {
+    if (ranking === "unranked") {
+      where.qsRanking = null;
+      where.theRanking = null;
+    } else {
+      const max = RANKING_TIERS[ranking]?.max;
+      if (max != null) {
+        const existingOr = where.OR as Prisma.UniversityWhereInput[] | undefined;
+        where.OR = [
+          ...(existingOr ?? []),
+          { qsRanking: { lte: max } },
+          { theRanking: { lte: max } },
+        ];
+      }
+    }
+  }
+
+  if (tuitionRange && tuitionRange !== "all") {
+    where.tuitionInfo = tuitionRangeToCondition(tuitionRange) as Prisma.StringFilter;
+  }
+
+  const sortOrder = "asc" as const;
+  const sortOrderDesc = "desc" as const;
+  const orderBy = sort === "lowest"
+    ? [{ qsRanking: sortOrderDesc }, { theRanking: sortOrderDesc }, { name: sortOrder }]
+    : sort === "name"
+      ? { name: sortOrder }
+      : sort === "scholarships"
+        ? { _count: { scholarships: sortOrderDesc } }
+        : sort === "country"
+          ? [{ country: { name: sortOrder } }, { name: sortOrder }]
+          : [{ qsRanking: sortOrder }, { name: sortOrder }];
+
   const rows = await prisma.university.findMany({
-    where: VISIBLE,
-    orderBy: [{ qsRanking: "asc" }, { name: "asc" }],
-    take: limit,
+    where,
+    orderBy,
+    take,
     include: {
       country: { select: { id: true, name: true, code: true } },
       ...(includeScholarships
@@ -564,7 +937,6 @@ export async function getPublicUniversities({
     },
   });
 
-  // De-duplicate by name (case-insensitive) to prevent duplicate universities.
   const seen = new Set<string>();
   const uniqueRows = rows.filter((u) => {
     const key = (u.name ?? "").trim().toLowerCase();
@@ -573,55 +945,60 @@ export async function getPublicUniversities({
     return true;
   });
 
-  return uniqueRows.map((u) => ({
-    id: u.id,
-    name: u.name,
-    country: u.country?.name ?? u.countryNameLegacy ?? "",
-    city: u.city,
-    website: u.website,
-    admissionsWebsite: u.admissionsWebsite,
-    logo: u.logo,
-    // Unranked institutions sort after every ranked one.
-    ranking: u.qsRanking ?? 9999,
-    description: u.description,
-    programs: u.popularFields,
-    popularFields: u.popularFields,
-    tuitionInfo: u.tuitionInfo,
-    admissionInfo: u.admissionInfo,
-    internationalInfo: u.internationalInfo,
-    // Only published, non-deleted scholarships count as "available".
-    scholarshipCount: u._count.scholarships,
-    establishedYear: u.foundedYear,
-    studentCount: u.studentCount,
-    internationalStudentPercent: u.internationalStudentPercent,
-    countryId: u.countryId,
-    countryCode: u.country?.code ?? null,
-    slug: u.slug,
-    coverImage: u.coverImage,
-    type: u.type,
-    ownership: u.ownership,
-    qsRanking: u.qsRanking,
-    theRanking: u.theRanking,
-    acceptanceRate: u.acceptanceRate,
-    internationalStudentCount: u.internationalStudentCount,
-    address: u.address,
-    contactEmail: u.contactEmail,
-    contactPhone: u.contactPhone,
-    featured: u.featured,
-    createdAt: u.createdAt,
-    ...(includeScholarships
-      ? {
-          scholarships: (u.scholarships as unknown as { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[]).map((s) => ({
-            id: s.id,
-            degreeLevels: s.degreeLevels,
-            deadline: s.deadline,
-            intakes: s.intakes.map((link) => ({
-              intake: { name: link.intake.name, slug: link.intake.slug },
+  return uniqueRows.map((u) => {
+    const row = u as unknown as {
+      country: { name: string; code: string } | null;
+      _count: { scholarships: number };
+      scholarships?: { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[];
+    };
+    return {
+      id: u.id,
+      name: u.name,
+      country: row.country?.name ?? u.countryNameLegacy ?? "",
+      city: u.city,
+      website: u.website,
+      admissionsWebsite: u.admissionsWebsite,
+      logo: u.logo,
+      ranking: u.qsRanking ?? 9999,
+      description: u.description,
+      programs: u.popularFields,
+      popularFields: u.popularFields,
+      tuitionInfo: u.tuitionInfo,
+      admissionInfo: u.admissionInfo,
+      internationalInfo: u.internationalInfo,
+      scholarshipCount: row._count.scholarships,
+      establishedYear: u.foundedYear,
+      studentCount: u.studentCount,
+      internationalStudentPercent: u.internationalStudentPercent,
+      countryId: u.countryId,
+      countryCode: row.country?.code ?? null,
+      slug: u.slug,
+      coverImage: u.coverImage,
+      type: u.type,
+      ownership: u.ownership,
+      qsRanking: u.qsRanking,
+      theRanking: u.theRanking,
+      acceptanceRate: u.acceptanceRate,
+      internationalStudentCount: u.internationalStudentCount,
+      address: u.address,
+      contactEmail: u.contactEmail,
+      contactPhone: u.contactPhone,
+      featured: u.featured,
+      createdAt: u.createdAt,
+      ...(includeScholarships
+        ? {
+            scholarships: (row.scholarships as unknown as { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[]).map((s) => ({
+              id: s.id,
+              degreeLevels: s.degreeLevels,
+              deadline: s.deadline,
+              intakes: s.intakes.map((link) => ({
+                intake: { name: link.intake.name, slug: link.intake.slug },
+              })),
             })),
-          })),
-        }
-      : {}),
-  }));
+          }
+        : {}),
+    };
+  });
 }
 
 export async function getPublicUniversityFilterOptions(): Promise<UniversityFilterOptions> {

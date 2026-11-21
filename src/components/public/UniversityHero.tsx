@@ -36,7 +36,6 @@ export function UniversityHero({
   // Always read the freshest params inside the debounced callback so a filter
   // changed in the directory during the debounce window is not lost.
   const searchParamsRef = useRef(searchParams);
-  searchParamsRef.current = searchParams;
 
   // Pending debounced navigation; cleared on unmount to avoid navigating after
   // the hero is gone.
@@ -45,8 +44,8 @@ export function UniversityHero({
   // Keep the local input in sync when the URL changes (e.g. back navigation,
   // or a filter change that re-renders the server component with a new q).
   useEffect(() => {
-    setValue(searchValue);
-  }, [searchValue]);
+    searchParamsRef.current = searchParams;
+  }, [searchParams]);
 
   useEffect(() => {
     return () => {
