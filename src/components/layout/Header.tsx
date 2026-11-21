@@ -115,7 +115,6 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const closeTimerRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const isAuthenticated = useStore((s) => s.isAuthenticated);
   const userName = useStore((s) => s.user?.name ?? null);
@@ -196,20 +195,6 @@ export function Header() {
     return pathname === href || pathname?.startsWith(href + "/");
   };
 
-  const handleMouseEnter = (label: string) => {
-    if (closeTimerRef.current[label]) {
-      clearTimeout(closeTimerRef.current[label]);
-      closeTimerRef.current[label] = null as unknown as NodeJS.Timeout;
-    }
-    setActiveDropdown(label);
-  };
-
-  const handleMouseLeave = (label: string) => {
-    closeTimerRef.current[label] = setTimeout(() => {
-      setActiveDropdown(null);
-    }, 100);
-  };
-
   return (
     <header
       className={cn(
@@ -231,14 +216,12 @@ export function Header() {
                 <div
                   key={item.label}
                   className="relative"
-                  role="menuitem"
-                  onMouseEnter={() => hasDropdown && handleMouseEnter(item.label)}
-                  onMouseLeave={() => hasDropdown && handleMouseLeave(item.label)}
-                  onFocus={() => hasDropdown && handleMouseEnter(item.label)}
-                  onBlur={() => hasDropdown && handleMouseLeave(item.label)}
+                  role="none"
+                  ref={(el) => { dropdownRefs.current[item.label] = el; }}
                 >
-                  <Link
-                    href={item.href}
+                  <button
+                    type="button"
+                    onClick={() => hasDropdown && setActiveDropdown(isOpen ? null : item.label)}
                     className={cn(
                       "flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                       isActive(item.href)
@@ -246,8 +229,9 @@ export function Header() {
                         : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900",
                       isOpen && "bg-primary-50 text-primary-700"
                     )}
-                    aria-haspopup={hasDropdown}
-                    aria-expanded={isOpen}
+                    aria-haspopup={hasDropdown ? "menu" : undefined}
+                    aria-expanded={hasDropdown ? isOpen : undefined}
+                    aria-controls={hasDropdown ? `nav-dropdown-${item.label.toLowerCase().replace(/\s+/g, "-")}` : undefined}
                   >
                     {item.label}
                     {hasDropdown && (
@@ -259,16 +243,22 @@ export function Header() {
                         aria-hidden="true"
                       />
                     )}
-                  </Link>
+                  </button>
 
                   {hasDropdown && isOpen && (
                     <div
-                      ref={(el) => { dropdownRefs.current[item.label] = el; }}
+                      id={`nav-dropdown-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
                       className="absolute left-0 top-full min-w-[220px] rounded-xl border border-secondary-200 bg-white py-2 shadow-card-elevated z-50 animate-slide-in"
                       role="menu"
-                      onMouseEnter={() => handleMouseEnter(item.label)}
-                      onMouseLeave={() => handleMouseLeave(item.label)}
                     >
+                      <Link
+                        href={item.href}
+                        role="menuitem"
+                        className="flex items-center gap-3 border-b border-secondary-100 px-4 py-2.5 text-sm font-semibold text-primary-700 hover:bg-primary-50"
+                        onClick={() => setActiveDropdown(null)}
+                      >
+                        View all {item.label}
+                      </Link>
                       {item.dropdown?.map((ddItem) => (
                         <Link
                           key={ddItem.label}
