@@ -602,29 +602,11 @@ export async function getPublicUniversities({
   }
 
   if (country) {
-    where.countryNameLegacy = country;
-    where.country = { name: country };
-  }
-
-  if (studyLevel) {
-    const LEVEL_MAP: Record<string, string[]> = {
-      ug: ["Undergraduate"],
-      pg: ["Master's", "MBA", "Doctoral", "JD", "MD"],
-      phd: ["PhD"],
-    };
-    const levels = LEVEL_MAP[studyLevel] ?? [];
-    where.scholarships = {
-      some: {
-        ...VISIBLE,
-        degreeLevels: { hasSome: levels },
-      },
-    };
-  }
-
-  if (scholarships === "with") {
-    (where as Prisma.UniversityWhereInput & { _count?: { scholarships: { where: Prisma.ScholarshipScalarWhereInput } } })._count = { scholarships: { where: VISIBLE } };
-  } else if (scholarships === "without") {
-    where.scholarships = { none: VISIBLE };
+    where.OR = [
+      ...(where.OR ?? []),
+      { countryNameLegacy: country },
+      { country: { name: country } },
+    ];
   }
 
   if (field) {
@@ -635,15 +617,25 @@ export async function getPublicUniversities({
     where.type = type;
   }
 
-  if (intake) {
-    const existing = where.scholarships as Prisma.ScholarshipListRelationFilter | undefined;
-    where.scholarships = {
-      ...(existing || {}),
-      some: {
-        ...VISIBLE,
-        intakes: { some: { intake: { slug: intake } } },
-      },
-    };
+  if (studyLevel || scholarships !== undefined || intake) {
+    const scholarshipFilter: Prisma.ScholarshipListRelationFilter | undefined = (() => {
+      if (scholarships === "without") return { none: VISIBLE };
+      const cond: Prisma.ScholarshipWhereInput = { ...VISIBLE };
+      if (studyLevel) {
+        const LEVEL_MAP: Record<string, string[]> = {
+          ug: ["Undergraduate"],
+          pg: ["Master's", "MBA", "Doctoral", "JD", "MD"],
+          phd: ["PhD"],
+        };
+        const levels = LEVEL_MAP[studyLevel] ?? [];
+        if (levels.length) cond.degreeLevels = { hasSome: levels };
+      }
+      if (intake) {
+        cond.intakes = { some: { intake: { slug: intake } } };
+      }
+      return { some: cond };
+    })();
+    if (scholarshipFilter) where.scholarships = scholarshipFilter;
   }
 
   if (ranking && ranking !== "all") {
@@ -843,7 +835,7 @@ export async function getPublicUniversitiesList({
 }: GetPublicUniversitiesOptions = {}): Promise<PublicUniversity[]> {
   const take = Math.min(Math.max(Math.trunc(limit ?? 60), 1), 60);
 
-  const where: Record<string, unknown> = { ...VISIBLE };
+  const where: Prisma.UniversityWhereInput = { ...VISIBLE };
 
   if (query) {
     const like = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
@@ -857,29 +849,11 @@ export async function getPublicUniversitiesList({
   }
 
   if (country) {
-    where.countryNameLegacy = country;
-    where.country = { name: country };
-  }
-
-  if (studyLevel) {
-    const LEVEL_MAP: Record<string, string[]> = {
-      ug: ["Undergraduate"],
-      pg: ["Master's", "MBA", "Doctoral", "JD", "MD"],
-      phd: ["PhD"],
-    };
-    const levels = LEVEL_MAP[studyLevel] ?? [];
-    where.scholarships = {
-      some: {
-        ...VISIBLE,
-        degreeLevels: { hasSome: levels },
-      },
-    };
-  }
-
-  if (scholarships === "with") {
-    (where as Prisma.UniversityWhereInput & { _count?: { scholarships: { where: Prisma.ScholarshipScalarWhereInput } } })._count = { scholarships: { where: VISIBLE } };
-  } else if (scholarships === "without") {
-    where.scholarships = { none: VISIBLE };
+    where.OR = [
+      ...(where.OR ?? []),
+      { countryNameLegacy: country },
+      { country: { name: country } },
+    ];
   }
 
   if (field) {
@@ -890,15 +864,25 @@ export async function getPublicUniversitiesList({
     where.type = type;
   }
 
-  if (intake) {
-    const existing = where.scholarships as Prisma.ScholarshipListRelationFilter | undefined;
-    where.scholarships = {
-      ...(existing || {}),
-      some: {
-        ...VISIBLE,
-        intakes: { some: { intake: { slug: intake } } },
-      },
-    };
+  if (studyLevel || scholarships !== undefined || intake) {
+    const scholarshipFilter: Prisma.ScholarshipListRelationFilter | undefined = (() => {
+      if (scholarships === "without") return { none: VISIBLE };
+      const cond: Prisma.ScholarshipWhereInput = { ...VISIBLE };
+      if (studyLevel) {
+        const LEVEL_MAP: Record<string, string[]> = {
+          ug: ["Undergraduate"],
+          pg: ["Master's", "MBA", "Doctoral", "JD", "MD"],
+          phd: ["PhD"],
+        };
+        const levels = LEVEL_MAP[studyLevel] ?? [];
+        if (levels.length) cond.degreeLevels = { hasSome: levels };
+      }
+      if (intake) {
+        cond.intakes = { some: { intake: { slug: intake } } };
+      }
+      return { some: cond };
+    })();
+    if (scholarshipFilter) where.scholarships = scholarshipFilter;
   }
 
   if (ranking && ranking !== "all") {

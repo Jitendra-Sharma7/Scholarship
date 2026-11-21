@@ -49,8 +49,8 @@ interface UniversityListItemProps {
 
 export function UniversityListItem({ university }: UniversityListItemProps) {
   const isAuthenticated = useStore((s) => s.isAuthenticated);
-  const isSaved = useStore((s) => s.isSaved(university.id));
-  const toggleSaveUniversity = useStore((s) => s.toggleSaveScholarship);
+  const isSaved = useStore((s) => s.isSavedUniversity(university.id));
+  const toggleSaveUniversity = useStore((s) => s.toggleSaveUniversity);
 
   const [isSaving, setIsSaving] = useState(false);
 
