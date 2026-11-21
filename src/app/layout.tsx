@@ -24,6 +24,10 @@ import {
   webSiteSchema,
 } from "@/lib/seo-jsonld";
 
+// Public pages read live Prisma data. Render them at request time so a temporary
+// database outage or incorrect build-time credential cannot fail static export.
+export const dynamic = "force-dynamic";
+
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
