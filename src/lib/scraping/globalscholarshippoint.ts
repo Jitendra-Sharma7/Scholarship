@@ -1,5 +1,5 @@
-import { chromium } from "playwright";
-import { PublishStatus } from "@prisma/client";
+import { chromium, Page } from "playwright";
+import { PublishStatus, FundingType } from "@prisma/client";
 import { slugify } from "@/lib/slug";
 
 export interface ScrapedScholarship {
@@ -89,7 +89,7 @@ function determineFundingType(text: string): string {
   return "mixed";
 }
 
-async function scrapeScholarshipPage(page: any, url: string): Promise<ScrapedScholarship | null> {
+async function scrapeScholarshipPage(page: Page, url: string): Promise<ScrapedScholarship | null> {
   try {
     await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForSelector("article, .post-content, .entry-content, main", { timeout: 10000 });
@@ -190,7 +190,7 @@ async function scrapeScholarshipPage(page: any, url: string): Promise<ScrapedSch
   }
 }
 
-async function getScholarshipLinks(page: any, listingUrl: string): Promise<string[]> {
+async function getScholarshipLinks(page: Page, listingUrl: string): Promise<string[]> {
   try {
     await page.goto(listingUrl, { waitUntil: "networkidle", timeout: 30000 });
     await page.waitForSelector("a", { timeout: 10000 });
@@ -283,7 +283,7 @@ export function mapScrapedToPrisma(scraped: ScrapedScholarship) {
     universityNameLegacy: scraped.university,
     countryNameLegacy: scraped.country,
     region: scraped.country,
-    fundingType: scraped.fundingType.toUpperCase().replace(/-/g, "_") as any,
+    fundingType: scraped.fundingType.toUpperCase().replace(/-/g, "_") as FundingType,
     isFullyFunded: scraped.fundingType === "fully-funded",
     currency: scraped.fundingAmount?.match(/[A-Z]{3}/)?.[0] || "USD",
     tuitionCoverage: scraped.tuitionCoverage,

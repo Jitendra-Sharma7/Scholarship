@@ -278,13 +278,20 @@ export function MatchVisualization({
 
   // Fetch server-side matches if profile has enough data
   useEffect(() => {
+    let mounted = true;
+    
     if (
       profile.citizenship &&
       profile.field &&
       profile.degreeLevel &&
       !serverMatches.length
     ) {
-      setLoading(true);
+      // Use a promise to defer setLoading to avoid synchronous setState in effect
+      Promise.resolve().then(() => {
+        if (!mounted) return;
+        setLoading(true);
+      });
+      
       runEligibilityMatch({
         citizenship: profile.citizenship,
         field: profile.field,
@@ -294,6 +301,7 @@ export function MatchVisualization({
         needFullFunding: profile.needFullFunding || false,
       })
         .then(results => {
+          if (!mounted) return;
           const mapped: MatchResult[] = results.map(r => ({
             scholarshipId: r.scholarship.id,
             scholarshipTitle: r.scholarship.title,
@@ -303,8 +311,17 @@ export function MatchVisualization({
           }));
           setServerMatches(mapped);
         })
-        .finally(() => setLoading(false));
+        .catch(() => {
+          if (!mounted) return;
+        })
+        .finally(() => {
+          if (mounted) setLoading(false);
+        });
     }
+    
+    return () => {
+      mounted = false;
+    };
   }, [profile.citizenship, profile.field, profile.degreeLevel, serverMatches.length]);
 
   // Use server matches if available, otherwise client matches

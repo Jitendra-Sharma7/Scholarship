@@ -371,7 +371,7 @@ export function SearchFilters({
             }`}
           >
             <Check className="h-3 w-3" />
-            Master's
+            Master&apos;s
           </button>
           {germany && (
             <button

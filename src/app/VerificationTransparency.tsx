@@ -109,7 +109,7 @@ export function VerificationTransparency() {
                 <ExternalLink className="h-5 w-5" />
               </div>
               <h4 className="font-semibold text-secondary-900">Official Application URL</h4>
-              <p className="mt-1 text-sm text-secondary-600">Direct link to the provider's application portal</p>
+              <p className="mt-1 text-sm text-secondary-600">Direct link to the provider&apos;s application portal</p>
             </div>
             <div className="rounded-2xl border border-secondary-200 bg-white p-5">
               <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary-100 text-secondary-600">

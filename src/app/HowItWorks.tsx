@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Search, ShieldCheck, Target, ExternalLink, ArrowRight } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 
@@ -83,15 +84,15 @@ export function HowItWorks() {
 
         <div className="mt-12 text-center">
           <p className="text-sm text-secondary-500 mb-4">Ready to start your scholarship journey?</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href="/finder" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-base font-semibold text-white transition-all hover:bg-primary-700">
-              <Search className="h-5 w-5" />
-              Start Scholarship Finder
-            </a>
-            <a href="/scholarships" className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary-600 bg-transparent px-6 py-3 text-base font-semibold text-primary-600 transition-all hover:bg-primary-600 hover:text-white">
-              Browse All Scholarships
-            </a>
-          </div>
+<div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Link href="/finder" className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-base font-semibold text-white transition-all hover:bg-primary-700">
+                <Search className="h-5 w-5" />
+                Start Scholarship Finder
+              </Link>
+              <Link href="/scholarships" className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-primary-600 bg-transparent px-6 py-3 text-base font-semibold text-primary-600 transition-all hover:bg-primary-600 hover:text-white">
+                Browse All Scholarships
+              </Link>
+            </div>
         </div>
       </Container>
     </section>

@@ -197,8 +197,11 @@ export interface PublicField {  id: string;
 
 export interface PublicUniversityScholarship {
   id: string;
+  slug: string;
+  title: string;
   degreeLevels: string[];
   deadline: Date | null;
+  fundingType: string;
   intakes: { intake: { name: string; slug: string } }[];
 }
 
@@ -239,6 +242,10 @@ export interface PublicUniversity {
   contactPhone: string | null;
   featured: boolean;
   createdAt: Date;
+  /** Latitude for map preview. */
+  latitude: number | null;
+  /** Longitude for map preview. */
+  longitude: number | null;
   /** Populated when the caller requests related scholarships. */
   scholarships?: PublicUniversityScholarship[];
 }
@@ -684,9 +691,15 @@ export async function getPublicUniversities({
           ? {
               scholarships: {
                 where: VISIBLE,
-                include: {
+                select: {
+                  id: true,
+                  slug: true,
+                  title: true,
+                  degreeLevels: true,
+                  deadline: true,
+                  fundingType: true,
                   intakes: {
-                    include: { intake: true },
+                    include: { intake: { select: { name: true, slug: true } } },
                   },
                 },
                 orderBy: [{ deadline: "asc" }, { createdAt: "asc" }],
@@ -716,7 +729,7 @@ export async function getPublicUniversities({
       const row = u as unknown as {
         country: { name: string; code: string } | null;
         _count: { scholarships: number };
-        scholarships?: { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[];
+        scholarships?: { id: string; slug: string; title: string; degreeLevels: string[]; deadline: Date | null; fundingType: string; intakes: { intake: { name: string; slug: string } }[] }[];
       };
       return {
         id: u.id,
@@ -752,12 +765,17 @@ export async function getPublicUniversities({
         contactPhone: u.contactPhone,
         featured: u.featured,
         createdAt: u.createdAt,
+        latitude: u.latitude,
+        longitude: u.longitude,
         ...(includeScholarships
           ? {
-              scholarships: (row.scholarships as unknown as { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[]).map((s) => ({
+              scholarships: (row.scholarships as unknown as { id: string; slug: string; title: string; degreeLevels: string[]; deadline: Date | null; fundingType: string; intakes: { intake: { name: string; slug: string } }[] }[]).map((s) => ({
                 id: s.id,
+                slug: s.slug,
+                title: s.title,
                 degreeLevels: s.degreeLevels,
                 deadline: s.deadline,
+                fundingType: s.fundingType,
                 intakes: s.intakes.map((link) => ({
                   intake: { name: link.intake.name, slug: link.intake.slug },
                 })),
@@ -922,9 +940,15 @@ export async function getPublicUniversitiesList({
         ? {
             scholarships: {
               where: VISIBLE,
-              include: {
+              select: {
+                id: true,
+                slug: true,
+                title: true,
+                degreeLevels: true,
+                deadline: true,
+                fundingType: true,
                 intakes: {
-                  include: { intake: true },
+                  include: { intake: { select: { name: true, slug: true } } },
                 },
               },
               orderBy: [{ deadline: "asc" }, { createdAt: "asc" }],
@@ -949,7 +973,7 @@ export async function getPublicUniversitiesList({
     const row = u as unknown as {
       country: { name: string; code: string } | null;
       _count: { scholarships: number };
-      scholarships?: { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[];
+      scholarships?: { id: string; slug: string; title: string; degreeLevels: string[]; deadline: Date | null; fundingType: string; intakes: { intake: { name: string; slug: string } }[] }[];
     };
     return {
       id: u.id,
@@ -985,12 +1009,17 @@ export async function getPublicUniversitiesList({
       contactPhone: u.contactPhone,
       featured: u.featured,
       createdAt: u.createdAt,
+      latitude: u.latitude,
+      longitude: u.longitude,
       ...(includeScholarships
         ? {
-            scholarships: (row.scholarships as unknown as { id: string; degreeLevels: string[]; deadline: Date | null; intakes: { intake: { name: string; slug: string } }[] }[]).map((s) => ({
+            scholarships: (row.scholarships as unknown as { id: string; slug: string; title: string; degreeLevels: string[]; deadline: Date | null; fundingType: string; intakes: { intake: { name: string; slug: string } }[] }[]).map((s) => ({
               id: s.id,
+              slug: s.slug,
+              title: s.title,
               degreeLevels: s.degreeLevels,
               deadline: s.deadline,
+              fundingType: s.fundingType,
               intakes: s.intakes.map((link) => ({
                 intake: { name: link.intake.name, slug: link.intake.slug },
               })),
@@ -1087,6 +1116,8 @@ export async function getPublicUniversityById(id: string): Promise<PublicUnivers
     contactPhone: row.contactPhone,
     featured: row.featured,
     createdAt: row.createdAt,
+    latitude: row.latitude,
+    longitude: row.longitude,
   };
 }
 

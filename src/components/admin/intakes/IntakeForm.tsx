@@ -20,9 +20,25 @@ interface IntakeFormState {
   error?: string;
 }
 
+interface IntakeData {
+  id: string;
+  name: string;
+  slug: string;
+  startMonth: number;
+  startYear: number;
+  endMonth?: number | null;
+  endYear?: number | null;
+  isActive: boolean;
+  sortOrder: number;
+  description?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date | null;
+}
+
 const INITIAL_STATE: IntakeFormState = {};
 
-export function IntakeForm({ mode, intake }: { mode: "create" | "edit"; intake?: any }) {
+export function IntakeForm({ mode, intake }: { mode: "create" | "edit"; intake?: IntakeData }) {
   const isEdit = mode === "edit" && Boolean(intake);
   const record = intake;
 

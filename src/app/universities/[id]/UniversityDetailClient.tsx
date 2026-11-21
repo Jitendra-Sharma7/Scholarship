@@ -485,12 +485,12 @@ function OverviewSection({ university }: { university: PublicUniversity }) {
                   {university.scholarships?.slice(0, 5).map((scholarship, index) => (
                     <Link
                       key={index}
-                      href={`/scholarships/${(scholarship as any).slug || scholarship.id}`}
+                      href={`/scholarships/${scholarship.slug || scholarship.id}`}
                       className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50/50 p-3 hover:bg-gray-50 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 line-clamp-1">
-                          {(scholarship as any).title || `Scholarship ${index + 1}`}
+                          {scholarship.title || `Scholarship ${index + 1}`}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           {university.countryCode && (
@@ -501,7 +501,7 @@ function OverviewSection({ university }: { university: PublicUniversity }) {
                             />
                           )}
                           <span className="text-xs text-gray-500">
-                            {(scholarship as any).fundingType?.replace("-", " ") || "Funding available"}
+                            {scholarship.fundingType?.replace("-", " ") || "Funding available"}
                           </span>
                           {scholarship.deadline && (
                             <span className="text-xs text-gray-500">
@@ -608,11 +608,11 @@ function OverviewSection({ university }: { university: PublicUniversity }) {
             </div>
 
             {/* Map Preview */}
-            {(university as any).latitude && (university as any).longitude && (
+            {university.latitude && university.longitude && (
               <div className="mt-4 rounded-lg overflow-hidden border border-gray-200">
                 <div className="aspect-[16/9] bg-gray-100 relative">
                   <iframe
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${(university as any).longitude - 0.01},${(university as any).latitude - 0.01},${(university as any).longitude + 0.01},${(university as any).latitude + 0.01}&layer=mapnik&marker=${(university as any).latitude},${(university as any).longitude}`}
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${university.longitude - 0.01},${university.latitude - 0.01},${university.longitude + 0.01},${university.latitude + 0.01}&layer=mapnik&marker=${university.latitude},${university.longitude}`}
                     className="w-full h-full border-0"
                     loading="lazy"
                     title={`Map showing ${university.name} location`}

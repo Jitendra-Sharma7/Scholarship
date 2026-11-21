@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma, FundingType } from "@prisma/client";
 
 export interface IntakeData {
   id: string;
@@ -63,7 +64,7 @@ export async function getIntakeWithScholarships(
 
   const { page = 1, limit = 12, country, field, degree, funding } = filters;
 
-  const where: any = {
+  const where: Prisma.ScholarshipIntakeWhereInput = {
     scholarship: {
       publishStatus: "PUBLISHED",
       deletedAt: null,
@@ -71,10 +72,10 @@ export async function getIntakeWithScholarships(
     intakeId: intake.id,
   };
 
-  if (country) where.scholarship.countryId = country;
-  if (field) where.scholarship.fields = { some: { fieldId: field } };
-  if (degree) where.scholarship.degreeLevels = { has: degree };
-  if (funding) where.scholarship.fundingType = funding.toUpperCase().replace(/-/g, "_");
+  if (country) (where.scholarship as Prisma.ScholarshipWhereInput).countryId = country;
+  if (field) (where.scholarship as Prisma.ScholarshipWhereInput).fields = { some: { fieldId: field } };
+  if (degree) (where.scholarship as Prisma.ScholarshipWhereInput).degreeLevels = { has: degree };
+  if (funding) (where.scholarship as Prisma.ScholarshipWhereInput).fundingType = funding.toUpperCase().replace(/-/g, "_") as FundingType;
 
   const [scholarships, total] = await Promise.all([
     prisma.scholarshipIntake.findMany({

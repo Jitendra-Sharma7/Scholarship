@@ -428,7 +428,7 @@ export function DirectoryBrowser({
                   </svg>
                   <h3 className="text-base font-bold text-secondary-900">No scholarships found</h3>
                   <p className="mt-1 text-sm text-secondary-500 max-w-sm mx-auto">
-                    We couldn't find any opportunities matching your active filters. Try broadening your criteria or resetting filters.
+                    We couldn&apos;t find any opportunities matching your active filters. Try broadening your criteria or resetting filters.
                   </p>
                   <button
                     onClick={handleResetFilters}

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Prisma, MatchStatus } from "@prisma/client";
 import { evaluateDeadlineSync } from "@/lib/deadline";
 import { getSettingNumber } from "@/lib/settings";
 
@@ -325,7 +326,7 @@ export async function getUserMatches(userId: string, status?: string) {
   return prisma.scholarshipMatch.findMany({
     where: {
       userId,
-      ...(status ? { status: status as any } : {}),
+      ...(status ? { status: status as MatchStatus } : {}),
     },
     include: {
       scholarship: {
@@ -348,7 +349,7 @@ export async function updateMatchStatus(
   return prisma.scholarshipMatch.update({
     where: { userId_scholarshipId: { userId, scholarshipId } },
     data: {
-      status: status as any,
+      status: status as MatchStatus,
       userNotes: notes,
       ...(status === "APPLIED" ? { appliedAt: new Date() } : {}),
       ...(status === "AWARDED" || status === "REJECTED" ? { reviewedAt: new Date() } : {}),
