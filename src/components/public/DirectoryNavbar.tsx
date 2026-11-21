@@ -14,7 +14,6 @@ import {
   Award,
   FileText,
   ChevronDown,
-  User,
   LogOut,
   Moon,
   Sun,
@@ -23,6 +22,7 @@ import { Button } from "@/components/ui/Button";
 import { SiteLogo } from "@/components/layout/SiteLogo";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store/useStore";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 interface DropdownItem {
   label: string;
@@ -89,7 +89,7 @@ export function DirectoryNavbar({ className }: DirectoryNavbarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [openMobileDropdown, setOpenMobileDropdown] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
 
   const isAuthenticated = useStore((s) => s.isAuthenticated);
@@ -105,15 +105,7 @@ export function DirectoryNavbar({ className }: DirectoryNavbarProps) {
     setIsMobileMenuOpen(false);
   };
 
-  const handleThemeToggle = () => {
-    setTheme((prev: "light" | "dark") => (prev === "light" ? "dark" : "light"));
-    if (typeof window !== "undefined") {
-      document.documentElement.setAttribute(
-        "data-theme",
-        theme === "light" ? "dark" : "light"
-      );
-    }
-  };
+  const handleThemeToggle = toggleTheme;
 
   return (
     <header
@@ -151,7 +143,6 @@ export function DirectoryNavbar({ className }: DirectoryNavbarProps) {
                 <div
                   key={item.label}
                   className="relative"
-                  ref={(el: HTMLDivElement | null) => {}}
                 >
                   <button
                     type="button"

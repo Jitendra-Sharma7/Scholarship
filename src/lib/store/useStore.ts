@@ -44,6 +44,10 @@ interface AppState {
   toggleSaveScholarship: (id: string) => void;
   isSaved: (id: string) => boolean;
 
+  savedUniversityIds: string[];
+  toggleSaveUniversity: (id: string) => void;
+  isSavedUniversity: (id: string) => boolean;
+
   compareIds: string[];
   toggleCompare: (id: string) => void;
   clearCompare: () => void;
@@ -87,6 +91,7 @@ interface PersistedState {
   isAuthenticated: boolean;
   user: UserProfile | null;
   savedScholarshipIds: string[];
+  savedUniversityIds: string[];
   applications: ApplicationTrackerItem[];
   recentSearches: string[];
   compareIds: string[];
@@ -120,6 +125,16 @@ export const useStore = create<AppState>()(
         return { savedScholarshipIds: [...state.savedScholarshipIds, id] };
       }),
       isSaved: (id) => get().savedScholarshipIds.includes(id),
+
+      savedUniversityIds: [],
+      toggleSaveUniversity: (id) => set((state) => {
+        const exists = state.savedUniversityIds.includes(id);
+        if (exists) {
+          return { savedUniversityIds: state.savedUniversityIds.filter((sId) => sId !== id) };
+        }
+        return { savedUniversityIds: [...state.savedUniversityIds, id] };
+      }),
+      isSavedUniversity: (id) => get().savedUniversityIds.includes(id),
 
       compareIds: [],
       toggleCompare: (id) => set((state) => {
@@ -207,6 +222,7 @@ export const useStore = create<AppState>()(
         isAuthenticated: state.isAuthenticated,
         user: state.user,
         savedScholarshipIds: state.savedScholarshipIds,
+        savedUniversityIds: state.savedUniversityIds,
         applications: state.applications,
         recentSearches: state.recentSearches,
         compareIds: state.compareIds,
@@ -238,9 +254,10 @@ export const useStore = create<AppState>()(
       migrate: (persisted) => {
         const old = (persisted ?? {}) as Partial<PersistedState>;
         return {
-          isAuthenticated: false,
-          user: null,
-          savedScholarshipIds: old.savedScholarshipIds ?? [],
+        isAuthenticated: false,
+        user: null,
+        savedScholarshipIds: old.savedScholarshipIds ?? [],
+        savedUniversityIds: old.savedUniversityIds ?? [],
           applications: old.applications ?? [],
           recentSearches: old.recentSearches ?? [],
           compareIds: old.compareIds ?? [],

@@ -3,7 +3,6 @@
 import { usePathname } from "next/navigation";
 import { Footer } from "@/components/layout/Footer";
 import { Header } from "@/components/layout/Header";
-import { DirectoryNavbar } from "@/components/public/DirectoryNavbar";
 import { DirectoryHeader } from "@/components/directory/DirectoryHeader";
 import type { SiteBranding } from "@/lib/site-branding";
 
@@ -32,14 +31,11 @@ export function SiteChrome({
 
   if (isStaffArea(pathname)) return <>{children}</>;
 
-  const isUniversityDirectory = pathname === "/universities" || pathname.startsWith("/universities/");
   const isScholarshipDirectory = pathname === "/directory" || pathname.startsWith("/directory/");
 
   return (
     <div className="flex min-h-screen flex-col">
-      {isUniversityDirectory ? (
-        <DirectoryNavbar />
-      ) : isScholarshipDirectory ? (
+      {isScholarshipDirectory ? (
         <DirectoryHeader />
       ) : (
         <Header />

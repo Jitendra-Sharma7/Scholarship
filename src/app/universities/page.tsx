@@ -1,16 +1,11 @@
-import { Container } from "@/components/layout/Layout";
-import { DirectoryHero } from "@/components/public/DirectoryHero";
-import {
-  getPublicUniversities,
-  getPublicUniversityFilterOptions,
-  getPublicStats,
-} from "@/lib/data/public";
+import { getPublicUniversities, getPublicUniversityFilterOptions, getPublicStats } from "@/lib/data/public";
+import type { PaginatedUniversities, UniversityFilterOptions } from "@/lib/data/public";
 import JsonLd from "@/components/seo/JsonLd";
-import { pageMetadata } from "@/lib/seo";
 import { itemListSchema } from "@/lib/seo-jsonld";
-import type { UniversityFilterOptions } from "@/lib/data/public";
-import type { PaginatedUniversities } from "@/lib/data/public";
-import { UniversityDirectoryClient } from "./UniversityDirectoryClient";
+import { pageMetadata } from "@/lib/seo";
+import { UniversityHero } from "@/components/university-directory/UniversityHero";
+import { UniversityDirectoryClient } from "@/components/university-directory/UniversityDirectoryClient";
+import { UNIVERSITY_PAGE_SIZE } from "@/lib/page-size";
 
 export const metadata = pageMetadata({
   title: "University Directory - Top Universities Offering Scholarships",
@@ -34,22 +29,19 @@ export default async function UniversitiesPage({
   const params = await searchParams;
 
   const page = Math.max(parseInt(asString(params.page, "1"), 10) || 1, 1);
-  const limit = 9;
+  const limit = UNIVERSITY_PAGE_SIZE;
   const q = asString(params.q, "");
   const country = asString(params.country, "all");
-  const ranking = asString(params.ranking, "all");
   const studyLevel = asString(params.studyLevel, "all");
   const scholarships = asString(params.scholarships, "all");
   const field = asString(params.field, "all");
-  const type = asString(params.type, "all");
   const intake = asString(params.intake, "all");
   const tuitionRange = asString(params.tuitionRange, "all");
   const sort = (asString(params.sort, "ranking") as
     | "ranking"
     | "lowest"
     | "name"
-    | "scholarships"
-    | "country") ?? "ranking";
+    | "scholarships") ?? "ranking";
   const view = asString(params.view, "grid") === "list" ? "list" : "grid";
 
   let result: PaginatedUniversities | null = null;
@@ -65,11 +57,9 @@ export default async function UniversitiesPage({
         includeScholarships: true,
         query: q || undefined,
         country: country !== "all" ? country : undefined,
-        ranking: ranking !== "all" ? ranking : undefined,
         studyLevel: studyLevel !== "all" ? studyLevel : undefined,
         scholarships: scholarships !== "all" ? scholarships : undefined,
         field: field !== "all" ? field : undefined,
-        type: type !== "all" ? type : undefined,
         intake: intake !== "all" ? intake : undefined,
         tuitionRange: tuitionRange !== "all" ? tuitionRange : undefined,
         sort,
@@ -101,17 +91,11 @@ export default async function UniversitiesPage({
   }
 
   const universities = result?.data ?? [];
-  const totalUniversities = result?.total ?? 0;
-  const countriesCount = filterOptions?.countries.length ?? 0;
-  const rankedCount = universities.filter(
-    (u) => u.qsRanking != null || u.theRanking != null
-  ).length;
-  const scholarshipOpportunities = stats?.openScholarships ?? 0;
-
+  const totalUniversities = stats?.universities ?? 0;
   const totalPages = result?.totalPages ?? 1;
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="max-w-[1240px] mx-auto px-5 min-h-screen font-onest bg-[var(--gs-bg)]">
       <JsonLd
         data={itemListSchema({
           name: "Universities offering scholarships",
@@ -123,11 +107,10 @@ export default async function UniversitiesPage({
         })}
       />
 
-      <DirectoryHero
+      <UniversityHero
         totalUniversities={totalUniversities}
-        countriesCount={countriesCount}
-        rankedCount={rankedCount}
-        scholarshipOpportunities={scholarshipOpportunities}
+        countriesCount={stats?.countries ?? 0}
+        scholarshipsCount={stats?.openScholarships ?? 0}
         searchValue={q}
       />
 
@@ -140,11 +123,9 @@ export default async function UniversitiesPage({
         filters={{
           q,
           country,
-          ranking,
           studyLevel,
           scholarships,
           field,
-          type,
           intake,
           tuitionRange,
           sort,

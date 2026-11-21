@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 
 import { Providers } from "./providers";
 import { SiteChrome } from "@/components/layout/SiteChrome";
@@ -26,6 +27,17 @@ import {
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const onest = localFont({
+  src: [
+    { path: "../../public/fonts/onest/Onest-400.ttf", weight: "400" },
+    { path: "../../public/fonts/onest/Onest-500.ttf", weight: "500" },
+    { path: "../../public/fonts/onest/Onest-600.ttf", weight: "600" },
+    { path: "../../public/fonts/onest/Onest-700.ttf", weight: "700" },
+  ],
+  variable: "--font-onest",
   display: "swap",
 });
 
@@ -171,11 +183,11 @@ export default async function RootLayout({
     <html
       lang="en"
       data-scroll-behavior="smooth"
-      className={`${inter.variable}`}
+      className={`${inter.variable} ${onest.variable}`}
     >
-      <body className="font-sans antialiased bg-white text-secondary-900">
+        <body className="font-sans antialiased bg-white text-secondary-900">
 
-        {/* Website structured data */}
+          {/* Website structured data */}
         <JsonLd data={webSiteSchema()} />
 
         {/* Organization structured data */}

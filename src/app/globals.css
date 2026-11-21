@@ -6,11 +6,41 @@
   html {
     scroll-behavior: smooth;
   }
+
+  :root {
+    --gs-bg: #f5f7fb;
+    --gs-surface: #ffffff;
+    --gs-text: #0f1b3d;
+    --gs-muted: #5b6785;
+    --gs-border: #e2e7f1;
+    --gs-brand: #2342c7;
+    --gs-brand-text: #ffffff;
+    --gs-soft-brand: #eaefff;
+    --gs-success-text: #0d7a4d;
+    --gs-success-bg: #e3f6ec;
+    --gs-focus-ring: #2342c7;
+  }
+
+  [data-theme="dark"] {
+    --gs-bg: #0b1226;
+    --gs-surface: #131c38;
+    --gs-text: #eaf0ff;
+    --gs-muted: #9aa7c9;
+    --gs-border: #25305a;
+    --gs-brand: #7b95ff;
+    --gs-brand-text: #0b1226;
+    --gs-soft-brand: #1b2750;
+    --gs-success-text: #5fd9a1;
+    --gs-success-bg: #12372b;
+    --gs-focus-ring: #7b95ff;
+  }
+
   body {
     @apply antialiased;
   }
+
   :focus-visible {
-    @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-white;
+    @apply outline-none ring-2 ring-[var(--gs-focus-ring)] ring-offset-2 ring-offset-[var(--gs-bg)];
   }
 }
 
