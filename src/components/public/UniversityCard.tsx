@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ArrowRight,
+  Bookmark,
+  BookmarkCheck,
   ExternalLink,
   Globe,
   GraduationCap,
   Users,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 import { UniversityImage } from "@/components/public/UniversityImage";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import {
@@ -18,7 +20,6 @@ import {
   ScholarshipAvailabilityBadge,
 } from "@/components/public/UniversityBadges";
 import type { PublicUniversity } from "@/lib/data/public";
-import { formatNumber } from "@/lib/utils";
 
 const STUDY_LEVEL_LABELS: Record<string, string> = {
   Undergraduate: "Undergraduate",
@@ -72,28 +73,23 @@ export function UniversityCard({
   return (
     <Link
       href={`/universities/${university.slug ?? university.id}`}
-      onClick={() => {
-        // Keep filter state intact: navigating to a profile is a normal push
-        // so the browser back button restores the directory with its filters.
-      }}
       prefetch={true}
-      className="block"
+      className="block h-full"
     >
       <article
         className={cn(
-          "flex flex-col justify-between rounded-xl border border-secondary-200 bg-white shadow-card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1",
-          isActive && "ring-2 ring-primary-500 bg-primary-50",
-          "min-h-[560px]"
+          "group flex h-full flex-col overflow-hidden rounded-xl border border-secondary-200 bg-white shadow-card transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1",
+          isActive && "ring-2 ring-primary-500 bg-primary-50"
         )}
       >
         {/* Top section: image + badges */}
-        <div className="relative overflow-hidden rounded-t-xl">
+        <div className="relative aspect-[16/10] overflow-hidden rounded-t-xl bg-secondary-100">
           <UniversityImage
             src={university.coverImage}
             alt={`Campus of ${university.name}`}
             initials={university.name}
             priority={priority}
-            className="w-full h-[240px] object-cover"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute top-3 left-3 z-20 flex flex-col gap-1.5">
             <NewlyAddedBadge
@@ -125,14 +121,15 @@ export function UniversityCard({
           </div>
         </div>
 
-        <div className="p-5 flex flex-col flex-1">
+        {/* Content body */}
+        <div className="flex flex-1 flex-col p-4">
           <div className="mb-1.5">
             <h3 className="text-base font-bold text-secondary-950 leading-tight line-clamp-2">
               {university.name}
             </h3>
           </div>
 
-          <p className="flex items-center gap-1.5 text-xs text-secondary-500 mb-3.5">
+          <p className="flex items-center gap-1.5 text-xs text-secondary-500 mb-3">
             <CountryFlag
               code={university.countryCode}
               name={university.country}
@@ -144,7 +141,7 @@ export function UniversityCard({
           </p>
 
           {university.description && (
-            <p className="text-sm text-secondary-600 leading-relaxed line-clamp-2 mb-3.5">
+            <p className="text-sm text-secondary-600 leading-relaxed line-clamp-2 mb-3">
               {university.description}
             </p>
           )}
@@ -164,7 +161,7 @@ export function UniversityCard({
               </div>
             )}
             {levels.length > 0 && (
-              <div className="mt-2.5 flex items-center gap-1.5 text-xs text-secondary-500">
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-secondary-500">
                 <GraduationCap className="h-3.5 w-3.5 shrink-0" />
                 <span className="font-medium text-secondary-700">Study levels:</span>{" "}
                 <span className="truncate">
@@ -172,7 +169,7 @@ export function UniversityCard({
                 </span>
               </div>
             )}
-            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-secondary-500">
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-secondary-500">
               <Globe className="h-3.5 w-3.5 shrink-0" />
               <span className="font-medium text-secondary-700">International students:</span>{" "}
               <span>
@@ -181,7 +178,7 @@ export function UniversityCard({
                   : "Not available"}
               </span>
             </div>
-            <div className="mt-2.5 flex items-center gap-1.5 text-xs text-secondary-500">
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-secondary-500">
               <Users className="h-3.5 w-3.5 shrink-0" />
               <span className="font-medium text-secondary-700">Student population:</span>{" "}
               <span>
@@ -193,7 +190,8 @@ export function UniversityCard({
           </div>
         </div>
 
-        <footer className="p-4 border-t border-secondary-100 bg-secondary-50/50 rounded-b-xl">
+        {/* Footer */}
+        <footer className="border-t border-secondary-100 bg-secondary-50/50 p-3 rounded-b-xl">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
               <ScholarshipAvailabilityBadge

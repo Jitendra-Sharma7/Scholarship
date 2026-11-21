@@ -1,9 +1,11 @@
 import { GraduationCap } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { UniversityDirectory } from "@/components/public/UniversityDirectory";
+import { UniversityHero } from "@/components/public/UniversityHero";
 import {
   getPublicUniversities,
   getPublicUniversityFilterOptions,
+  getPublicStats,
 } from "@/lib/data/public";
 import JsonLd from "@/components/seo/JsonLd";
 import { pageMetadata } from "@/lib/seo";
@@ -37,6 +39,7 @@ function initialDirectoryState(searchParams: PublicSearchParams): DirectoryState
     field: asString(searchParams.f, "all"),
     type: asString(searchParams.t, "all"),
     intake: asString(searchParams.i, "all"),
+    tuitionRange: asString(searchParams.tr, "all"),
     q: asString(searchParams.q, ""),
     sort: asString(searchParams.sort, "ranking"),
     view: asString(searchParams.view, "grid") === "list" ? "list" : "grid",
@@ -58,11 +61,13 @@ export default async function UniversitiesPage({
   let universities: PublicUniversity[] = [];
   let filterOptions: UniversityFilterOptions | null = null;
   let error: Error | null = null;
+  let stats: { universities: number; countries: number; openScholarships: number } | null = null;
 
   try {
-    [universities, filterOptions] = await Promise.all([
+    [universities, filterOptions, stats] = await Promise.all([
       getPublicUniversities({ includeScholarships: true }),
       getPublicUniversityFilterOptions(),
+      getPublicStats(),
     ]);
   } catch (err) {
     error = err instanceof Error ? err : new Error("Failed to load universities");
@@ -78,6 +83,7 @@ export default async function UniversitiesPage({
         { value: "phd", label: "PhD / Doctoral" },
       ],
     };
+    stats = { universities: 0, countries: 0, openScholarships: 0 };
   }
 
   const totalUniversities = universities.length;
@@ -85,6 +91,10 @@ export default async function UniversitiesPage({
   const universitiesWithScholarships = universities.filter(
     (u) => u.scholarshipCount > 0
   ).length;
+  const rankedCount = universities.filter(
+    (u) => u.qsRanking != null || u.theRanking != null
+  ).length;
+  const scholarshipOpportunities = stats?.openScholarships ?? 0;
 
   return (
     <div className="bg-secondary-50/50 min-h-screen">
@@ -98,16 +108,43 @@ export default async function UniversitiesPage({
           })),
         })}
       />
-      <Container>
-        {/* Page header */}
+
+      {/* Hero Section */}
+      <UniversityHero
+        totalUniversities={totalUniversities}
+        countriesCount={countriesCount}
+        rankedCount={rankedCount}
+        scholarshipOpportunities={scholarshipOpportunities}
+        onSearch={(q) => {
+          const next = { ...initial, q, page: 1 };
+          const params = new URLSearchParams();
+          if (next.q) params.set("q", next.q);
+          if (next.country !== "all") params.set("c", next.country);
+          if (next.ranking !== "all") params.set("r", next.ranking);
+          if (next.studyLevel !== "all") params.set("l", next.studyLevel);
+          if (next.scholarships !== "all") params.set("s", next.scholarships);
+          if (next.field !== "all") params.set("f", next.field);
+          if (next.type !== "all") params.set("t", next.type);
+          if (next.intake !== "all") params.set("i", next.intake);
+          if (next.tuitionRange !== "all") params.set("tr", next.tuitionRange);
+          if (next.sort !== "ranking") params.set("sort", next.sort);
+          if (next.view !== "grid") params.set("view", next.view);
+          if (next.page > 1) params.set("page", String(next.page));
+          window.location.href = `/universities?${params.toString()}`;
+        }}
+        searchValue={initial.q}
+      />
+
+      {/* Directory Section */}
+      <Container className="py-12 lg:py-16">
         <div className="mb-8">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700 mb-3">
             <GraduationCap className="h-3.5 w-3.5" />
             <span>Academic Institutions</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-secondary-950">
-            Global University Directory
-          </h1>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-secondary-950">
+            Browse Universities
+          </h2>
           <p className="mt-3 text-base text-secondary-600 max-w-2xl">
             Discover and compare universities offering scholarships to
             international students. Explore verified rankings, programmes,

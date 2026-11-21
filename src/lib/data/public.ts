@@ -270,8 +270,8 @@ const iso = (d: Date | null | undefined): string | null =>
 /** Shared include so a scholarship always arrives with its relations resolved. */
 const scholarshipInclude = {
   country: { select: { id: true, name: true, code: true } },
-  university: { select: { id: true, name: true, slug: true, city: true } },
-  provider: { select: { id: true, name: true } },
+  university: { select: { id: true, name: true, slug: true, city: true, website: true } },
+  provider: { select: { id: true, name: true, website: true } },
   fields: { include: { field: { select: { id: true, name: true, slug: true } } } },
   intakes: { include: { intake: { select: { id: true, name: true, slug: true, startMonth: true, startYear: true } } } },
 } as const;

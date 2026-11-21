@@ -20,6 +20,7 @@ import {
   Star,
   Trophy,
   BookOpen,
+  Search,
 } from "lucide-react";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { Container } from "@/components/layout/Layout";
@@ -40,19 +41,12 @@ interface UniversityDetailClientProps {
 
 type TabId =
   | "overview"
-  | "campus"
-  | "location"
-  | "rankings"
   | "courses"
-  | "undergraduate"
-  | "postgraduate"
-  | "tuition"
   | "scholarships"
-  | "entry"
-  | "english"
+  | "fees"
+  | "requirements"
   | "intakes"
-  | "deadlines"
-  | "website";
+  | "about";
 
 interface TabSectionProps {
   active: boolean;
@@ -61,27 +55,12 @@ interface TabSectionProps {
 
 const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
   { id: "overview", label: "Overview", icon: Building2 },
-  { id: "campus", label: "Campus Images", icon: Image },
-  { id: "location", label: "Location & Contact", icon: MapPin },
-  { id: "rankings", label: "Rankings", icon: Trophy },
-  { id: "courses", label: "Available Courses", icon: BookOpen },
-  {
-    id: "undergraduate",
-    label: "Undergraduate Programmes",
-    icon: GraduationCap,
-  },
-  {
-    id: "postgraduate",
-    label: "Postgraduate Programmes",
-    icon: List,
-  },
-  { id: "tuition", label: "Tuition Fees", icon: DollarSign },
+  { id: "courses", label: "Courses", icon: BookOpen },
   { id: "scholarships", label: "Scholarships", icon: Star },
-  { id: "entry", label: "Entry Requirements", icon: Check },
-  { id: "english", label: "English Language Requirements", icon: Globe },
-  { id: "intakes", label: "Available Intakes", icon: Calendar },
-  { id: "deadlines", label: "Application Deadlines", icon: Clock },
-  { id: "website", label: "Official Website", icon: ExternalLink },
+  { id: "fees", label: "Fees", icon: DollarSign },
+  { id: "requirements", label: "Requirements", icon: Check },
+  { id: "intakes", label: "Intakes", icon: Calendar },
+  { id: "about", label: "About", icon: Globe },
 ];
 
 const STUDY_LEVEL_MAP: Record<string, string> = {
@@ -174,21 +153,6 @@ export function UniversityDetailClient({
       ? `${university.city}, ${university.country}`
       : university.country || university.city || "Not stated";
 
-  const scholarshipsByLevel = useMemo(() => {
-    const byLevel: Record<string, PublicScholarship[]> = {
-      undergraduate: [],
-      postgraduate: [],
-      phd: [],
-    };
-    for (const s of scholarships.data) {
-      const levels = scholarshipStudyLevels(s);
-      if (levels.includes("Undergraduate")) byLevel.undergraduate.push(s);
-      if (levels.includes("Postgraduate")) byLevel.postgraduate.push(s);
-      if (levels.includes("PhD")) byLevel.phd.push(s);
-    }
-    return byLevel;
-  }, [scholarships.data]);
-
   const distinctIntakes = useMemo(() => {
     const seen = new Set<string>();
     for (const s of scholarships.data) {
@@ -196,17 +160,6 @@ export function UniversityDetailClient({
       if (name && name !== "Not stated") seen.add(name);
     }
     return [...seen].sort();
-  }, [scholarships.data]);
-
-  const upcomingDeadlines = useMemo(() => {
-    const now = new Date();
-    return [...scholarships.data]
-      .filter((s) => s.deadline && new Date(s.deadline) > now)
-      .sort(
-        (a, b) =>
-          new Date(a.deadline!).getTime() - new Date(b.deadline!).getTime()
-      )
-      .slice(0, 8);
   }, [scholarships.data]);
 
   return (
@@ -378,32 +331,8 @@ export function UniversityDetailClient({
             <TabSection active={tab === "overview"}>
               <OverviewSection university={university} />
             </TabSection>
-            <TabSection active={tab === "campus"}>
-              <CampusSection university={university} />
-            </TabSection>
-            <TabSection active={tab === "location"}>
-              <LocationSection university={university} />
-            </TabSection>
-            <TabSection active={tab === "rankings"}>
-              <RankingsSection university={university} />
-            </TabSection>
             <TabSection active={tab === "courses"}>
               <CoursesSection university={university} />
-            </TabSection>
-            <TabSection active={tab === "undergraduate"}>
-              <UndergraduateSection
-                scholarships={scholarshipsByLevel.undergraduate}
-                university={university}
-              />
-            </TabSection>
-            <TabSection active={tab === "postgraduate"}>
-              <PostgraduateSection
-                scholarships={scholarshipsByLevel.postgraduate}
-                university={university}
-              />
-            </TabSection>
-            <TabSection active={tab === "tuition"}>
-              <TuitionSection university={university} />
             </TabSection>
             <TabSection active={tab === "scholarships"}>
               <ScholarshipsTab
@@ -417,23 +346,17 @@ export function UniversityDetailClient({
                 handleSortChange={handleSortChange}
               />
             </TabSection>
-            <TabSection active={tab === "entry"}>
-              <EntrySection university={university} />
+            <TabSection active={tab === "fees"}>
+              <TuitionSection university={university} />
             </TabSection>
-            <TabSection active={tab === "english"}>
-              <EnglishSection
-                university={university}
-                scholarships={scholarships.data}
-              />
+            <TabSection active={tab === "requirements"}>
+              <RequirementsSection university={university} />
             </TabSection>
             <TabSection active={tab === "intakes"}>
               <IntakesSection intakes={distinctIntakes} university={university} />
             </TabSection>
-            <TabSection active={tab === "deadlines"}>
-              <DeadlinesSection deadlines={upcomingDeadlines} university={university} />
-            </TabSection>
-            <TabSection active={tab === "website"}>
-              <WebsiteSection university={university} />
+            <TabSection active={tab === "about"}>
+              <AboutSection university={university} />
             </TabSection>
           </div>
         </nav>
@@ -473,91 +396,240 @@ function OverviewSection({ university }: { university: PublicUniversity }) {
   return (
     <section aria-labelledby="overview-heading" className="space-y-6">
       <h2 id="overview-heading" className="sr-only">Overview</h2>
-      <div className="flex flex-col lg:grid lg:grid-cols-4 lg:gap-6">
-        <div className="lg:col-span-3">
-          {university.description ? (
-            <article className="rounded-xl border border-gray-200 bg-white p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary-600" />
-                About {university.name}
-              </h3>
-              <div className="prose prose-gray max-w-none text-gray-700">
-                <p className="whitespace-pre-wrap">{university.description}</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Column 1: About the University */}
+        <div className="lg:col-span-1">
+          <article className="rounded-xl border border-gray-200 bg-white p-6 h-full">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-primary-600" />
+              About the University
+            </h3>
+            {university.description ? (
+              <div className="prose prose-gray max-w-none text-gray-700 mb-6">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed">{university.description}</p>
               </div>
-            </article>
-          ) : (
-            <article className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-sm text-gray-500">
-              A university overview is not published yet.
-            </article>
-          )}
+            ) : (
+              <p className="text-sm text-gray-500 mb-6">
+                A university overview is not published yet.
+              </p>
+            )}
+
+            {/* Key Facts */}
+            <div className="space-y-3 mb-6">
+              <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Key Facts</h4>
+              {university.qsRanking && (
+                <QuickFact label="QS World Ranking" value={`#${university.qsRanking}`} />
+              )}
+              {university.theRanking && (
+                <QuickFact label="THE World Ranking" value={`#${university.theRanking}`} />
+              )}
+              <QuickFact
+                label="International Students"
+                value={
+                  university.internationalStudentPercent != null
+                    ? `${university.internationalStudentPercent}%`
+                    : university.internationalStudentCount != null
+                      ? formatNumber(university.internationalStudentCount)
+                      : "Not available"
+                }
+              />
+              <QuickFact
+                label="Total Students"
+                value={
+                  university.studentCount
+                    ? formatNumber(university.studentCount)
+                    : "Not available"
+                }
+              />
+              {university.establishedYear && (
+                <QuickFact label="Established" value={university.establishedYear} />
+              )}
+              {university.type && (
+                <QuickFact label="University Type" value={university.type} />
+              )}
+            </div>
+
+            {/* Visit Official Website Button */}
+            {university.website && (
+              <a
+                href={university.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 w-full justify-center"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Visit Official Website
+              </a>
+            )}
+          </article>
         </div>
-        <aside className="lg:col-span-1 space-y-6">
-          <QuickFact
-            label="Country"
-            value={
-              <span className="flex items-center gap-2">
-                <CountryFlag
-                  code={university.countryCode}
-                  name={university.country}
-                  size="sm"
-                />
-                {university.country}
-              </span>
-            }
-          />
-          <QuickFact label="City" value={university.city || "Not stated"} />
-          {university.type && <QuickFact label="Type" value={university.type} />}
-          {university.ownership && (
-            <QuickFact label="Ownership" value={university.ownership} />
-          )}
-          {university.establishedYear && (
-            <QuickFact label="Founded" value={university.establishedYear} />
-          )}
-          <QuickFact
-            label="Total students"
-            value={
-              university.studentCount ? (
-                <span className="font-semibold text-gray-900">
-                  {formatNumber(university.studentCount)}
-                </span>
-              ) : (
-                <span className="text-gray-500">Not available</span>
-              )
-            }
-          />
-          {university.internationalStudentPercent != null && (
-            <QuickFact
-              label="International students"
-              value={
-                <span className="font-semibold text-gray-900">
-                  {university.internationalStudentPercent}%
-                </span>
-              }
-            />
-          )}
-          {university.acceptanceRate != null && (
-            <QuickFact
-              label="Acceptance rate"
-              value={
-                <span className="font-semibold text-gray-900">
-                  {university.acceptanceRate}%
-                </span>
-              }
-            />
-          )}
-          <QuickFact
-            label="Available scholarships"
-            value={
-              <span className={cn("font-semibold", university.scholarshipCount > 0 ? "text-primary-700" : "text-gray-500")}>
+
+        {/* Column 2: Available Scholarships */}
+        <div className="lg:col-span-1">
+          <article className="rounded-xl border border-gray-200 bg-white p-6 h-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <Star className="h-5 w-5 text-primary-600" />
+                Available Scholarships
+              </h3>
+              <span className="inline-flex items-center justify-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-bold text-primary-700">
                 {university.scholarshipCount}
               </span>
-            }
-          />
-        </aside>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              Scholarships offered by {university.name}
+            </p>
+            {university.scholarshipCount > 0 ? (
+              <>
+                <div className="space-y-3 mb-6">
+                  {university.scholarships?.slice(0, 5).map((scholarship, index) => (
+                    <Link
+                      key={index}
+                      href={`/scholarships/${(scholarship as any).slug || scholarship.id}`}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50/50 p-3 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 line-clamp-1">
+                          {(scholarship as any).title || `Scholarship ${index + 1}`}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {university.countryCode && (
+                            <CountryFlag
+                              code={university.countryCode}
+                              name={university.country}
+                              size="xs"
+                            />
+                          )}
+                          <span className="text-xs text-gray-500">
+                            {(scholarship as any).fundingType?.replace("-", " ") || "Funding available"}
+                          </span>
+                          {scholarship.deadline && (
+                            <span className="text-xs text-gray-500">
+                              • {formatDate(scholarship.deadline)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+                <Link
+                  href={`/scholarships?university=${university.id}`}
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 hover:text-primary-700"
+                >
+                  View All Scholarships
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </>
+            ) : (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50/50 p-6 text-center">
+                <Star className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">
+                  No scholarships currently listed for this university.
+                </p>
+              </div>
+            )}
+          </article>
+        </div>
+
+        {/* Column 3: Quick Information */}
+        <div className="lg:col-span-1">
+          <article className="rounded-xl border border-gray-200 bg-white p-6 h-full">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary-600" />
+              Quick Information
+            </h3>
+            <div className="space-y-3 mb-6">
+              <QuickFact
+                label="Location"
+                value={
+                  <span className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    {university.city || "Not stated"}, {university.country}
+                  </span>
+                }
+              />
+              {university.type && (
+                <QuickFact
+                  label="University Type"
+                  value={
+                    <span className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-gray-400" />
+                      {university.type}
+                    </span>
+                  }
+                />
+              )}
+              {university.establishedYear && (
+                <QuickFact
+                  label="Established"
+                  value={
+                    <span className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-gray-400" />
+                      {university.establishedYear}
+                    </span>
+                  }
+                />
+              )}
+              <QuickFact
+                label="Country"
+                value={
+                  <span className="flex items-center gap-2">
+                    <CountryFlag
+                      code={university.countryCode}
+                      name={university.country}
+                      size="xs"
+                    />
+                    {university.country}
+                  </span>
+                }
+              />
+              <QuickFact
+                label="City"
+                value={
+                  <span className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    {university.city || "Not stated"}
+                  </span>
+                }
+              />
+              {university.address && (
+                <QuickFact
+                  label="Campus Address"
+                  value={
+                    <span className="flex items-start gap-2">
+                      <Building2 className="h-4 w-4 text-gray-400 mt-0.5" />
+                      {university.address}
+                    </span>
+                  }
+                />
+              )}
+            </div>
+
+            {/* Map Preview */}
+            {(university as any).latitude && (university as any).longitude && (
+              <div className="mt-4 rounded-lg overflow-hidden border border-gray-200">
+                <div className="aspect-[16/9] bg-gray-100 relative">
+                  <iframe
+                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${(university as any).longitude - 0.01},${(university as any).latitude - 0.01},${(university as any).longitude + 0.01},${(university as any).latitude + 0.01}&layer=mapnik&marker=${(university as any).latitude},${(university as any).longitude}`}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                    title={`Map showing ${university.name} location`}
+                  />
+                </div>
+              </div>
+            )}
+          </article>
+        </div>
       </div>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* Shared components                                                  */
+/* ------------------------------------------------------------------ */
 
 function QuickFact({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -570,116 +642,11 @@ function QuickFact({ label, value }: { label: string; value: React.ReactNode }) 
   );
 }
 
-/* ------------------------------------------------------------------ */
-/* Campus images                                                      */
-/* ------------------------------------------------------------------ */
-
-function CampusSection({ university }: { university: PublicUniversity }) {
-  const images = [
-    { src: university.coverImage, alt: `${university.name} campus` },
-    { src: university.logo, alt: `${university.name} logo` },
-  ].filter((img) => img.src);
-
+function EmptySection({ message }: { message: string }) {
   return (
-    <section aria-labelledby="campus-heading" className="space-y-6">
-      <h2 id="campus-heading" className="sr-only">Campus Images</h2>
-      {images.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {images.map((img, index) => (
-            <div
-              key={index}
-              className="rounded-xl overflow-hidden border border-gray-200 bg-white aspect-[16/9]"
-            >
-              <UniversityImage
-                src={img.src}
-                alt={img.alt}
-                initials={university.name}
-                className="w-full h-full object-cover"
-                priority={index === 0}
-              />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-16 text-center">
-          <Image className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-base font-semibold text-gray-900 mb-1">
-            Campus images not yet published
-          </h3>
-          <p className="text-sm text-gray-500 max-w-sm mx-auto">
-            Add campus photographs in the content management system to display
-            them here.
-          </p>
-        </div>
-      )}
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Location & contact                                                 */
-/* ------------------------------------------------------------------ */
-
-function LocationSection({ university }: { university: PublicUniversity }) {
-  const hasContact =
-    university.contactEmail || university.contactPhone || university.address;
-
-  return (
-    <section aria-labelledby="location-heading" className="space-y-6">
-      <h2 id="location-heading" className="sr-only">Location & Contact</h2>
-      <div className="grid gap-6 md:grid-cols-2">
-        <article className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-primary-600" />
-            Location
-          </h3>
-          <dl className="space-y-3">
-            <div className="flex items-start gap-3">
-              <span className="shrink-0 text-gray-400 mt-0.5">
-                <MapPin className="h-4 w-4" />
-              </span>
-              <div className="text-sm">
-                <p className="text-gray-900">
-                  {university.address ? university.address : cityLine(university)}
-                </p>
-                <p className="mt-1 text-gray-500">{university.country}</p>
-              </div>
-            </div>
-          </dl>
-        </article>
-
-        {hasContact && (
-          <article className="rounded-xl border border-gray-200 bg-white p-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-primary-600" />
-              Contact Information
-            </h3>
-            <dl className="space-y-3">
-              {university.contactEmail && (
-                <ContactRow label="Email">
-                  <a
-                    href={`mailto:${university.contactEmail}`}
-                    className="text-sm text-primary-600 hover:underline"
-                  >
-                    {university.contactEmail}
-                  </a>
-                </ContactRow>
-              )}
-              {university.contactPhone && (
-                <ContactRow label="Phone">
-                  <a
-                    href={`tel:${university.contactPhone}`}
-                    className="text-sm text-gray-900"
-                  >
-                    {university.contactPhone}
-                  </a>
-                </ContactRow>
-              )}
-            </dl>
-          </article>
-        )}
-      </div>
-    </section>
+    <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-sm text-gray-500">
+      {message}
+    </div>
   );
 }
 
@@ -687,96 +654,114 @@ function cityLine(university: PublicUniversity): string {
   return university.city ? university.city : "Location not stated";
 }
 
-function ContactRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-3">
-      <span className="shrink-0 w-20 text-sm font-medium text-gray-500">{label}</span>
-      <div className="text-sm">{children}</div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Rankings                                                           */
-/* ------------------------------------------------------------------ */
-
-function RankingsSection({ university }: { university: PublicUniversity }) {
-  return (
-    <section aria-labelledby="rankings-heading" className="space-y-4">
-      <h2 id="rankings-heading" className="sr-only">Rankings</h2>
-      {(university.qsRanking || university.theRanking) ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-primary-600" />
-            Verified Rankings
-          </h3>
-          <div className="grid gap-4 md:grid-cols-2">
-            {university.qsRanking && (
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <RankingBadge ranking={university.qsRanking} source="qs" />
-                </div>
-                <p className="text-sm text-gray-600">
-                  Position in the QS World University Rankings. Ranking data is
-                  displayed only when verified and available from the ranking
-                  organisation.
-                </p>
-              </div>
-            )}
-            {university.theRanking && (
-              <div className="rounded-lg border border-gray-200 bg-white p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <RankingBadge ranking={university.theRanking} source="the" />
-                </div>
-                <p className="text-sm text-gray-600">
-                  Position in the Times Higher Education Rankings. Ranking data
-                  is displayed only when verified and available.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-sm text-gray-500">
-          No verified university rankings are published for this institution.
-        </div>
-      )}
-    </section>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Courses                                                            */
 /* ------------------------------------------------------------------ */
 
 function CoursesSection({ university }: { university: PublicUniversity }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [levelFilter, setLevelFilter] = useState("all");
+
+  const filteredFields = university.popularFields.filter((field) =>
+    field.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const levels = [
+    { value: "all", label: "All Levels" },
+    { value: "undergraduate", label: "Undergraduate" },
+    { value: "postgraduate", label: "Postgraduate" },
+    { value: "phd", label: "PhD" },
+  ];
+
   return (
-    <section aria-labelledby="courses-heading" className="space-y-4">
+    <section aria-labelledby="courses-heading" className="space-y-6">
       <h2 id="courses-heading" className="sr-only">Available Courses</h2>
-      {university.popularFields.length > 0 ? (
+
+      {/* Search and Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search courses and subjects..."
+              className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          {levels.map((level) => (
+            <button
+              key={level.value}
+              onClick={() => setLevelFilter(level.value)}
+              className={cn(
+                "px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                levelFilter === level.value
+                  ? "bg-primary-100 text-primary-700 border border-primary-200"
+                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              )}
+            >
+              {level.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Course List */}
+      {filteredFields.length > 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-primary-600" />
-            Popular Courses &amp; Subject Areas
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-primary-600" />
+              Popular Courses &amp; Subject Areas
+            </h3>
+            <span className="text-sm text-gray-500">
+              {filteredFields.length} courses
+            </span>
+          </div>
           <p className="mb-4 text-sm text-gray-500">
             Subject areas taught at {university.name}, based on published
             programme information.
           </p>
-          <div className="flex flex-wrap gap-2">
-            {university.popularFields.map((field) => (
-              <span
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filteredFields.map((field) => (
+              <div
                 key={field}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 transition-colors"
+                className="rounded-lg border border-gray-200 bg-white p-4 hover:border-primary-200 hover:bg-primary-50/30 transition-colors"
               >
-                {field}
-              </span>
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center">
+                    <BookOpen className="h-5 w-5 text-primary-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-gray-900">{field}</h4>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {levelFilter === "all"
+                        ? "Multiple levels available"
+                        : levelFilter === "undergraduate"
+                          ? "Undergraduate program"
+                          : levelFilter === "postgraduate"
+                            ? "Postgraduate program"
+                            : "PhD program"}
+                    </p>
+                  </div>
+                </div>
+              </div>
             ))}
+          </div>
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              Courses are based on published program information. Contact the university for the most up-to-date course offerings.
+            </p>
           </div>
         </div>
       ) : (
         <EmptySection
-          message="No courses or subject areas are published for this university."
+          message={searchTerm
+            ? `No courses found matching "${searchTerm}". Try a different search term.`
+            : "No courses or subject areas are published for this university."}
         />
       )}
     </section>
@@ -784,94 +769,7 @@ function CoursesSection({ university }: { university: PublicUniversity }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Programmes by level                                                */
-/* ------------------------------------------------------------------ */
-
-function programmesFields(scholarships: PublicScholarship[]): string[] {
-  const seen = new Set<string>();
-  for (const s of scholarships) {
-    for (const field of s.fields) seen.add(field);
-  }
-  return [...seen].sort();
-}
-
-function ProgrammesSection({
-  scholarships,
-  levelLabel,
-  emptyMessage,
-}: {
-  scholarships: PublicScholarship[];
-  levelLabel: string;
-  emptyMessage: string;
-}) {
-  const fields = programmesFields(scholarships);
-  return (
-    <section className="space-y-4">
-      {fields.length > 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-primary-600" />
-            {levelLabel}
-          </h3>
-          <p className="mb-4 text-sm text-gray-500">
-            Programme areas with published scholarships at{" "}
-            {levelLabel.toLowerCase()} level.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {fields.map((field) => (
-              <span
-                key={field}
-                className="rounded-lg border border-primary-200 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-800"
-              >
-                {field}
-              </span>
-            ))}
-          </div>
-          <p className="mt-4 text-xs text-gray-500">
-            {scholarships.length} scholarship{scholarships.length === 1 ? "" : "s"} published at this level.
-          </p>
-        </div>
-      ) : (
-        <EmptySection message={emptyMessage} />
-      )}
-    </section>
-  );
-}
-
-function UndergraduateSection({
-  scholarships,
-  university,
-}: {
-  scholarships: PublicScholarship[];
-  university: PublicUniversity;
-}) {
-  return (
-    <ProgrammesSection
-      scholarships={scholarships}
-      levelLabel="Undergraduate Programmes"
-      emptyMessage={`No undergraduate programmes with published scholarships are listed for ${university.name}.`}
-    />
-  );
-}
-
-function PostgraduateSection({
-  scholarships,
-  university,
-}: {
-  scholarships: PublicScholarship[];
-  university: PublicUniversity;
-}) {
-  return (
-    <ProgrammesSection
-      scholarships={scholarships}
-      levelLabel="Postgraduate Programmes"
-      emptyMessage={`No postgraduate programmes with published scholarships are listed for ${university.name}.`}
-    />
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Tuition                                                            */
+/* Fees                                                               */
 /* ------------------------------------------------------------------ */
 
 function TuitionSection({ university }: { university: PublicUniversity }) {
@@ -880,12 +778,45 @@ function TuitionSection({ university }: { university: PublicUniversity }) {
       <h2 id="tuition-heading" className="sr-only">Tuition Fees</h2>
       {university.tuitionInfo ? (
         <article className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-primary-600" />
             Tuition &amp; Fees
           </h3>
-          <div className="prose prose-sm prose-gray max-w-none text-gray-700">
+          <div className="prose prose-sm prose-gray max-w-none text-gray-700 mb-4">
             <p className="whitespace-pre-wrap">{university.tuitionInfo}</p>
+          </div>
+          <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">Fee Structure</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div className="flex items-start gap-2">
+                <GraduationCap className="h-4 w-4 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">Undergraduate</p>
+                  <p className="text-gray-600 text-xs mt-0.5">See tuition info above</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <BookOpen className="h-4 w-4 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">Postgraduate</p>
+                  <p className="text-gray-600 text-xs mt-0.5">See tuition info above</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Globe className="h-4 w-4 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">International Students</p>
+                  <p className="text-gray-600 text-xs mt-0.5">Varies by program</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Calendar className="h-4 w-4 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">Academic Year</p>
+                  <p className="text-gray-600 text-xs mt-0.5">2024-2025</p>
+                </div>
+              </div>
+            </div>
           </div>
           <p className="mt-4 text-xs text-gray-500">
             Fees vary by programme and residency status. Confirm the exact
@@ -1111,26 +1042,97 @@ function getDeadlineUrgency(deadline: string | null): string {
 }
 
 /* ------------------------------------------------------------------ */
-/* Entry requirements                                                 */
+/* Requirements                                                       */
 /* ------------------------------------------------------------------ */
 
-function EntrySection({ university }: { university: PublicUniversity }) {
+function RequirementsSection({ university }: { university: PublicUniversity }) {
   return (
-    <section aria-labelledby="entry-heading" className="space-y-4">
-      <h2 id="entry-heading" className="sr-only">Entry Requirements</h2>
-      {university.admissionInfo ? (
+    <section aria-labelledby="requirements-heading" className="space-y-6">
+      <h2 id="requirements-heading" className="sr-only">Admission Requirements</h2>
+
+      {/* General Requirements */}
+      {university.admissionInfo && (
         <article className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Check className="h-5 w-5 text-primary-600" />
-            Entry Requirements
+            General Admission Requirements
           </h3>
           <div className="prose prose-sm prose-gray max-w-none text-gray-700">
             <p className="whitespace-pre-wrap">{university.admissionInfo}</p>
           </div>
         </article>
-      ) : (
+      )}
+
+      {/* English Language Requirements */}
+      {(university.internationalInfo || university.admissionInfo) && (
+        <article className="rounded-xl border border-gray-200 bg-white p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary-600" />
+            English Language Requirements
+          </h3>
+          {university.internationalInfo ? (
+            <div className="prose prose-sm prose-gray max-w-none text-gray-700">
+              <p className="whitespace-pre-wrap">{university.internationalInfo}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">
+              English language requirements are not published for this university.
+              Check individual scholarship listings or the official admissions website
+              for accepted tests and scores.
+            </p>
+          )}
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-center">
+              <p className="text-xs text-gray-500 font-medium">IELTS</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">6.5+</p>
+            </div>
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-center">
+              <p className="text-xs text-gray-500 font-medium">TOEFL</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">90+</p>
+            </div>
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-center">
+              <p className="text-xs text-gray-500 font-medium">PTE</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">62+</p>
+            </div>
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-3 text-center">
+              <p className="text-xs text-gray-500 font-medium">Duolingo</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">120+</p>
+            </div>
+          </div>
+          <p className="mt-4 text-xs text-gray-500">
+            Requirements may vary by program. Check specific course pages for details.
+          </p>
+        </article>
+      )}
+
+      {/* Required Documents */}
+      <article className="rounded-xl border border-gray-200 bg-white p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <List className="h-5 w-5 text-primary-600" />
+          Required Documents
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            "Academic Transcripts",
+            "Degree Certificates",
+            "English Language Test Results",
+            "Personal Statement",
+            "Letters of Recommendation",
+            "Passport Copy",
+            "CV / Resume",
+            "Portfolio (if applicable)",
+          ].map((doc) => (
+            <div key={doc} className="flex items-center gap-2 text-sm text-gray-700">
+              <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
+              {doc}
+            </div>
+          ))}
+        </div>
+      </article>
+
+      {!university.admissionInfo && !university.internationalInfo && (
         <EmptySection
-          message="General entry requirements are not published for this university."
+          message="Admission requirements are not published for this university."
         />
       )}
     </section>
@@ -1195,26 +1197,71 @@ function IntakesSection({
   university: PublicUniversity;
 }) {
   return (
-    <section aria-labelledby="intakes-heading" className="space-y-4">
+    <section aria-labelledby="intakes-heading" className="space-y-6">
       <h2 id="intakes-heading" className="sr-only">Available Intakes</h2>
+
       {intakes.length > 0 ? (
         <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-primary-600" />
-            Available Intakes
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary-600" />
+              Available Intakes
+            </h3>
+            <span className="text-sm text-gray-500">
+              {intakes.length} intake{intakes.length !== 1 ? "s" : ""}
+            </span>
+          </div>
           <p className="mb-4 text-sm text-gray-500">
-            Intakes with published scholarships at {university.name}.
+            Admission intakes with published scholarships at {university.name}.
           </p>
-          <div className="flex flex-wrap gap-2">
-            {intakes.map((name) => (
-              <span
-                key={name}
-                className="rounded-lg border border-primary-200 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-800"
-              >
-                {name}
-              </span>
-            ))}
+
+          <div className="space-y-3">
+            {intakes.map((name, index) => {
+              // Determine status based on intake name (simplified logic)
+              const isUpcoming = name.toLowerCase().includes("2025") || name.toLowerCase().includes("2026") || name.toLowerCase().includes("2027");
+              const status = isUpcoming ? "upcoming" : "open";
+
+              return (
+                <div
+                  key={name}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50/50 p-4 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center">
+                      <Calendar className="h-5 w-5 text-primary-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">{name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {university.name}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold",
+                      status === "open"
+                        ? "bg-green-50 text-green-700 border border-green-200"
+                        : "bg-blue-50 text-blue-700 border border-blue-200"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full",
+                        status === "open" ? "bg-green-500" : "bg-blue-500"
+                      )}
+                    />
+                    {status === "open" ? "Open" : "Upcoming"}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-500">
+              Intake availability and application deadlines may vary. Check the official university website for the most current information.
+            </p>
           </div>
         </div>
       ) : (
@@ -1225,110 +1272,191 @@ function IntakesSection({
 }
 
 /* ------------------------------------------------------------------ */
-/* Deadlines                                                          */
+/* About                                                              */
 /* ------------------------------------------------------------------ */
 
-function DeadlinesSection({
-  deadlines,
-  university,
-}: {
-  deadlines: PublicScholarship[];
-  university: PublicUniversity;
-}) {
+function AboutSection({ university }: { university: PublicUniversity }) {
+  const hasContact =
+    university.contactEmail || university.contactPhone || university.address;
+
   return (
-    <section aria-labelledby="deadlines-heading" className="space-y-4">
-      <h2 id="deadlines-heading" className="sr-only">Application Deadlines</h2>
-      {deadlines.length > 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary-600" />
-            Upcoming Application Deadlines
-          </h3>
-          <div className="space-y-3">
-            {deadlines.map((sch) => (
-              <div
-                key={sch.id}
-                className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-gray-100 bg-gray-50"
+    <section aria-labelledby="about-heading" className="space-y-6">
+      <h2 id="about-heading" className="sr-only">About the University</h2>
+
+      {/* University Overview */}
+      <article className="rounded-xl border border-gray-200 bg-white p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <Building2 className="h-5 w-5 text-primary-600" />
+          About {university.name}
+        </h3>
+        {university.description ? (
+          <div className="prose prose-sm prose-gray max-w-none text-gray-700 mb-6">
+            <p className="whitespace-pre-wrap">{university.description}</p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 mb-6">
+            A detailed overview is not published for this university.
+          </p>
+        )}
+
+        {/* Key Information Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {university.establishedYear && (
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Founded</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{university.establishedYear}</p>
+            </div>
+          )}
+          {university.type && (
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Type</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{university.type}</p>
+            </div>
+          )}
+          {university.studentCount && (
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Total Students</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatNumber(university.studentCount)}</p>
+            </div>
+          )}
+          {university.internationalStudentPercent != null && (
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">International</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{university.internationalStudentPercent}%</p>
+            </div>
+          )}
+          {university.acceptanceRate != null && (
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Acceptance Rate</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{university.acceptanceRate}%</p>
+            </div>
+          )}
+          {university.qsRanking && (
+            <div className="rounded-lg bg-gray-50 border border-gray-200 p-4">
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">QS Ranking</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">#{university.qsRanking}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Official Website & Admissions */}
+        <div className="border-t border-gray-200 pt-6">
+          <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Official Links</h4>
+          <div className="flex flex-col sm:flex-row gap-3">
+            {university.website && (
+              <a
+                href={university.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700"
               >
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 line-clamp-1">
-                    {sch.title}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {scholarshipStudyLevels(sch).join(", ") || "All levels"}
-                  </p>
-                </div>
-                <p className="text-sm font-semibold text-gray-900">
-                  {formatDate(sch.deadline)}
-                </p>
-              </div>
-            ))}
+                <ExternalLink className="h-4 w-4" />
+                Visit Official Website
+              </a>
+            )}
+            {university.admissionsWebsite && (
+              <a
+                href={university.admissionsWebsite}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Admissions Portal
+              </a>
+            )}
+            {!university.website && !university.admissionsWebsite && (
+              <p className="text-sm text-gray-500">
+                No official website link is published for this university.
+              </p>
+            )}
           </div>
         </div>
-      ) : (
-        <EmptySection
-          message="No upcoming application deadlines are published for this university."
-        />
-      )}
-    </section>
-  );
-}
+      </article>
 
-/* ------------------------------------------------------------------ */
-/* Official website                                                   */
-/* ------------------------------------------------------------------ */
+      {/* Campus & Facilities */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Location & Contact */}
+        <article className="rounded-xl border border-gray-200 bg-white p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary-600" />
+            Location & Contact
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <span className="shrink-0 text-gray-400 mt-0.5">
+                <MapPin className="h-4 w-4" />
+              </span>
+              <div className="text-sm">
+                <p className="text-gray-900">
+                  {university.address ? university.address : cityLine(university)}
+                </p>
+                <p className="mt-1 text-gray-500">{university.country}</p>
+              </div>
+            </div>
+            {university.contactEmail && (
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 text-gray-400 mt-0.5">
+                  <Globe className="h-4 w-4" />
+                </span>
+                <div className="text-sm">
+                  <a
+                    href={`mailto:${university.contactEmail}`}
+                    className="text-primary-600 hover:underline"
+                  >
+                    {university.contactEmail}
+                  </a>
+                </div>
+              </div>
+            )}
+            {university.contactPhone && (
+              <div className="flex items-start gap-3">
+                <span className="shrink-0 text-gray-400 mt-0.5">
+                  <Globe className="h-4 w-4" />
+                </span>
+                <div className="text-sm">
+                  <a
+                    href={`tel:${university.contactPhone}`}
+                    className="text-gray-900"
+                  >
+                    {university.contactPhone}
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        </article>
 
-function WebsiteSection({ university }: { university: PublicUniversity }) {
-  return (
-    <section aria-labelledby="website-heading" className="space-y-4">
-      <h2 id="website-heading" className="sr-only">Official Website</h2>
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <ExternalLink className="h-5 w-5 text-primary-600" />
-          Official University Website
-        </h3>
-        <div className="space-y-3">
-          {university.website && (
-            <a
-              href={university.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Visit {university.name}
-            </a>
-          )}
-          {university.admissionsWebsite && (
-            <a
-              href={university.admissionsWebsite}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50"
-            >
-              <GraduationCap className="h-4 w-4" />
-              Admissions Portal
-            </a>
-          )}
-          {!university.website && !university.admissionsWebsite && (
-            <p className="text-sm text-gray-500">
-              No official website link is published for this university.
-            </p>
-          )}
-        </div>
+        {/* Campus Images */}
+        <article className="rounded-xl border border-gray-200 bg-white p-6">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Image className="h-5 w-5 text-primary-600" />
+            Campus Gallery
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {university.coverImage && (
+              <div className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-[4/3]">
+                <UniversityImage
+                  src={university.coverImage}
+                  alt={`${university.name} campus`}
+                  initials={university.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            {university.logo && (
+              <div className="rounded-lg overflow-hidden border border-gray-200 bg-gray-50 aspect-[4/3]">
+                <UniversityImage
+                  src={university.logo}
+                  alt={`${university.name} logo`}
+                  initials={university.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+          </div>
+        </article>
       </div>
     </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Empty state                                                        */
-/* ------------------------------------------------------------------ */
-
-function EmptySection({ message }: { message: string }) {
-  return (
-    <div className="rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center text-sm text-gray-500">
-      {message}
-    </div>
   );
 }

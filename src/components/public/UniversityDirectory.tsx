@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { ChevronDown, ArrowRight, LayoutGrid, LayoutList } from "lucide-react";
+import { ChevronDown, ArrowRight, LayoutGrid, LayoutList, SlidersHorizontal, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Pagination } from "@/components/ui/Pagination";
 import { UNIVERSITY_PAGE_SIZE } from "@/lib/page-size";
@@ -36,6 +36,7 @@ export interface DirectoryState {
   field: string;
   type: string;
   intake: string;
+  tuitionRange: string;
   q: string;
   sort: string;
   view: View;
@@ -51,6 +52,7 @@ export type FilterValues = Pick<
   | "field"
   | "type"
   | "intake"
+  | "tuitionRange"
   | "sort"
 >;
 
@@ -62,6 +64,7 @@ const DEFAULT_STATE: DirectoryState = {
   field: "all",
   type: "all",
   intake: "all",
+  tuitionRange: "all",
   q: "",
   sort: "ranking",
   view: "grid",
@@ -98,6 +101,13 @@ const RANKING_TIERS: Record<string, { max: number } | null> = {
   unranked: null,
 };
 
+const TUITION_RANGE_LABELS: Record<string, string> = {
+  free: "Free / No tuition",
+  low: "Low (under $10k)",
+  medium: "Moderate ($10k-$30k)",
+  high: "High ($30k+)",
+};
+
 const PARAM_KEYS: Record<keyof DirectoryState, string> = {
   country: "c",
   ranking: "r",
@@ -106,6 +116,7 @@ const PARAM_KEYS: Record<keyof DirectoryState, string> = {
   field: "f",
   type: "t",
   intake: "i",
+  tuitionRange: "tr",
   q: "q",
   sort: "sort",
   view: "view",
@@ -124,6 +135,7 @@ function buildQuery(state: DirectoryState): string {
   if (state.field !== "all") params.set(PARAM_KEYS.field, state.field);
   if (state.type !== "all") params.set(PARAM_KEYS.type, state.type);
   if (state.intake !== "all") params.set(PARAM_KEYS.intake, state.intake);
+  if (state.tuitionRange !== "all") params.set(PARAM_KEYS.tuitionRange, state.tuitionRange);
   if (state.sort !== "ranking") params.set(PARAM_KEYS.sort, state.sort);
   if (state.view !== "grid") params.set(PARAM_KEYS.view, state.view);
   if (state.page > 1) params.set(PARAM_KEYS.page, String(state.page));
@@ -240,6 +252,23 @@ export function UniversityDirectory({
       );
     }
 
+    if (state.tuitionRange !== "all") {
+      result = result.filter((u) => {
+        if (!u.tuitionInfo) return false;
+        const text = u.tuitionInfo.toLowerCase();
+        if (state.tuitionRange === "free") {
+          return text.includes("free") || text.includes("no tuition") || text.includes("€0") || text.includes("$0");
+        } else if (state.tuitionRange === "low") {
+          return text.includes("low") || text.includes("affordable") || text.includes("cheap") || /€?[0-9],?[0-9]{3}\b/.test(text) || /\$?[0-9],?[0-9]{3}\b/.test(text);
+        } else if (state.tuitionRange === "medium") {
+          return /€?[0-9]{2},?[0-9]{3}\b/.test(text) || /\$?[0-9]{2},?[0-9]{3}\b/.test(text);
+        } else if (state.tuitionRange === "high") {
+          return /€?[3-9][0-9],?[0-9]{3}\b/.test(text) || /\$?[3-9][0-9],?[0-9]{3}\b/.test(text);
+        }
+        return true;
+      });
+    }
+
     const ranked = (u: PublicUniversity) =>
       u.qsRanking ?? u.theRanking ?? Infinity;
 
@@ -309,6 +338,11 @@ export function UniversityDirectory({
       items.push({
         key: "intake",
         label: `Intake: ${filterOptions.intakes.find((x) => x.slug === state.intake)?.name ?? state.intake}`,
+      });
+    if (state.tuitionRange !== "all")
+      items.push({
+        key: "tuitionRange",
+        label: `Tuition: ${TUITION_RANGE_LABELS[state.tuitionRange] ?? state.tuitionRange}`,
       });
     return items;
   }, [state, filterOptions]);
@@ -452,6 +486,7 @@ export function UniversityDirectory({
           field: state.field,
           type: state.type,
           intake: state.intake,
+          tuitionRange: state.tuitionRange,
         }}
         onFilterChange={(patch) => navigate(patch)}
         onClearAll={clearAll}
