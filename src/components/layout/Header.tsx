@@ -100,7 +100,6 @@ const navItems: NavItem[] = [
       { divider: true, section: "Visa Information" },
       { label: "Student Visa Requirements by Country", href: "/resources/student-visa-requirements-by-country" },
       { divider: true, section: "Organisation & Strategy" },
-      { label: "Organising Your Scholarship Search", href: "/resources/organising-a-scholarship-search" },
       { label: "Reading Listings Critically", href: "/resources/reading-a-scholarship-listing-critically" },
       { divider: true, section: "Other Resources" },
       { label: "Frequently Asked Questions", href: "/faq" },
