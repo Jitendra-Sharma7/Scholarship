@@ -5,6 +5,7 @@ import {
   getPublicFields,
   getPublicScholarships,
   getPublicIntakes,
+  getPublicUniversitiesList,
 } from "@/lib/data/public";
 import { SCHOLARSHIP_PAGE_SIZE } from "@/lib/page-size";
 import { ScholarshipsBrowser } from "./ScholarshipsBrowser";
@@ -73,15 +74,15 @@ function filterQuery(f: ResolvedFilters): string {
   return parts.toString();
 }
 
+interface FieldContext {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+}
+
 /**
  * Filter-aware metadata for the listing.
- *
- * Previously this page emitted no metadata at all, so every variant -
- * `/scholarships`, `/scholarships?country=de`, `/scholarships?funding=fully-funded`
- * - rendered the homepage's title and description, and all of them inherited
- * the root `canonical: "/"`. That is the worst of both: the pages Google most
- * wants to show for "scholarships in Germany" were indistinguishable from each
- * other and were all declared duplicates of the homepage.
  *
  * Each resolved filter now gets its own title, description and self-referencing
  * canonical, which is what makes the directory rank for country and degree
@@ -168,14 +169,32 @@ export default async function ScholarshipsPage({
 }) {
   const filters = await resolveFilters(await searchParams);
 
-  const [countries, fields, intakes, initialResult] = await Promise.all([
-    getCountries(),
-    getFields(),
-    getPublicIntakes(),
-    getPublicScholarships({ ...filters, page: 1, limit: SCHOLARSHIP_PAGE_SIZE }),
-  ]);
+  const [countries, fields, intakes, universities, initialResult] =
+    await Promise.all([
+      getCountries(),
+      getFields(),
+      getPublicIntakes(),
+      getPublicUniversitiesList({ limit: 60 }),
+      getPublicScholarships({ ...filters, page: 1, limit: SCHOLARSHIP_PAGE_SIZE }),
+    ]);
 
   const { data: results } = initialResult;
+
+  // When the user lands on a field-specific listing (e.g. from a
+  // "Browse X Scholarships" card), resolve the field record so the page
+  // header can name the discipline and describe it.
+  let contextField: FieldContext | null = null;
+  if (filters.field) {
+    const record = fields.find((f) => f.id === filters.field);
+    if (record) {
+      contextField = {
+        id: record.id,
+        name: record.name,
+        description: record.description,
+        category: record.category,
+      };
+    }
+  }
 
   return (
     <Suspense fallback={<div className="p-12 text-center text-sm text-gray-500">Loading scholarships...</div>}>
@@ -195,7 +214,9 @@ export default async function ScholarshipsPage({
       <ScholarshipsBrowser
         countries={countries}
         fields={fields}
+        universities={universities}
         intakes={intakes}
+        contextField={contextField}
         initialResult={initialResult}
       />
     </Suspense>

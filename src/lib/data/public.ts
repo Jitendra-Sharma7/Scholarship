@@ -1283,6 +1283,8 @@ export async function getPublicScholarships(
     where.OR = [
       { title: { contains: like, mode: "insensitive" } },
       { description: { contains: like, mode: "insensitive" } },
+      { university: { name: { contains: like, mode: "insensitive" } } },
+      { country: { name: { contains: like, mode: "insensitive" } } },
     ];
   }
   if (country) where.countryId = country;

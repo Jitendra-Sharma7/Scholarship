@@ -75,6 +75,7 @@ function sanitiseFilters(input: Partial<ScholarshipQuery>): ScholarshipQuery {
     eligibleNationality: input.eligibleNationality?.slice(0, 40) || undefined,
     applicationFee: input.applicationFee?.slice(0, 40) || undefined,
     intake: input.intake?.slice(0, 80) || undefined,
+    university: input.university?.slice(0, 80) || undefined,
     page: typeof input.page === "number" && input.page > 0 ? Math.trunc(input.page) : 1,
     limit: clampLimit(input.limit),
     sort: allowlisted(input.sort, SORTS),

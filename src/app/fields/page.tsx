@@ -28,16 +28,16 @@ export default async function FieldsPage() {
         })}
       />
       <Container>
-        <div className="mb-8">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-100 px-3 py-1 text-xs font-semibold text-primary-700 mb-3">
+        <div className="mb-10">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 border border-primary-100 mb-4">
             <span>Academic Disciplines</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-secondary-950">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-secondary-950 tracking-tight leading-tight mb-4">
             Scholarships by Field of Study
           </h1>
-          <p className="mt-2 text-sm text-secondary-600 max-w-2xl">
-            Browse specialized funding opportunities for Computer Science, Engineering, Medicine,
-            Business, Humanities, and Sciences.
+          <p className="text-lg text-secondary-600 max-w-3xl leading-relaxed">
+            Browse specialized funding opportunities across a wide range of
+            academic disciplines and fields of study.
           </p>
         </div>
 

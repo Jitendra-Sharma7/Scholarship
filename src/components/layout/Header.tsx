@@ -439,11 +439,6 @@ export function Header() {
           </nav>
 
           <Flex align="center" gap="sm">
-            <Link href="/scholarships" className="hidden sm:flex">
-              <Button variant="ghost" size="sm" leftIcon={<Search className="h-4 w-4" />}>
-                Search Scholarships
-              </Button>
-            </Link>
             {isAuthenticated ? (
               <Flex align="center" gap="sm">
                 <Link href="/dashboard">

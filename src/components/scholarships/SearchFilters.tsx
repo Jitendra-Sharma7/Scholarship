@@ -3,7 +3,11 @@
 import React, { useId } from "react";
 import { Filter, RotateCcw, Check } from "lucide-react";
 import { CountryFlagWithName } from "@/components/ui/CountryFlag";
-import type { PublicCountryOption, PublicField } from "@/lib/data/public";
+import type {
+  PublicCountryOption,
+  PublicField,
+  PublicUniversity,
+} from "@/lib/data/public";
 
 interface FilterState {
   query: string;
@@ -15,6 +19,7 @@ interface FilterState {
   status: string;
   eligibleNationality: string;
   applicationFee: string;
+  university: string;
   sortBy: string;
 }
 
@@ -24,6 +29,7 @@ interface SearchFiltersProps {
   onReset: () => void;
   countries: PublicCountryOption[];
   fields: PublicField[];
+  universities: PublicUniversity[];
   intakes: { id: string; name: string; slug: string }[];
 }
 
@@ -33,6 +39,7 @@ export function SearchFilters({
   onReset,
   countries,
   fields,
+  universities,
   intakes
 }: SearchFiltersProps) {
   const germany = countries.find((c) => c.id === "de");
@@ -104,7 +111,7 @@ export function SearchFilters({
   const hasActiveFilters = Boolean(
     filters.query || filters.country || filters.field || filters.degree || 
     filters.funding || filters.intake || filters.status || 
-    filters.eligibleNationality || filters.applicationFee || filters.sortBy
+    filters.eligibleNationality || filters.applicationFee || filters.university || filters.sortBy
   );
 
   return (
@@ -206,6 +213,29 @@ export function SearchFilters({
           {fields.map((f) => (
             <option key={f.id} value={f.id}>
               {f.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* University */}
+      <div className="space-y-2">
+        <label
+          htmlFor={controlId("university")}
+          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
+        >
+          University
+        </label>
+        <select
+          id={controlId("university")}
+          value={filters.university}
+          onChange={(e) => handleSelect("university", e.target.value)}
+          className="input-field"
+        >
+          <option value="">All Universities</option>
+          {universities.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.name}
             </option>
           ))}
         </select>
