@@ -79,22 +79,40 @@ const popularSearches = [
 ];
 
 export default async function HomePage() {
-  // Keep database reads sequential during static generation. The hosted
-  // database has a small connection pool, and running all homepage queries
-  // concurrently can exhaust it while Next.js prerenders the page.
-  const featured = await getPublicScholarships({ limit: 6, featuredOnly: true });
-  const fullyFunded = await getPublicScholarships({ funding: "fully-funded", limit: 3 });
-  const countryOptions = await getPublicCountryOptions();
-  const countryTiles = await getPublicCountryTiles(15);
-  const fields = await getPublicFields();
-  const stats = await getPublicStats();
-  const closingSoon = await getPublicScholarships({ status: "closing soon", limit: 5 });
-  const upcoming = await getPublicScholarships({ status: "upcoming", limit: 5 });
-  const recentlyUpdated = await getPublicScholarships({ sort: "newest", limit: 5 });
-  const featuredFullyFunded = await getPublicScholarships({ funding: "fully-funded", limit: 6 });
-  const featuredUndergraduate = await getPublicScholarships({ degree: "Undergraduate", limit: 6 });
-  const featuredMasters = await getPublicScholarships({ degree: "Master's", limit: 6 });
-  const featuredPhd = await getPublicScholarships({ degree: "PhD", limit: 6 });
+  // Run the independent homepage reads in parallel. Sequentially awaiting 13
+  // queries made the page take ~30s to respond, which made every interactive
+  // element feel unresponsive. Batching them keeps the connection pool happy
+  // (a handful of concurrent queries, not 13) while cutting wall time to the
+  // slowest single query.
+  const [
+    featured,
+    fullyFunded,
+    countryOptions,
+    countryTiles,
+    fields,
+    stats,
+    closingSoon,
+    upcoming,
+    recentlyUpdated,
+    featuredFullyFunded,
+    featuredUndergraduate,
+    featuredMasters,
+    featuredPhd,
+  ] = await Promise.all([
+    getPublicScholarships({ limit: 6, featuredOnly: true }),
+    getPublicScholarships({ funding: "fully-funded", limit: 3 }),
+    getPublicCountryOptions(),
+    getPublicCountryTiles(15),
+    getPublicFields(),
+    getPublicStats(),
+    getPublicScholarships({ status: "closing soon", limit: 5 }),
+    getPublicScholarships({ status: "upcoming", limit: 5 }),
+    getPublicScholarships({ sort: "newest", limit: 5 }),
+    getPublicScholarships({ funding: "fully-funded", limit: 6 }),
+    getPublicScholarships({ degree: "Undergraduate", limit: 6 }),
+    getPublicScholarships({ degree: "Master's", limit: 6 }),
+    getPublicScholarships({ degree: "PhD", limit: 6 }),
+  ]);
 
   const featuredScholarships = featured.data;
   const fullyFundedList = fullyFunded.data;

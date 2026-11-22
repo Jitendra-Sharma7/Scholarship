@@ -18,6 +18,7 @@
     "verify:speed": "node scripts/verify-speed.mjs",
     "verify:mobile": "node scripts/verify-mobile.mjs",
     "verify:oauth": "node scripts/verify-oauth.mjs",
+    "verify:cookies": "node tests/cookie-test.js",
     "verify": "npm run verify:bundle && npm run verify:auth && npm run verify:crud && npm run verify:content && npm run verify:public && npm run verify:forms && npm run verify:links && npm run verify:seo && npm run verify:speed && npm run verify:mobile && npm run verify:oauth",
     "verify:bundle": "node scripts/verify-client-bundle.mjs",
     "clean:test-records": "node scripts/clean-test-records.mjs --apply",

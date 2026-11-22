@@ -384,6 +384,7 @@ export function UniversityDirectoryClient({
                       type="button"
                       disabled={safePage <= 1}
                       onClick={() => handlePageChange(safePage - 1)}
+                      aria-label="Previous page"
                       className="rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-3 py-2 text-sm text-[#15264A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
                     >
                       <ChevronDown className="h-4 w-4 rotate-180" />
@@ -408,6 +409,7 @@ export function UniversityDirectoryClient({
                       type="button"
                       disabled={safePage >= totalPages}
                       onClick={() => handlePageChange(safePage + 1)}
+                      aria-label="Next page"
                       className="rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-3 py-2 text-sm text-[#15264A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
                     >
                       <ChevronDown className="h-4 w-4" />

@@ -62,9 +62,37 @@ export function HomeSearchForm({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSearch(e);
+            }
+          }}
           placeholder="Search scholarships, universities, or countries..."
           className="w-full pl-12 pr-4 py-4 text-lg text-secondary-900 placeholder:text-secondary-400 bg-transparent focus:outline-none"
         />
+      </div>
+
+      {/* Always-visible search + filters toggle. Without this the submit button
+          lived inside the collapsed filter panel, so the only way to run a
+          search was to first expand filters - the primary CTA appeared dead. */}
+      <div className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700"
+        >
+          <Search className="h-4 w-4" />
+          Search Scholarships
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowFilters(!showFilters)}
+          aria-expanded={showFilters}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-6 py-2.5 text-sm font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50"
+        >
+          <Filter className="h-4 w-4" />
+          <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
+        </button>
       </div>
 
       {/* Filter Row */}
@@ -152,44 +180,13 @@ export function HomeSearchForm({
             </div>
           </div>
 
-          {/* Submit Row */}
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-secondary-100">
-            <div className="flex items-center gap-2 text-xs text-secondary-500">
-              <ShieldCheck className="h-4 w-4 text-success-600 shrink-0" />
-              <span>Official & verified scholarship opportunities</span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
-              <button
-                type="button"
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-6 py-2.5 text-sm font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50"
-              >
-                <Filter className="h-4 w-4" />
-                <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
-              </button>
-
-              <button
-                type="submit"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700"
-              >
-                <Search className="h-4 w-4" />
-                Search Scholarships
-              </button>
-            </div>
+          {/* Trust note inside the expanded panel */}
+          <div className="mt-4 flex items-center gap-2 text-xs text-secondary-500 pt-3 border-t border-secondary-100">
+            <ShieldCheck className="h-4 w-4 text-success-600 shrink-0" />
+            <span>Official &amp; verified scholarship opportunities</span>
           </div>
         </div>
       </div>
-
-      {/* Mobile Filter Toggle */}
-      <button
-        type="button"
-        onClick={() => setShowFilters(!showFilters)}
-        className="w-full sm:hidden mt-3 inline-flex items-center justify-center gap-2 rounded-xl border border-secondary-200 bg-white px-6 py-2.5 text-sm font-semibold text-secondary-700 shadow-sm transition-all hover:bg-secondary-50"
-      >
-        <Filter className="h-4 w-4" />
-        <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
-      </button>
     </form>
   );
 }

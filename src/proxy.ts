@@ -45,42 +45,45 @@ const SECURITY_HEADERS: Record<string, string> = {
 };
 
 /**
- * Content Security Policy. Keeps the site functional while restricting where
- * scripts, styles, images and frames can come from.
+ * Content Security Policy.
  *
- * Inline styles and scripts are NOT allowed: Tailwind classes are used instead
- * of `style=""`, and all interactivity is in bundled assets.
+ * Next.js App Router emits inline bootstrap and hydration scripts (for example
+ * the one that sets `self.__next_r`, the React Flight request id). Those inline
+ * scripts carry a per-request nonce, so `script-src` must allow that nonce or
+ * the whole app fails to hydrate: the server-rendered HTML is delivered and
+ * visible, but no client JavaScript runs, so every interactive control (the
+ * cookie-consent buttons included) is dead. The nonce is generated per request
+ * and propagated to the app so Next.js stamps it onto its own script tags.
  */
-const CSP_DIRECTIVES: Record<string, string> = {
-  "default-src": "'self'",
-  "script-src": [
+function buildCsp(nonce: string): string {
+  const scriptSrc = [
     "'self'",
+    `'nonce-${nonce}'`,
     "https://pagead2.googlesyndication.com",
     "https://googleads.g.doubleclick.net",
-  ].join(" "),
-  "script-src-elem": [
-    "'self'",
-    "https://pagead2.googlesyndication.com",
-    "https://googleads.g.doubleclick.net",
-  ].join(" "),
-  "style-src": ["'self'", "'unsafe-inline'"].join(" "),
-  "img-src": ["'self'", "data:", "https:"].join(" "),
-  "font-src": ["'self'", "https://fonts.gstatic.com"].join(" "),
-  "connect-src": [
-    "'self'",
-    "https://accounts.google.com",
-    "https://oauth2.googleapis.com",
-    "https://appleid.apple.com",
-  ].join(" "),
-  "frame-src": ["https://pagead2.googlesyndication.com"].join(" "),
-  "object-src": "'none'",
-  "base-uri": "'self'",
-  "form-action": "'self'",
-  "frame-ancestors": "'none'",
-};
+  ].join(" ");
 
-function cspHeader(): string {
-  return Object.entries(CSP_DIRECTIVES)
+  const directives: Record<string, string> = {
+    "default-src": "'self'",
+    "script-src": scriptSrc,
+    "script-src-elem": scriptSrc,
+    "style-src": ["'self'", "'unsafe-inline'"].join(" "),
+    "img-src": ["'self'", "data:", "https:"].join(" "),
+    "font-src": ["'self'", "https://fonts.gstatic.com"].join(" "),
+    "connect-src": [
+      "'self'",
+      "https://accounts.google.com",
+      "https://oauth2.googleapis.com",
+      "https://appleid.apple.com",
+    ].join(" "),
+    "frame-src": ["https://pagead2.googlesyndication.com"].join(" "),
+    "object-src": "'none'",
+    "base-uri": "'self'",
+    "form-action": "'self'",
+    "frame-ancestors": "'none'",
+  };
+
+  return Object.entries(directives)
     .map(([key, value]) => `${key} ${value}`)
     .join("; ");
 }
@@ -91,30 +94,53 @@ function hstsHeader(): string | null {
   return "max-age=31536000; includeSubDomains; preload";
 }
 
-function applySecurityHeaders(response: NextResponse): NextResponse {
+function applySecurityHeaders(response: NextResponse, csp: string): NextResponse {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
     response.headers.set(key, value);
   }
-  response.headers.set("Content-Security-Policy", cspHeader());
+  response.headers.set("Content-Security-Policy", csp);
   const hsts = hstsHeader();
   if (hsts) response.headers.set("Strict-Transport-Security", hsts);
   return response;
 }
 
+/**
+ * Forward the request with the nonce attached. Next.js reads the nonce from the
+ * request (both the `x-nonce` header and the request CSP) and stamps it onto
+ * every script tag it emits for this render, which is what lets its inline
+ * bootstrap/hydration scripts run under the CSP instead of being blocked.
+ */
+function forwardWithNonce(request: NextRequest, nonce: string, csp: string): Headers {
+  const headers = new Headers(request.headers);
+  headers.set("x-nonce", nonce);
+  headers.set("Content-Security-Policy", csp);
+  return headers;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // A fresh, unguessable nonce per response. Next.js requires a nonce (or
+  // 'unsafe-inline') in `script-src` to allow its own inline scripts to run;
+  // without it the app ships HTML that never hydrates and no button works.
+  const nonce = crypto.randomUUID();
+  const csp = buildCsp(nonce);
+  const requestHeaders = forwardWithNonce(request, nonce, csp);
 
   if (pathname.startsWith("/api/public")) {
     if (!hasValidKey(request) && !isLocal(request)) {
       return hidden();
     }
-    const response = NextResponse.next();
+    const response = NextResponse.next({ request: { headers: requestHeaders } });
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     response.headers.set("Cache-Control", "private, no-store");
-    return applySecurityHeaders(response);
+    return applySecurityHeaders(response, csp);
   }
 
-  return applySecurityHeaders(NextResponse.next());
+  return applySecurityHeaders(
+    NextResponse.next({ request: { headers: requestHeaders } }),
+    csp
+  );
 }
 
 export const config = {

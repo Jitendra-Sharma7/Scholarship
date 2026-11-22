@@ -190,6 +190,7 @@ export function ScholarshipCard({
           <button
             onClick={handleSave}
             title={saved ? "Remove from saved" : "Save scholarship"}
+            aria-label={saved ? "Remove from saved" : "Save scholarship"}
             className={cn(
               "rounded-lg p-2 transition-colors",
               saved
@@ -203,6 +204,7 @@ export function ScholarshipCard({
           <button
             onClick={handleCompare}
             title={isCompared ? "Remove from comparison" : "Compare with others"}
+            aria-label={isCompared ? "Remove from comparison" : "Compare with others"}
             className={cn(
               "rounded-lg p-2 transition-colors",
               isCompared

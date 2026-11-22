@@ -274,6 +274,8 @@ export function CookieConsent() {
                   onClick={() => {
                     resetConsent();
                     setDecision({ functional: false, analytics: false, marketing: false });
+                    setDismissed(true);
+                    setMode("banner");
                   }}
                 >
                   Clear choice
