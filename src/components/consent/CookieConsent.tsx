@@ -89,20 +89,20 @@ export function CookieConsent() {
   return (
     <>
       {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="consent-title"
-          onKeyDown={(e) => {
-            if (e.key === "Escape" && mode === "preferences") {
-              setDismissed(true);
-            }
-          }}
-        >
-          {mode === "banner" ? (
-            /* First visit: a centred card, no category detail to read through. */
-            <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-xl">
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="consent-title"
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && mode === "preferences") {
+                setDismissed(true);
+              }
+            }}
+          >
+            {mode === "banner" ? (
+              /* First visit: a centred card, no category detail to read through. */
+              <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-xl pointer-events-auto">
               <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-700">
                 <Cookie className="h-5 w-5" />
               </div>
@@ -150,7 +150,7 @@ export function CookieConsent() {
             </div>
           ) : (
             /* Customised view: the per-category detail, so each switch means something. */
-            <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-xl">
+            <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-xl pointer-events-auto">
               {/* Header */}
               <div className="flex items-start justify-between gap-4 border-b border-gray-100 p-5 sm:p-6">
                 <div className="flex items-start gap-3">
