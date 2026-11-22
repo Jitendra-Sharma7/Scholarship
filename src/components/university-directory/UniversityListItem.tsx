@@ -199,19 +199,19 @@ export function UniversityListItem({ university }: UniversityListItemProps) {
         )}
 
         <div className="grid grid-cols-3 gap-3 mb-3">
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[12px] text-[var(--gs-muted)]">Tuition</span>
             <span className="text-[13px] font-medium text-[var(--gs-text)] truncate">
               {university.tuitionInfo || "\u2014"}
             </span>
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[12px] text-[var(--gs-muted)]">Intake</span>
             <span className="text-[13px] font-medium text-[var(--gs-text)] truncate">
               {intakes.length > 0 ? intakes.join(", ") : "\u2014"}
             </span>
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[12px] text-[var(--gs-muted)]">Levels</span>
             <span className="text-[13px] font-medium text-[var(--gs-text)] truncate">
               {levels.length > 0 ? levels.join(", ") : "\u2014"}

@@ -124,6 +124,7 @@ export async function fetchPublicUniversitiesPaginated(
     includeScholarships: true,
     query: filters.query?.slice(0, 200) || undefined,
     country: filters.country?.slice(0, 80) || undefined,
+    city: filters.city?.slice(0, 80) || undefined,
     ranking: filters.ranking,
     studyLevel: filters.studyLevel,
     scholarships: filters.scholarships,

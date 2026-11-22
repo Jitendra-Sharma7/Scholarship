@@ -45,7 +45,7 @@ export function ResultsBar({
   activeCategory = "all",
 }: ResultsBarProps) {
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-[#FFFFFF] shadow-sm">
+    <div className="rounded-xl border border-[#E2E8F0] bg-[#FFFFFF] shadow-sm overflow-hidden">
       <div className="border-b border-[#E2E8F0] px-5 py-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -73,7 +73,7 @@ export function ResultsBar({
                   onClick={() => onCategoryChange?.(o.value)}
                   aria-pressed={active}
                   className={cn(
-                    "px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors",
+                    "px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors whitespace-nowrap",
                     active
                       ? "bg-[#1747D1] text-[#FFFFFF]"
                       : "text-[#64748B] hover:bg-[#F3F7FF] hover:text-[#15264A]",
@@ -91,7 +91,7 @@ export function ResultsBar({
                 type="button"
                 onClick={onFilterToggle}
                 className={cn(
-                  "lg:hidden inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-3 py-2 text-sm font-medium text-[#15264A] transition-colors hover:bg-[#F3F7FF]",
+                  "lg:hidden inline-flex items-center gap-2 rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-3 py-2 text-sm font-medium text-[#15264A] transition-colors hover:bg-[#F3F7FF] whitespace-nowrap",
                   activeFilterCount && activeFilterCount > 0
                     ? "border-[#1747D1] bg-[#E2F2FF] text-[#1747D1]"
                     : "hover:border-[#64748B]",
@@ -108,12 +108,12 @@ export function ResultsBar({
               </button>
             )}
 
-            <div className="relative flex-shrink-0 min-w-[150px]">
+            <div className="relative flex-shrink-0 min-w-[150px] max-w-full">
               <label className="sr-only">Sort universities by</label>
               <select
                 value={sort}
                 onChange={(e) => onSortChange(e.target.value)}
-                className="w-full appearance-none rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] pl-3 pr-10 py-2.5 text-sm text-[#15264A] shadow-sm transition-colors focus:border-[#1747D1] focus:outline-none focus:ring-2 focus:ring-[#1747D1]/20 focus:ring-offset-1"
+                className="w-full appearance-none rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] pl-3 pr-10 py-2.5 text-sm text-[#15264A] shadow-sm transition-colors focus:border-[#1747D1] focus:outline-none focus:ring-2 focus:ring-[#1747D1]/20 focus:ring-offset-1 truncate"
               >
                 {SORT_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -126,7 +126,7 @@ export function ResultsBar({
               />
             </div>
 
-            <div className="inline-flex rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-sm">
+            <div className="inline-flex rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-sm shrink-0">
               <button
                 type="button"
                 onClick={() => onViewChange("grid")}

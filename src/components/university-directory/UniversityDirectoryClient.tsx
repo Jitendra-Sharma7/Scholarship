@@ -26,6 +26,7 @@ interface UniversityDirectoryClientProps {
   filters: {
     q: string;
     country: string;
+    city: string;
     studyLevel: string;
     scholarships: string;
     field: string;
@@ -42,6 +43,7 @@ type SortValue = "ranking" | "lowest" | "name" | "scholarships";
 
 const DEFAULT_STATE = {
   country: "all",
+  city: "all",
   studyLevel: "all",
   scholarships: "all",
   field: "all",
@@ -74,6 +76,7 @@ export function UniversityDirectoryClient({
     () => ({
       ...DEFAULT_STATE,
       country: initialFilters.country,
+      city: initialFilters.city,
       studyLevel: initialFilters.studyLevel,
       scholarships: initialFilters.scholarships,
       field: initialFilters.field,
@@ -115,6 +118,10 @@ export function UniversityDirectoryClient({
       if (patch.country !== undefined) {
         if (patch.country !== "all") params.set("country", patch.country);
         else params.delete("country");
+      }
+      if (patch.city !== undefined) {
+        if (patch.city !== "all") params.set("city", patch.city);
+        else params.delete("city");
       }
       if (patch.studyLevel !== undefined) {
         if (patch.studyLevel !== "all") params.set("studyLevel", patch.studyLevel);
@@ -200,6 +207,7 @@ export function UniversityDirectoryClient({
       const res = await fetchPublicUniversitiesPaginated({
         query: state.q || undefined,
         country: state.country !== "all" ? state.country : undefined,
+        city: state.city !== "all" ? state.city : undefined,
         studyLevel: state.studyLevel !== "all" ? state.studyLevel : undefined,
         scholarships: state.scholarships !== "all" ? state.scholarships : undefined,
         field: state.field !== "all" ? state.field : undefined,
@@ -233,6 +241,7 @@ export function UniversityDirectoryClient({
   const hasActiveFilters =
     state.q !== "" ||
     state.country !== "all" ||
+    state.city !== "all" ||
     state.studyLevel !== "all" ||
     state.scholarships !== "all" ||
     state.field !== "all" ||
@@ -286,15 +295,17 @@ export function UniversityDirectoryClient({
     <div className="space-y-6">
       <div className="lg:flex lg:items-start lg:gap-[28px]">
         <aside
-          className="w-[268px] shrink-0 hidden [@media(min-width:900px)]:sticky [@media(min-width:900px)]:top-[80px] [@media(min-width:900px)]:flex"
+          className="hidden shrink-0 [@media(min-width:900px)]:sticky [@media(min-width:900px)]:top-[80px] [@media(min-width:900px)]:flex"
         >
           <FiltersSidebar
             countries={filterOptions.countries}
             fields={filterOptions.fields}
             intakes={filterOptions.intakes}
             studyLevels={filterOptions.studyLevels}
+            cities={filterOptions.cities}
             values={{
               country: state.country,
+              city: state.city,
               studyLevel: state.studyLevel,
               scholarships: state.scholarships,
               field: state.field,
@@ -309,7 +320,7 @@ export function UniversityDirectoryClient({
           />
         </aside>
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <ResultsBar
             totalCount={dataToRender.total}
             showingFrom={showingFrom}
@@ -321,6 +332,7 @@ export function UniversityDirectoryClient({
             onFilterToggle={() => setMobileOpen((o) => !o)}
             activeFilterCount={
               (state.country !== "all" ? 1 : 0) +
+              (state.city !== "all" ? 1 : 0) +
               (state.studyLevel !== "all" ? 1 : 0) +
               (state.scholarships !== "all" ? 1 : 0) +
               (state.field !== "all" ? 1 : 0) +

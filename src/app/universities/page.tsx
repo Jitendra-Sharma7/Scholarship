@@ -33,6 +33,7 @@ export default async function UniversitiesPage({
   const limit = UNIVERSITY_PAGE_SIZE;
   const q = asString(params.q, "");
   const country = asString(params.country, "all");
+  const city = asString(params.city, "all");
   const studyLevel = asString(params.studyLevel, "all");
   const scholarships = asString(params.scholarships, "all");
   const field = asString(params.field, "all");
@@ -63,6 +64,7 @@ export default async function UniversitiesPage({
         includeScholarships: true,
         query: q || undefined,
         country: country !== "all" ? country : undefined,
+        city: city !== "all" ? city : undefined,
         studyLevel: studyLevel !== "all" ? studyLevel : undefined,
         scholarships: scholarships !== "all" ? scholarships : undefined,
         field: field !== "all" ? field : undefined,
@@ -92,6 +94,7 @@ export default async function UniversitiesPage({
         { value: "pg", label: "Postgraduate" },
         { value: "phd", label: "PhD / Doctoral" },
       ],
+      cities: [],
     };
     stats = { universities: 0, countries: 0, openScholarships: 0, totalCourses: 0 };
   }
@@ -101,7 +104,7 @@ export default async function UniversitiesPage({
   const totalPages = result?.totalPages ?? 1;
 
   return (
-    <div className="max-w-[1240px] mx-auto px-5 min-h-screen font-onest bg-[#F3F7FF]">
+    <div className="bg-secondary-50/50 min-h-screen py-8">
       <JsonLd
         data={itemListSchema({
           name: "Universities offering scholarships",
@@ -113,35 +116,38 @@ export default async function UniversitiesPage({
         })}
       />
 
-      <UniversityHero
-        totalUniversities={totalUniversities}
-        totalCourses={stats?.totalCourses ?? 0}
-        totalScholarships={stats?.openScholarships ?? 0}
-        searchValue={q}
-      />
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <UniversityHero
+          totalUniversities={totalUniversities}
+          totalCourses={stats?.totalCourses ?? 0}
+          totalScholarships={stats?.openScholarships ?? 0}
+          searchValue={q}
+        />
 
-      <UniversityDirectoryClient
-        universities={universities}
-        filterOptions={filterOptions}
-        totalUniversities={totalUniversities}
-        totalPages={totalPages}
-        currentPage={page}
-        filters={{
-          q,
-          country,
-          studyLevel,
-          scholarships,
-          field,
-          intake,
-          tuitionRange,
-          sort,
-          view,
-          category: "all",
-        }}
-        error={error}
-      />
+        <UniversityDirectoryClient
+          universities={universities}
+          filterOptions={filterOptions!}
+          totalUniversities={totalUniversities}
+          totalPages={totalPages}
+          currentPage={page}
+          filters={{
+            q,
+            country,
+            city,
+            studyLevel,
+            scholarships,
+            field,
+            intake,
+            tuitionRange,
+            sort,
+            view,
+            category: "all",
+          }}
+          error={error}
+        />
 
-      <DirectoryCta />
+        <DirectoryCta />
+      </div>
     </div>
   );
 }

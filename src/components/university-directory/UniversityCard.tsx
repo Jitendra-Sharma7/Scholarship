@@ -215,25 +215,25 @@ export function UniversityCard({ university }: UniversityCardProps) {
 
         {/* Info grid: ranking, tuition, courses, scholarships */}
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[11px] text-[#64748B] uppercase tracking-wider">Ranking</span>
             <span className="text-[13px] font-bold text-[#15264A]">
               {ranking ? `#${ranking}` : "\u2014"}
             </span>
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[11px] text-[#64748B] uppercase tracking-wider">Tuition/yr</span>
             <span className="text-[13px] font-bold text-[#15264A] truncate">
               {university.tuitionInfo || "\u2014"}
             </span>
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[11px] text-[#64748B] uppercase tracking-wider">Courses</span>
             <span className="text-[13px] font-bold text-[#15264A]">
               {university.popularFields.length}
             </span>
           </div>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <span className="text-[11px] text-[#64748B] uppercase tracking-wider">Scholarships</span>
             <span className="text-[13px] font-bold text-[#15264A]">
               {university.scholarshipCount}

@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement } from "react";
+import { cloneElement, useId } from "react";
 import {
   ChevronDown,
   Filter,
@@ -9,7 +9,7 @@ import {
   MapPin,
   DollarSign,
   Clock,
-  LayoutList,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +18,10 @@ interface FiltersSidebarProps {
   fields: string[];
   intakes: { id: string; name: string; slug: string }[];
   studyLevels: { value: string; label: string }[];
+  cities: string[];
   values: {
     country: string;
+    city: string;
     studyLevel: string;
     scholarships: string;
     field: string;
@@ -41,11 +43,27 @@ const TUITION_FILTERS: { value: string; label: string }[] = [
   { value: "high", label: "High ($30k+)" },
 ];
 
+const SCHOLARSHIP_FILTERS: { value: string; label: string; group: string }[] = [
+  { value: "all", label: "All universities", group: "All" },
+  { value: "with", label: "With scholarships", group: "Availability" },
+  { value: "without", label: "Without scholarships", group: "Availability" },
+  { value: "fully-funded", label: "Fully Funded Scholarships", group: "Funding Type" },
+  { value: "partial-tuition", label: "Partially Funded Scholarships", group: "Funding Type" },
+  { value: "stipend", label: "Monthly Stipend / Allowance", group: "Funding Type" },
+  { value: "mixed", label: "Mixed / Other Funding", group: "Funding Type" },
+  { value: "undergraduate", label: "Undergraduate Scholarships", group: "Study Level" },
+  { value: "masters", label: "Master's Scholarships", group: "Study Level" },
+  { value: "phd", label: "PhD / Doctoral Scholarships", group: "Study Level" },
+];
+
+const STUDY_LEVEL_ALL = [{ value: "all", label: "All study levels" }];
+
 export function FiltersSidebar({
   countries,
   fields,
   intakes,
   studyLevels,
+  cities,
   values,
   onFilterChange,
   onClearAll,
@@ -57,13 +75,14 @@ export function FiltersSidebar({
     <>
       {/* Desktop: sticky filter sidebar */}
       <div
-        className="w-[268px] shrink-0 hidden [@media(min-width:900px)]:sticky [@media(min-width:900px)]:top-[80px] [@media(min-width:900px)]:flex [@media(min-width:900px)]:flex-col [@media(min-width:900px)]:gap-6"
+        className="hidden w-[268px] shrink-0 [@media(min-width:900px)]:sticky [@media(min-width:900px)]:top-[80px] [@media(min-width:900px)]:flex [@media(min-width:900px)]:flex-col"
       >
         <FilterPanel
           countries={countries}
           fields={fields}
           intakes={intakes}
           studyLevels={studyLevels}
+          cities={cities}
           values={values}
           onFilterChange={onFilterChange}
           onClearAll={onClearAll}
@@ -79,7 +98,7 @@ export function FiltersSidebar({
             onClick={onToggleMobile}
             aria-hidden="true"
           />
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-[380px] bg-[#FFFFFF] border-l border-[#E2E8F0] shadow-2xl flex flex-col">
+          <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[380px] flex-col border-l border-[#E2E8F0] bg-[#FFFFFF] shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4">
               <h2 className="text-[17px] font-semibold text-[#15264A]">Filters</h2>
               <button
@@ -91,12 +110,13 @@ export function FiltersSidebar({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-5">
+            <div className="flex-1 overflow-y-auto px-5 py-5">
               <FilterPanel
                 countries={countries}
                 fields={fields}
                 intakes={intakes}
                 studyLevels={studyLevels}
+                cities={cities}
                 values={values}
                 onFilterChange={onFilterChange}
                 onClearAll={onClearAll}
@@ -104,12 +124,12 @@ export function FiltersSidebar({
                 mobile
               />
             </div>
-            <div className="border-t border-[#E2E8F0] p-4 gap-3">
+            <div className="flex gap-3 border-t border-[#E2E8F0] p-4">
               <button
                 type="button"
                 onClick={onClearAll}
                 disabled={!hasActiveFilters}
-                className="flex-1 rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-4 py-2.5 text-sm font-medium text-[#15264A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
+                className="flex-1 rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-4 py-2.5 text-sm font-medium text-[#15264A] transition-colors hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Clear all
               </button>
@@ -133,6 +153,7 @@ interface FilterPanelProps {
   fields: string[];
   intakes: { id: string; name: string; slug: string }[];
   studyLevels: { value: string; label: string }[];
+  cities: string[];
   values: FiltersSidebarProps["values"];
   onFilterChange: (patch: Partial<FiltersSidebarProps["values"]>) => void;
   onClearAll: () => void;
@@ -145,17 +166,21 @@ function FilterPanel({
   fields,
   intakes,
   studyLevels,
+  cities,
   values,
   onFilterChange,
   onClearAll,
   hasActiveFilters,
   mobile = false,
 }: FilterPanelProps) {
+  const id = useId();
+  const controlId = (name: string) => `${id}-filter-${name}`;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-[#64748B]" />
-        <span className="text-[12px] font-semibold text-[#64748B] uppercase tracking-wider">
+        <Filter className="h-4 w-4 shrink-0 text-[#64748B]" />
+        <span className="text-[12px] font-semibold uppercase tracking-wider text-[#64748B]">
           Filters
         </span>
         {hasActiveFilters && (
@@ -165,9 +190,9 @@ function FilterPanel({
         )}
       </div>
 
-      <FilterField label="Country" icon={<Globe className="h-4 w-4" />} id="filter-country">
+      <FilterField label="Country" icon={<Globe className="h-4 w-4" />} id={controlId("country")}>
         <select
-          id="filter-country"
+          id={controlId("country")}
           value={values.country}
           onChange={(e) => onFilterChange({ country: e.target.value })}
         >
@@ -180,9 +205,28 @@ function FilterPanel({
         </select>
       </FilterField>
 
-      <FilterField label="Subject area" icon={<MapPin className="h-4 w-4" />} id="filter-field">
+      <FilterField label="City" icon={<MapPin className="h-4 w-4" />} id={controlId("city")} showChevron={false}>
+        <>
+          <input
+            type="text"
+            id={controlId("city")}
+            list={`${controlId("city")}-options`}
+            value={values.city === "all" ? "" : values.city}
+            onChange={(e) => onFilterChange({ city: e.target.value || "all" })}
+            placeholder="Enter city name"
+            className="w-full min-w-0 appearance-none rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] pl-3 pr-9 py-2.5 text-sm text-[#15264A] shadow-sm transition-colors focus:border-[#1747D1] focus:outline-none focus:ring-2 focus:ring-[#1747D1]/20 focus:ring-offset-1"
+          />
+          <datalist id={`${controlId("city")}-options`}>
+            {cities.map((city) => (
+              <option key={city} value={city} />
+            ))}
+          </datalist>
+        </>
+      </FilterField>
+
+      <FilterField label="Subject area" icon={<MapPin className="h-4 w-4" />} id={controlId("field")}>
         <select
-          id="filter-field"
+          id={controlId("field")}
           value={values.field}
           onChange={(e) => onFilterChange({ field: e.target.value })}
         >
@@ -195,9 +239,31 @@ function FilterPanel({
         </select>
       </FilterField>
 
-      <FilterField label="Tuition per year" icon={<DollarSign className="h-4 w-4" />} id="filter-tuition">
+      <FilterField
+        label="Study level"
+        icon={<GraduationCap className="h-4 w-4" />}
+        id={controlId("study-level")}
+      >
         <select
-          id="filter-tuition"
+          id={controlId("study-level")}
+          value={values.studyLevel}
+          onChange={(e) => onFilterChange({ studyLevel: e.target.value })}
+        >
+          {[...STUDY_LEVEL_ALL, ...studyLevels].map((level) => (
+            <option key={level.value} value={level.value}>
+              {level.label}
+            </option>
+          ))}
+        </select>
+      </FilterField>
+
+      <FilterField
+        label="Tuition per year"
+        icon={<DollarSign className="h-4 w-4" />}
+        id={controlId("tuition")}
+      >
+        <select
+          id={controlId("tuition")}
           value={values.tuitionRange}
           onChange={(e) => onFilterChange({ tuitionRange: e.target.value })}
         >
@@ -209,99 +275,73 @@ function FilterPanel({
         </select>
       </FilterField>
 
-      <FilterField label="Popular categories" icon={<LayoutList className="h-4 w-4" />} id="filter-study-level">
-        <div className="flex gap-2">
-          {[{ value: "all", label: "All" }, ...studyLevels].map((chip) => {
-            const selected =
-              chip.value === "all"
-                ? values.studyLevel === "all"
-                : values.studyLevel === chip.value;
-            return (
-              <button
-                key={chip.value}
-                type="button"
-                onClick={() => onFilterChange({ studyLevel: chip.value })}
-                aria-pressed={selected}
-                className={cn(
-                  "flex-1 cursor-pointer rounded-full border py-1.5 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]",
-                  selected
-                    ? "border-[#1747D1] bg-[#1747D1] text-[#FFFFFF]"
-                    : "border-[#E2E8F0] bg-[#FFFFFF] text-[#15264A] hover:bg-[#F3F7FF] hover:text-[#15264A]",
-                )}
-              >
-                {chip.label}
-              </button>
-            );
-          })}
-        </div>
+      <FilterField
+        label="Academic intake"
+        icon={<Clock className="h-4 w-4" />}
+        id={controlId("intake")}
+      >
+        <select
+          id={controlId("intake")}
+          value={values.intake}
+          onChange={(e) => onFilterChange({ intake: e.target.value })}
+        >
+          <option value="all">All intakes</option>
+          {intakes.map((intake) => (
+            <option key={intake.id} value={intake.slug}>
+              {intake.name}
+            </option>
+          ))}
+        </select>
       </FilterField>
 
-      <FilterField label="Intakes" icon={<Clock className="h-4 w-4" />} id="filter-intake">
-        <div className="flex gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => onFilterChange({ intake: "all" })}
-            aria-pressed={values.intake === "all"}
-            className={cn(
-              "cursor-pointer rounded-full border py-1.5 px-3 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]",
-              values.intake === "all"
-                ? "border-[#1747D1] bg-[#1747D1] text-[#FFFFFF]"
-                : "border-[#E2E8F0] bg-[#FFFFFF] text-[#15264A] hover:bg-[#F3F7FF] hover:text-[#15264A]",
-            )}
-          >
-            All
-          </button>
-          {intakes.map((intake) => {
-            const selected = values.intake === intake.slug;
-            return (
-              <button
-                key={intake.id}
-                type="button"
-                onClick={() => onFilterChange({ intake: intake.slug })}
-                aria-pressed={selected}
-                className={cn(
-                  "cursor-pointer rounded-full border py-1.5 px-3 text-[12px] font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]",
-                  selected
-                    ? "border-[#1747D1] bg-[#1747D1] text-[#FFFFFF]"
-                    : "border-[#E2E8F0] bg-[#FFFFFF] text-[#15264A] hover:bg-[#F3F7FF] hover:text-[#15264A]",
-                )}
-              >
-                {intake.name}
-              </button>
-            );
-          })}
-        </div>
+      <FilterField
+        label="Scholarship type"
+        icon={<Filter className="h-4 w-4" />}
+        id={controlId("scholarships")}
+      >
+        <select
+          id={controlId("scholarships")}
+          value={values.scholarships}
+          onChange={(e) => onFilterChange({ scholarships: e.target.value })}
+        >
+          <optgroup label="All">
+            {SCHOLARSHIP_FILTERS.filter((s) => s.group === "All").map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Availability">
+            {SCHOLARSHIP_FILTERS.filter((s) => s.group === "Availability").map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Funding Type">
+            {SCHOLARSHIP_FILTERS.filter((s) => s.group === "Funding Type").map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Study Level">
+            {SCHOLARSHIP_FILTERS.filter((s) => s.group === "Study Level").map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </optgroup>
+        </select>
       </FilterField>
-
-      <div className="border-t border-[#E2E8F0] pt-4">
-        <div className="flex items-center gap-3">
-          <input
-            id="filter-scholarships"
-            type="checkbox"
-            checked={values.scholarships === "with"}
-            onChange={() =>
-              onFilterChange({
-                scholarships: values.scholarships === "with" ? "all" : "with",
-              })
-            }
-            className="rounded-[10px] border-[#E2E8F0] bg-[#FFFFFF] text-[#1747D1] focus:ring-0 h-5 w-5 shrink-0 appearance-none checked:bg-[#1747D1] checked:border-[#1747D1]"
-          />
-          <label
-            htmlFor="filter-scholarships"
-            className="text-[14px] leading-1.5 text-[#15264A] cursor-pointer"
-          >
-            Only with scholarships
-          </label>
-        </div>
-      </div>
 
       {!mobile && (
-        <div className="pt-4">
+        <div className="pt-1">
           <button
             type="button"
             onClick={onClearAll}
             disabled={!hasActiveFilters}
-            className="w-full rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-4 py-2.5 text-sm font-medium text-[#15264A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF]"
+            className="w-full rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] px-4 py-2.5 text-sm font-medium text-[#15264A] transition-colors hover:bg-[#F3F7FF] focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#F3F7FF] disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reset all
           </button>
@@ -314,6 +354,7 @@ function FilterPanel({
 function activeFilterCount(values: FiltersSidebarProps["values"]): number {
   return (
     (values.country !== "all" ? 1 : 0) +
+    (values.city !== "all" ? 1 : 0) +
     (values.field !== "all" ? 1 : 0) +
     (values.tuitionRange !== "all" ? 1 : 0) +
     (values.studyLevel !== "all" ? 1 : 0) +
@@ -327,36 +368,40 @@ function FilterField({
   icon,
   id,
   children,
+  showChevron = true,
 }: {
   label: string;
   icon: React.ReactNode;
   id: string;
-  children: React.ReactElement<HTMLSelectElement>;
+  children: React.ReactElement<HTMLSelectElement | HTMLInputElement>;
+  showChevron?: boolean;
 }) {
   const selectClasses =
-    "w-full appearance-none rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] pl-3 pr-10 py-2.5 text-sm text-[#15264A] shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 focus:border-[#1747D1] focus:outline-none focus:ring-2 focus:ring-[#1747D1]/20 focus:ring-offset-1";
+    "w-full min-w-0 appearance-none rounded-[10px] border border-[#E2E8F0] bg-[#FFFFFF] pl-3 pr-9 py-2.5 text-sm text-[#15264A] shadow-sm transition-colors focus:border-[#1747D1] focus:outline-none focus:ring-2 focus:ring-[#1747D1]/20 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50";
+
+  const isSelect = children.type === "select";
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       <div className="flex items-center gap-2">
         {icon}
         <label
           htmlFor={id}
-          className="text-[12px] font-semibold text-[#64748B] uppercase tracking-wider"
+          className="text-[12px] font-semibold uppercase tracking-wider text-[#64748B]"
         >
           {label}
         </label>
       </div>
-      <div className="relative">
+      <div className="relative min-w-0">
         {cloneElement(children, {
           className: cn(
             selectClasses,
             (children.props as { className?: string }).className,
           ),
         })}
-        <ChevronDown
-          className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#64748B] pointer-events-none"
-        />
+        {isSelect && showChevron && (
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]" />
+        )}
       </div>
     </div>
   );

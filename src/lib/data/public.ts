@@ -256,6 +256,7 @@ export interface UniversityFilterOptions {
   fields: string[];
   intakes: { id: string; name: string; slug: string }[];
   studyLevels: { value: string; label: string }[];
+  cities: string[];
 }
 
 export interface PublicProvider {
@@ -545,11 +546,13 @@ export interface GetPublicUniversitiesOptions {
   query?: string;
   /** Country name filter. */
   country?: string;
+  /** City name filter. */
+  city?: string;
   /** Ranking tier: "top10" | "top50" | "top100" | "top500" | "unranked" | "all". */
   ranking?: string;
   /** Study level: "ug" | "pg" | "phd". */
   studyLevel?: string;
-  /** "with" | "without" | "all". */
+  /** "with" | "without" | "fully-funded" | "partial-tuition" | "stipend" | "mixed" | "undergraduate" | "masters" | "phd" | "all". */
   scholarships?: string;
   /** Subject/field name. */
   field?: string;
@@ -576,6 +579,7 @@ export async function getPublicUniversities({
   includeScholarships = false,
   query,
   country,
+  city,
   ranking,
   studyLevel,
   scholarships,
@@ -609,6 +613,10 @@ export async function getPublicUniversities({
     ];
   }
 
+  if (city) {
+    where.city = { equals: city, mode: "insensitive" };
+  }
+
   if (field) {
     where.popularFields = { has: field };
   }
@@ -632,6 +640,24 @@ export async function getPublicUniversities({
       }
       if (intake) {
         cond.intakes = { some: { intake: { slug: intake } } };
+      }
+      if (scholarships && scholarships !== "all" && scholarships !== "with") {
+        const FUNDING_MAP: Record<string, string> = {
+          "fully-funded": "FULLY_FUNDED",
+          "partial-tuition": "PARTIAL_TUITION",
+          "stipend": "STIPEND",
+          "mixed": "MIXED",
+        };
+        const DEGREE_MAP: Record<string, string[]> = {
+          "undergraduate": ["Undergraduate"],
+          "masters": ["Master's", "MBA"],
+          "phd": ["PhD", "Doctoral"],
+        };
+        if (scholarships in FUNDING_MAP) {
+          cond.fundingType = FUNDING_MAP[scholarships] as "FULLY_FUNDED" | "PARTIAL_TUITION" | "STIPEND" | "MIXED";
+        } else if (scholarships in DEGREE_MAP) {
+          cond.degreeLevels = { hasSome: DEGREE_MAP[scholarships] };
+        }
       }
       return { some: cond };
     })();
@@ -824,6 +850,7 @@ export async function getPublicUniversitiesList({
   includeScholarships = false,
   query,
   country,
+  city,
   ranking,
   studyLevel,
   scholarships,
@@ -856,6 +883,10 @@ export async function getPublicUniversitiesList({
     ];
   }
 
+  if (city) {
+    where.city = { equals: city, mode: "insensitive" };
+  }
+
   if (field) {
     where.popularFields = { has: field };
   }
@@ -879,6 +910,24 @@ export async function getPublicUniversitiesList({
       }
       if (intake) {
         cond.intakes = { some: { intake: { slug: intake } } };
+      }
+      if (scholarships && scholarships !== "all" && scholarships !== "with") {
+        const FUNDING_MAP: Record<string, string> = {
+          "fully-funded": "FULLY_FUNDED",
+          "partial-tuition": "PARTIAL_TUITION",
+          "stipend": "STIPEND",
+          "mixed": "MIXED",
+        };
+        const DEGREE_MAP: Record<string, string[]> = {
+          "undergraduate": ["Undergraduate"],
+          "masters": ["Master's", "MBA"],
+          "phd": ["PhD", "Doctoral"],
+        };
+        if (scholarships in FUNDING_MAP) {
+          cond.fundingType = FUNDING_MAP[scholarships] as "FULLY_FUNDED" | "PARTIAL_TUITION" | "STIPEND" | "MIXED";
+        } else if (scholarships in DEGREE_MAP) {
+          cond.degreeLevels = { hasSome: DEGREE_MAP[scholarships] };
+        }
       }
       return { some: cond };
     })();
@@ -1035,7 +1084,7 @@ export async function getPublicUniversityFilterOptions(): Promise<UniversityFilt
     getPublicIntakes(),
     prisma.university.findMany({
       where: VISIBLE,
-      select: { popularFields: true },
+      select: { popularFields: true, city: true },
     }),
   ]);
 
@@ -1050,13 +1099,17 @@ export async function getPublicUniversityFilterOptions(): Promise<UniversityFilt
     ...new Set(universityRows.flatMap((row) => (row.popularFields ?? []).filter(Boolean))),
   ].sort((a, b) => a.localeCompare(b));
 
+  const cities = [
+    ...new Set(universityRows.flatMap((row) => (row.city ? [row.city] : []).filter(Boolean))),
+  ].sort((a, b) => a.localeCompare(b));
+
   const studyLevels: { value: string; label: string }[] = [
     { value: "ug", label: "Undergraduate" },
     { value: "pg", label: "Postgraduate" },
     { value: "phd", label: "PhD / Doctoral" },
   ];
 
-  return { countries, types, fields, intakes, studyLevels };
+  return { countries, types, fields, intakes, studyLevels, cities };
 }
 
 export async function getPublicUniversityById(id: string): Promise<PublicUniversity | null> {
