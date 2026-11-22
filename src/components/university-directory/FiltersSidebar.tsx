@@ -1,6 +1,6 @@
 "use client";
 
-import { cloneElement, useId } from "react";
+import React, { cloneElement, useId } from "react";
 import {
   ChevronDown,
   Filter,
@@ -393,12 +393,16 @@ function FilterField({
         </label>
       </div>
       <div className="relative min-w-0">
-        {cloneElement(children, {
-          className: cn(
-            selectClasses,
-            (children.props as { className?: string }).className,
-          ),
-        })}
+        {children.type === React.Fragment ? (
+          children
+        ) : (
+          cloneElement(children, {
+            className: cn(
+              selectClasses,
+              (children.props as { className?: string }).className,
+            ),
+          })
+        )}
         {isSelect && showChevron && (
           <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]" />
         )}

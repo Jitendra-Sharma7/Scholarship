@@ -59,6 +59,7 @@ function buildCsp(nonce: string): string {
   const scriptSrc = [
     "'self'",
     `'nonce-${nonce}'`,
+    ...(isDev ? ["'unsafe-eval'"] : []),
     "https://pagead2.googlesyndication.com",
     "https://googleads.g.doubleclick.net",
   ].join(" ");
