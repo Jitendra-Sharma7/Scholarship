@@ -143,6 +143,8 @@ export function DirectoryNavbar({ className }: DirectoryNavbarProps) {
                 <div
                   key={item.label}
                   className="relative"
+                  onMouseEnter={() => hasDropdown && setOpenDropdown(item.label)}
+                  onMouseLeave={() => hasDropdown && setOpenDropdown(null)}
                 >
                   <button
                     type="button"
