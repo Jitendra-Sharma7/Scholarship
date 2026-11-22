@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import { cn } from "@/lib/utils";
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -8,18 +8,20 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Input({ label, error, hint, className, id, ...props }: InputProps) {
+  const generatedId = useId();
+  const inputId = id || generatedId;
   return (
     <div className="w-full">
       {label && (
         <label
-          htmlFor={id}
+          htmlFor={inputId}
           className="mb-1.5 block text-sm font-medium text-gray-700"
         >
           {label}
         </label>
       )}
       <input
-        id={id}
+        id={inputId}
         className={cn(
           "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 disabled:bg-gray-50 disabled:text-gray-400",
           error && "border-red-500 focus:border-red-500 focus:ring-red-500",
@@ -44,18 +46,20 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 }
 
 export function Textarea({ label, error, className, id, ...props }: TextareaProps) {
+  const generatedId = useId();
+  const inputId = id || generatedId;
   return (
     <div className="w-full">
       {label && (
         <label
-          htmlFor={id}
+          htmlFor={inputId}
           className="mb-1.5 block text-sm font-medium text-gray-700"
         >
           {label}
         </label>
       )}
       <textarea
-        id={id}
+        id={inputId}
         className={cn(
           "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 disabled:bg-gray-50",
           error && "border-red-500 focus:border-red-500 focus:ring-red-500",
@@ -80,18 +84,20 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export function Select({ label, error, options, className, id, ...props }: SelectProps) {
+  const generatedId = useId();
+  const inputId = id || generatedId;
   return (
     <div className="w-full">
       {label && (
         <label
-          htmlFor={id}
+          htmlFor={inputId}
           className="mb-1.5 block text-sm font-medium text-gray-700"
         >
           {label}
         </label>
       )}
       <select
-        id={id}
+        id={inputId}
         className={cn(
           "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-1 disabled:bg-gray-50",
           error && "border-red-500 focus:border-red-500 focus:ring-red-500",

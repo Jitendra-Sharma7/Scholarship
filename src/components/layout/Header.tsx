@@ -29,13 +29,12 @@ const navItems: NavItem[] = [
     icon: GraduationCap,
     dropdown: [
       { label: "All Scholarships", href: "/scholarships" },
-      { label: "Fully Funded Scholarships", href: "/scholarships?funding=fully" },
-      { label: "Partially Funded Scholarships", href: "/scholarships?funding=partially" },
-      { label: "Undergraduate Scholarships", href: "/scholarships?level=undergraduate" },
-      { label: "Master's Scholarships", href: "/scholarships?level=masters" },
-      { label: "PhD Scholarships", href: "/scholarships?level=phd" },
-      { label: "Postdoctoral Scholarships", href: "/scholarships?level=postdoc" },
-      { label: "Government Scholarships", href: "/scholarships?type=government" },
+      { label: "Fully Funded Scholarships", href: "/scholarships?funding=fully-funded" },
+      { label: "Partially Funded Scholarships", href: "/scholarships?funding=partial-tuition" },
+      { label: "Undergraduate Scholarships", href: "/scholarships?degree=Undergraduate" },
+      { label: "Master's Scholarships", href: "/scholarships?degree=Master's" },
+      { label: "PhD Scholarships", href: "/scholarships?degree=PhD" },
+      { label: "Doctoral Scholarships", href: "/scholarships?degree=Doctoral" },
     ],
   },
   {
@@ -44,10 +43,10 @@ const navItems: NavItem[] = [
     icon: Building2,
     dropdown: [
       { label: "Top Universities", href: "/universities?sort=ranking" },
-      { label: "Universities by Country", href: "/universities/by-country" },
-      { label: "Universities by Ranking", href: "/universities/by-ranking" },
-      { label: "University Scholarships", href: "/universities/scholarships" },
-      { label: "Popular Universities", href: "/universities?sort=popular" },
+      { label: "Universities by Country", href: "/universities?sort=country" },
+      { label: "Universities by Ranking", href: "/universities?sort=ranking" },
+      { label: "University Scholarships", href: "/universities" },
+      { label: "Popular Universities", href: "/universities?sort=scholarships" },
     ],
   },
   {
@@ -55,12 +54,6 @@ const navItems: NavItem[] = [
     href: "/countries",
     icon: Globe,
     dropdown: [
-      { label: "Scholarships in United Kingdom", href: "/countries/united-kingdom" },
-      { label: "Scholarships in USA", href: "/countries/usa" },
-      { label: "Scholarships in Canada", href: "/countries/canada" },
-      { label: "Scholarships in Australia", href: "/countries/australia" },
-      { label: "Scholarships in Germany", href: "/countries/germany" },
-      { label: "Scholarships in Europe", href: "/countries/europe" },
       { label: "View All Countries", href: "/countries" },
     ],
   },
@@ -69,14 +62,7 @@ const navItems: NavItem[] = [
     href: "/fields",
     icon: BookOpen,
     dropdown: [
-      { label: "Engineering & Technology", href: "/fields/engineering-technology" },
-      { label: "Computer Science & IT", href: "/fields/computer-science-it" },
-      { label: "Business & Management", href: "/fields/business-management" },
-      { label: "Medicine & Health Sciences", href: "/fields/medicine-health" },
-      { label: "Social Sciences", href: "/fields/social-sciences" },
-      { label: "Arts & Humanities", href: "/fields/arts-humanities" },
-      { label: "Natural Sciences", href: "/fields/natural-sciences" },
-      { label: "Law", href: "/fields/law" },
+      { label: "View All Fields", href: "/fields" },
     ],
   },
   {
@@ -84,11 +70,7 @@ const navItems: NavItem[] = [
     href: "/fully-funded",
     icon: Award,
     dropdown: [
-      { label: "Fully Funded Bachelor's", href: "/fully-funded?level=bachelors" },
-      { label: "Fully Funded Master's", href: "/fully-funded?level=masters" },
-      { label: "Fully Funded PhD", href: "/fully-funded?level=phd" },
-      { label: "Government-Funded Scholarships", href: "/fully-funded?type=government" },
-      { label: "International Scholarships", href: "/fully-funded?type=international" },
+      { label: "All Fully Funded", href: "/fully-funded" },
     ],
   },
   {
@@ -96,12 +78,7 @@ const navItems: NavItem[] = [
     href: "/resources",
     icon: FileText,
     dropdown: [
-      { label: "Scholarship Guides", href: "/resources/guides" },
-      { label: "Application Tips", href: "/resources/application-tips" },
-      { label: "SOP & Personal Statement", href: "/resources/sop-personal-statement" },
-      { label: "Recommendation Letters", href: "/resources/recommendation-letters" },
-      { label: "IELTS & TOEFL Preparation", href: "/resources/ielts-toefl" },
-      { label: "Visa Guides", href: "/resources/visa-guides" },
+      { label: "Scholarship Guides", href: "/resources" },
       { label: "FAQs", href: "/faq" },
     ],
   },
@@ -296,7 +273,11 @@ export function Header() {
             {isAuthenticated ? (
               <Flex align="center" gap="sm">
                 <Link href="/dashboard">
-                  <button className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-secondary-100">
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 rounded-lg p-1.5 hover:bg-secondary-100"
+                    aria-label={`Profile for ${userName || "User"}`}
+                  >
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-sm font-semibold text-primary-700">
                       {userName ? userName.charAt(0).toUpperCase() : "U"}
                     </div>

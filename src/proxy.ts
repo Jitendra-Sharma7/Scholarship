@@ -1,19 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Hides the read-only JSON API from ordinary site visitors.
+ * Request middleware for the application.
  *
- * The browser no longer uses `/api/*` at all: every public page is a server
- * component reading Prisma directly, and every form posts through a server
- * action. These routes remain for external consumers and the verification
- * scripts, which is why they are gated rather than deleted.
+ * Two concerns are handled here:
  *
- * A request is allowed when it carries the shared API key, or when it comes
- * from the machine the app is running on — that second case is what lets the
- * verification suites and local development work without a key.
+ *  1. Security headers on every response (defense in depth).
+ *  2. Gating the read-only `/api/public/*` JSON API so it is only reachable
+ *     from localhost or with a valid API key.
  *
- * `/api/auth/*` is deliberately untouched: those are the OAuth start and
- * callback routes, which the browser has to reach by redirect.
+ * `/api/auth/*` (OAuth) is intentionally left untouched so the browser can
+ * reach it by redirect.
  */
 
 const API_KEY = process.env.PUBLIC_API_KEY;
@@ -36,6 +33,74 @@ function hasValidKey(request: NextRequest) {
   return provided === API_KEY || provided === `Bearer ${API_KEY}`;
 }
 
+const isDev = process.env.NODE_ENV === "development";
+
+/** Security headers applied to every response. */
+const SECURITY_HEADERS: Record<string, string> = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy":
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()",
+};
+
+/**
+ * Content Security Policy. Keeps the site functional while restricting where
+ * scripts, styles, images and frames can come from.
+ *
+ * Inline styles and scripts are NOT allowed: Tailwind classes are used instead
+ * of `style=""`, and all interactivity is in bundled assets.
+ */
+const CSP_DIRECTIVES: Record<string, string> = {
+  "default-src": "'self'",
+  "script-src": [
+    "'self'",
+    "https://pagead2.googlesyndication.com",
+    "https://googleads.g.doubleclick.net",
+  ].join(" "),
+  "script-src-elem": [
+    "'self'",
+    "https://pagead2.googlesyndication.com",
+    "https://googleads.g.doubleclick.net",
+  ].join(" "),
+  "style-src": ["'self'", "'unsafe-inline'"].join(" "),
+  "img-src": ["'self'", "data:", "https:"].join(" "),
+  "font-src": ["'self'", "https://fonts.gstatic.com"].join(" "),
+  "connect-src": [
+    "'self'",
+    "https://accounts.google.com",
+    "https://oauth2.googleapis.com",
+    "https://appleid.apple.com",
+  ].join(" "),
+  "frame-src": ["https://pagead2.googlesyndication.com"].join(" "),
+  "object-src": "'none'",
+  "base-uri": "'self'",
+  "form-action": "'self'",
+  "frame-ancestors": "'none'",
+};
+
+function cspHeader(): string {
+  return Object.entries(CSP_DIRECTIVES)
+    .map(([key, value]) => `${key} ${value}`)
+    .join("; ");
+}
+
+/** HSTS only makes sense over HTTPS; skip it in local development. */
+function hstsHeader(): string | null {
+  if (isDev) return null;
+  return "max-age=31536000; includeSubDomains; preload";
+}
+
+function applySecurityHeaders(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    response.headers.set(key, value);
+  }
+  response.headers.set("Content-Security-Policy", cspHeader());
+  const hsts = hstsHeader();
+  if (hsts) response.headers.set("Strict-Transport-Security", hsts);
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -43,18 +108,17 @@ export function proxy(request: NextRequest) {
     if (!hasValidKey(request) && !isLocal(request)) {
       return hidden();
     }
-    // A key can be copied out of a browser's history or a proxy log, so the
-    // response is marked as unindexable and never cached.
     const response = NextResponse.next();
     response.headers.set("X-Robots-Tag", "noindex, nofollow");
     response.headers.set("Cache-Control", "private, no-store");
-    return response;
+    return applySecurityHeaders(response);
   }
 
-  return NextResponse.next();
+  return applySecurityHeaders(NextResponse.next());
 }
 
 export const config = {
-  // Everything under /api except the OAuth routes, which must stay reachable.
-  matcher: ["/api/public/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|ico|webp)$).*)",
+  ],
 };

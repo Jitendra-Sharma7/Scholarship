@@ -191,6 +191,13 @@ export default async function RootLayout({
     >
         <body className="font-sans antialiased bg-white text-secondary-900">
 
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-secondary-900 focus:border-secondary-900 focus:rounded"
+          >
+            Skip to main content
+          </a>
+
           {/* Website structured data */}
         <JsonLd data={webSiteSchema()} />
 

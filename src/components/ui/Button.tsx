@@ -18,6 +18,7 @@ export function Button({
   className,
   children,
   disabled,
+  type = "button",
   ...props
 }: ButtonProps) {
   const variants = {
@@ -45,6 +46,7 @@ export function Button({
         className
       )}
       disabled={disabled || loading}
+      type={type}
       {...props}
     >
       {loading && (

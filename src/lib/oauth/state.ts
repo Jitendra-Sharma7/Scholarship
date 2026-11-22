@@ -23,6 +23,9 @@ function secret(): string {
   if (!value || value.length < 16) {
     throw new Error("NEXTAUTH_SECRET is missing or too short. OAuth state cannot be signed.");
   }
+  if (/^(change-me|replace-with|your-|example|placeholder)/i.test(value)) {
+    throw new Error("NEXTAUTH_SECRET is still a placeholder value. Set a real secret in .env.");
+  }
   return value;
 }
 

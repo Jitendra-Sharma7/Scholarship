@@ -78,9 +78,8 @@ export function Footer({ branding = SITE_BRANDING_FALLBACK }: { branding?: SiteB
           <LinkGroup
             title="Resources"
             items={[
-              { label: "Scholarship Guide", href: "/guides" },
-              { label: "Study in UK", href: "/countries/gb" },
-              { label: "Visa Guidance", href: "/resources/visa" },
+              { label: "Scholarship Guides", href: "/resources" },
+              { label: "Study in UK", href: "/countries" },
               { label: "FAQs", href: "/faq" },
               { label: "Blog", href: "/blog" },
             ]}

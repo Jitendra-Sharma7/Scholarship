@@ -193,7 +193,7 @@ export default async function HomePage() {
             {trustIndicators.map((item, index) => (
               <div key={index} className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-secondary-100 text-center sm:text-left">
                 <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-success-50 text-success-600">
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
                   <p className="font-semibold text-secondary-900">{item.label}</p>
@@ -211,7 +211,7 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 gap-6 text-center md:grid-cols-4">
               <div className="p-4 sm:p-6">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 text-primary-600 mx-auto mb-4">
-                  <Award className="h-6 w-6" />
+                  <Award className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="text-3xl sm:text-4xl font-extrabold text-primary-600">
                   {stats.openScholarships.toLocaleString()}+
@@ -222,7 +222,7 @@ export default async function HomePage() {
               </div>
               <div className="p-4 sm:p-6">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-100 text-secondary-600 mx-auto mb-4">
-                  <Globe className="h-6 w-6" />
+                  <Globe className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="text-3xl sm:text-4xl font-extrabold text-secondary-900">
                   {stats.countries}+
@@ -233,7 +233,7 @@ export default async function HomePage() {
               </div>
               <div className="p-4 sm:p-6">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-success-100 text-success-600 mx-auto mb-4">
-                  <Building2 className="h-6 w-6" />
+                  <Building2 className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="text-3xl sm:text-4xl font-extrabold text-success-600">
                   {stats.universities}+
@@ -244,7 +244,7 @@ export default async function HomePage() {
               </div>
               <div className="p-4 sm:p-6">
                 <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 text-primary-600 mx-auto mb-4">
-                  <ShieldCheck className="h-6 w-6" />
+                  <ShieldCheck className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="text-3xl sm:text-4xl font-extrabold text-primary-600">
                   {stats.verifiedShare}%

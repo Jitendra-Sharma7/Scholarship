@@ -88,7 +88,9 @@ const EMPTY_PROFILE: UserProfile = {
 
 /** The subset of state written to localStorage. */
 interface PersistedState {
-  isAuthenticated: boolean;
+  // isAuthenticated is deliberately NOT persisted: it is UI state only and
+  // must never be trusted from client storage. Actual authorization is
+  // always verified server-side against the session cookie.
   user: UserProfile | null;
   savedScholarshipIds: string[];
   savedUniversityIds: string[];
@@ -234,7 +236,7 @@ export const useStore = create<AppState>()(
         const saved = (persisted ?? {}) as Partial<PersistedState>;
         return {
           ...current,
-          isAuthenticated: Boolean(saved.isAuthenticated && saved.user),
+          isAuthenticated: false,
           user: saved.user
             ? { ...EMPTY_PROFILE, ...saved.user }
             : null,

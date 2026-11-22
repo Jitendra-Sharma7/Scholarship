@@ -42,6 +42,11 @@ function sessionSecret(): string {
       "NEXTAUTH_SECRET is missing or too short. Sessions cannot be signed without it."
     );
   }
+  if (/^(change-me|replace-with|your-|example|placeholder)/i.test(secret)) {
+    throw new Error(
+      "NEXTAUTH_SECRET is still a placeholder value. Generate a secret with `openssl rand -base64 32` and set it in .env."
+    );
+  }
   return secret;
 }
 
