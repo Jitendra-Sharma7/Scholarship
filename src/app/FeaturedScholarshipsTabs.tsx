@@ -2,42 +2,30 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, GraduationCap, Award, BookOpen } from "lucide-react";
+import { ArrowRight, CalendarClock, Clock } from "lucide-react";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import type { PublicScholarship } from "@/lib/data/public";
 import { Container } from "@/components/layout/Layout";
 
 const categories = [
-  { id: "all", label: "All", icon: GraduationCap },
-  { id: "fully-funded", label: "Fully Funded", icon: Award },
-  { id: "undergraduate", label: "Undergraduate", icon: BookOpen },
-  { id: "masters", label: "Master's", icon: GraduationCap },
-  { id: "phd", label: "PhD", icon: Award },
+  { id: "upcoming", label: "Upcoming Scholarships", icon: CalendarClock },
+  { id: "recently-updated", label: "Recently Updated Scholarships", icon: Clock },
 ];
 
 interface FeaturedScholarshipsTabsProps {
-  initialScholarships: PublicScholarship[];
-  featuredFullyFunded: PublicScholarship[];
-  featuredUndergraduate: PublicScholarship[];
-  featuredMasters: PublicScholarship[];
-  featuredPhd: PublicScholarship[];
+  upcoming: PublicScholarship[];
+  recentlyUpdated: PublicScholarship[];
 }
 
 export function FeaturedScholarshipsTabs({
-  initialScholarships,
-  featuredFullyFunded,
-  featuredUndergraduate,
-  featuredMasters,
-  featuredPhd,
+  upcoming,
+  recentlyUpdated,
 }: FeaturedScholarshipsTabsProps) {
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("upcoming");
 
   const scholarshipsMap = {
-    "all": initialScholarships,
-    "fully-funded": featuredFullyFunded,
-    "undergraduate": featuredUndergraduate,
-    "masters": featuredMasters,
-    "phd": featuredPhd,
+    "upcoming": upcoming,
+    "recently-updated": recentlyUpdated,
   };
 
   const scholarships = scholarshipsMap[activeCategory as keyof typeof scholarshipsMap] || [];
