@@ -446,14 +446,20 @@ export interface PublicCountryTile {
 /**
  * The handful of countries a landing grid shows.
  *
- * Takes a limit rather than reading all 197 and slicing in memory. The
- * scholarship count still needs a relation count, so this is the only country
- * read that touches `_count`; the count is derived rather than stored, which
- * keeps it from drifting the way a cached column would.
+ * Takes a limit rather than reading all 197 and slicing in memory. A country is
+ * only listed when it actually has at least one scholarship a visitor can see
+ * (published and not in the trash), and the per-tile count reflects only those
+ * same visible scholarships - so a destination with nothing to offer never
+ * appears, and adding or removing scholarships changes the grid on its own.
  */
 export async function getPublicCountryTiles(limit: number): Promise<PublicCountryTile[]> {
+  const VISIBLE_SCHOLARSHIP = { publishStatus: "PUBLISHED" as const, deletedAt: null };
+
   const rows = await prisma.country.findMany({
-    where: VISIBLE,
+    where: {
+      ...VISIBLE,
+      scholarships: { some: VISIBLE_SCHOLARSHIP },
+    },
     orderBy: { name: "asc" },
     take: limit,
     select: {
@@ -461,17 +467,36 @@ export async function getPublicCountryTiles(limit: number): Promise<PublicCountr
       name: true,
       code: true,
       region: true,
-      _count: { select: { scholarships: true } },
+      _count: { select: { scholarships: { where: VISIBLE_SCHOLARSHIP } } },
     },
   });
 
-  return rows.map((c) => ({
-    id: c.id,
-    name: c.name,
-    code: c.code,
-    region: c.region,
-    scholarshipCount: c._count.scholarships,
-  }));
+  return rows
+    .map((c) => ({
+      id: c.id,
+      name: c.name,
+      code: c.code,
+      region: c.region,
+      scholarshipCount: c._count.scholarships,
+    }))
+    .filter((c) => c.scholarshipCount > 0);
+}
+
+/**
+ * How many countries currently have at least one scholarship a visitor can see.
+ *
+ * This is the figure the landing grid's header and "view all" affordances quote,
+ * so they stay honest when a country gains its first listing or loses its last.
+ * It counts the same direct `countryId` relation the tiles and the
+ * `/scholarships?country=…` filter use, so the number always matches the links.
+ */
+export async function getPublicScholarshipCountryCount(): Promise<number> {
+  const rows = await prisma.scholarship.groupBy({
+    by: ["countryId"],
+    where: { ...VISIBLE, countryId: { not: null } },
+    _count: { _all: true },
+  });
+  return rows.length;
 }
 
 export async function getPublicCountries(): Promise<PublicCountry[]> {
@@ -1215,7 +1240,7 @@ export interface ScholarshipQuery {
   limit?: number;
   /** Internal: the Top Opportunities section. */
   featuredOnly?: boolean;
-  sort?: "deadline" | "newest" | "title" | "featured" | "alphabetical" | "amount" | "fully-funded";
+  sort?: "deadline" | "newest" | "recently-updated" | "title" | "featured" | "alphabetical" | "amount" | "fully-funded";
 }
 
 export interface Paginated<T> {
@@ -1336,17 +1361,19 @@ export async function getPublicScholarships(
   const orderBy =
     sort === "newest"
       ? { createdAt: "desc" as const }
-      : sort === "title"
-        ? { title: "asc" as const }
-        : sort === "featured"
-          ? [{ featuredOrder: "asc" as const }, { createdAt: "desc" as const }]
-          : sort === "alphabetical"
-            ? { title: "asc" as const }
-            : sort === "amount"
-              ? { fundingAmount: "desc" as const }
-              : sort === "fully-funded"
-                ? { isFullyFunded: "desc" as const }
-                : { deadline: "asc" as const };
+      : sort === "recently-updated"
+        ? { updatedAt: "desc" as const }
+        : sort === "title"
+          ? { title: "asc" as const }
+          : sort === "featured"
+            ? [{ featuredOrder: "asc" as const }, { createdAt: "desc" as const }]
+            : sort === "alphabetical"
+              ? { title: "asc" as const }
+              : sort === "amount"
+                ? { fundingAmount: "desc" as const }
+                : sort === "fully-funded"
+                  ? { isFullyFunded: "desc" as const }
+                  : { deadline: "asc" as const };
 
   const [rows, total] = await Promise.all([
     prisma.scholarship.findMany({

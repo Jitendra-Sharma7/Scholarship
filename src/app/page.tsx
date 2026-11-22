@@ -25,6 +25,7 @@ import {
   getPublicCountryTiles,
   getPublicFields,
   getPublicScholarships,
+  getPublicScholarshipCountryCount,
   getPublicStats,
 } from "@/lib/data/public";
 
@@ -79,39 +80,37 @@ const popularSearches = [
 ];
 
 export default async function HomePage() {
-  // Run the independent homepage reads in parallel. Sequentially awaiting 13
-  // queries made the page take ~30s to respond, which made every interactive
-  // element feel unresponsive. Batching them keeps the connection pool happy
-  // (a handful of concurrent queries, not 13) while cutting wall time to the
-  // slowest single query.
+  // Run the independent homepage reads in parallel. Sequentially awaiting a
+  // dozen queries made the page take ~30s to respond, which made every
+  // interactive element feel unresponsive. Batching them keeps the connection
+  // pool happy (a handful of concurrent queries, not a dozen) while cutting
+  // wall time to the slowest single query.
   const [
     featured,
     fullyFunded,
     countryOptions,
     countryTiles,
+    scholarshipCountryCount,
     fields,
     stats,
     closingSoon,
     upcoming,
     recentlyUpdated,
-    featuredFullyFunded,
-    featuredUndergraduate,
-    featuredMasters,
-    featuredPhd,
+    featuredUpcoming,
+    featuredRecentlyUpdated,
   ] = await Promise.all([
     getPublicScholarships({ limit: 6, featuredOnly: true }),
     getPublicScholarships({ funding: "fully-funded", limit: 3 }),
     getPublicCountryOptions(),
     getPublicCountryTiles(15),
+    getPublicScholarshipCountryCount(),
     getPublicFields(),
     getPublicStats(),
     getPublicScholarships({ status: "closing soon", limit: 5 }),
     getPublicScholarships({ status: "upcoming", limit: 5 }),
     getPublicScholarships({ sort: "newest", limit: 5 }),
-    getPublicScholarships({ funding: "fully-funded", limit: 6 }),
-    getPublicScholarships({ degree: "Undergraduate", limit: 6 }),
-    getPublicScholarships({ degree: "Master's", limit: 6 }),
-    getPublicScholarships({ degree: "PhD", limit: 6 }),
+    getPublicScholarships({ status: "upcoming", limit: 6 }),
+    getPublicScholarships({ sort: "recently-updated", limit: 6 }),
   ]);
 
   const featuredScholarships = featured.data;
@@ -277,18 +276,15 @@ export default async function HomePage() {
       </section>
 
       <FeaturedScholarshipsTabs
-        initialScholarships={featuredScholarships}
-        featuredFullyFunded={featuredFullyFunded.data}
-        featuredUndergraduate={featuredUndergraduate.data}
-        featuredMasters={featuredMasters.data}
-        featuredPhd={featuredPhd.data}
+        upcoming={featuredUpcoming.data}
+        recentlyUpdated={featuredRecentlyUpdated.data}
       />
 
       <FullyFundedScholarships initialScholarships={fullyFundedList} />
 
       <ScholarshipCategories />
 
-      <CountriesExplorer initialCountries={countryTiles} totalCountries={stats.countries} />
+      <CountriesExplorer initialCountries={countryTiles} totalCountries={scholarshipCountryCount} />
 
       <FieldsExplorer initialFields={fields.slice(0, 8)} />
 
