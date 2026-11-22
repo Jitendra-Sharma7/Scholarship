@@ -116,7 +116,7 @@ export default async function UniversitiesPage({
         })}
       />
 
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 space-y-6">
         <UniversityHero
           totalUniversities={totalUniversities}
           totalCourses={stats?.totalCourses ?? 0}

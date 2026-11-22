@@ -1,4 +1,4 @@
-import { Prisma, Prisma as PrismaClient } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   fromPrismaFundingType,

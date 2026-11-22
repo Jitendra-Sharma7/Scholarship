@@ -4,24 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Briefcase, Code, FlaskConical, HeartPulse, Scale, TrendingUp, Palette, Leaf, Brain, Database, Users, Zap } from "lucide-react";
 import type { PublicField } from "@/lib/data/public";
-import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/layout/Layout";
-
-const fieldIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  "business": Briefcase,
-  "computer-science": Code,
-  "engineering": FlaskConical,
-  "medicine": HeartPulse,
-  "law": Scale,
-  "economics": TrendingUp,
-  "social-sciences": Users,
-  "arts": Palette,
-  "agriculture": Leaf,
-  "artificial-intelligence": Brain,
-  "data-science": Database,
-  "environmental": Zap,
-  "default": BookOpen,
-};
 
 function getFieldIcon(fieldId: string) {
   const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {

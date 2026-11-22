@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { Prisma, MatchStatus } from "@prisma/client";
+import { MatchStatus } from "@prisma/client";
 import { evaluateDeadlineSync } from "@/lib/deadline";
 import { getSettingNumber } from "@/lib/settings";
 
@@ -270,7 +270,7 @@ export async function findMatches(profile: MatchProfile): Promise<MatchResult[]>
       };
 
       const { score, reasons } = calculateMatchScore(studentProfile, scholarship);
-      const deadlineStatus = evaluateDeadlineSync({
+      evaluateDeadlineSync({
         deadline: scholarship.deadline,
         openingDate: scholarship.openingDate,
         override: scholarship.deadlineStatusOverride,

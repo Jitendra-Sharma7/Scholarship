@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowRight, Globe, GraduationCap } from "lucide-react";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import type { PublicCountryTile } from "@/lib/data/public";
-import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/layout/Layout";
 
 interface CountriesExplorerProps {

@@ -57,7 +57,7 @@ export function HowItWorks() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <div
               key={step.number}
               className="relative group rounded-2xl border border-secondary-200 bg-white p-6 sm:p-8 shadow-card transition-all hover:shadow-card-hover hover:-translate-y-1"

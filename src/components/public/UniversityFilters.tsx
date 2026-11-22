@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ChevronDown, Filter, Globe, Trophy, GraduationCap, Award, MapPin, Shield, Clock, DollarSign, X, SlidersHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 
 interface FilterSection {

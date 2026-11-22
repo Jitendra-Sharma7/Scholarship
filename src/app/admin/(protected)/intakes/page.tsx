@@ -3,7 +3,7 @@ import { Plus } from "lucide-react";
 
 import { PageHeader } from "@/components/admin/ui/primitives";
 import { atLeast, getCurrentUser, isStaff, requireStaff } from "@/lib/auth";
-import { getIntakes, createIntake, seedDefaultIntakes } from "@/lib/data/intakes";
+import { getIntakes, seedDefaultIntakes } from "@/lib/data/intakes";
 import { IntakeTable } from "@/components/admin/intakes/IntakeTable";
 
 export const metadata = { title: "Intakes" };

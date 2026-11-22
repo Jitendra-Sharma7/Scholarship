@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Search, SlidersHorizontal, Inbox, RotateCcw, Calendar, LayoutGrid, LayoutList, Filter } from "lucide-react";
+import { Search, Inbox, RotateCcw, LayoutGrid, LayoutList, Filter } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { SearchFilters } from "@/components/scholarships/SearchFilters";
-import { fetchPublicScholarships, fetchPublicIntakes } from "@/app/actions/public-actions";
+import { fetchPublicScholarships } from "@/app/actions/public-actions";
 import type { Paginated, PublicCountryOption, PublicField, PublicScholarship } from "@/lib/data/public";
 
 import { SCHOLARSHIP_PAGE_SIZE } from "@/lib/page-size";

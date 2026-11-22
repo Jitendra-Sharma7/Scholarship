@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Calendar } from "lucide-react";
 import Link from "next/link";
 import { Container } from "@/components/layout/Layout";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import type { PublicScholarship } from "@/lib/data/public";
 import { useNow, daysUntilFrom } from "@/lib/useNow";
-import { formatDate } from "@/lib/utils";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -20,11 +19,14 @@ export function CalendarView({ scholarships }: { scholarships: PublicScholarship
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"month" | "week">("month");
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [showDetails, setShowDetails] = useState<string | null>(null);
+  const [_showDetails, setShowDetails] = useState<string | null>(null);
   const now = useNow();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
 
   const currentMonth = currentDate.getMonth();
   const currentYear = currentDate.getFullYear();
@@ -49,28 +51,20 @@ export function CalendarView({ scholarships }: { scholarships: PublicScholarship
     return map;
   }, [scholarships]);
 
-  const getScholarshipsForDate = (date: Date) => {
+  const getScholarshipsForDate = useCallback((date: Date) => {
     const key = date.toISOString().split("T")[0];
     return scholarshipsByDate.get(key) || [];
-  };
+  }, [scholarshipsByDate]);
 
-  const isToday = (date: Date) => {
+  const isToday = useCallback((date: Date) => {
     return date.getTime() === today.getTime();
-  };
+  }, [today]);
 
-  const isSelected = (date: Date) => {
+  const isSelected = useCallback((date: Date) => {
     return selectedDate && date.getTime() === selectedDate.getTime();
-  };
+  }, [selectedDate]);
 
-  const isCurrentMonth = (date: Date) => {
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
-  };
-
-  const hasDeadlines = (date: Date) => {
-    return getScholarshipsForDate(date).length > 0;
-  };
-
-  const getUrgencyForDate = (date: Date) => {
+  const getUrgencyForDate = useCallback((date: Date) => {
     const schs = getScholarshipsForDate(date);
     if (schs.length === 0) return "none";
     const days = now === null ? null : daysUntilFrom(now, date);
@@ -80,87 +74,86 @@ export function CalendarView({ scholarships }: { scholarships: PublicScholarship
     if (days <= 15) return "soon";
     if (days <= 30) return "warning";
     return "safe";
-  };
+  }, [getScholarshipsForDate, now]);
 
-  const renderDay = (day: number, isCurrent: boolean, date: Date) => {
-    const schs = getScholarshipsForDate(date);
-    const urgency = getUrgencyForDate(date);
-    const isTodayDate = isToday(date);
-    const isSelectedDate = isSelected(date);
-
-    let bgClass = "bg-white";
-    let borderClass = "border-secondary-200";
-    let textClass = "text-secondary-900";
-
-    if (isSelectedDate) {
-      bgClass = "bg-primary-50";
-      borderClass = "border-primary-300";
-      textClass = "text-primary-900";
-    } else if (isTodayDate) {
-      bgClass = "bg-primary-50";
-      borderClass = "border-primary-300";
-      textClass = "text-primary-900";
-    } else if (!isCurrent) {
-      textClass = "text-secondary-400";
-      bgClass = "bg-secondary-50";
-    }
-
-    if (urgency === "urgent") {
-      borderClass = "border-red-300";
-      if (!isSelectedDate && !isTodayDate) bgClass = "bg-red-50";
-    } else if (urgency === "soon") {
-      borderClass = "border-amber-300";
-      if (!isSelectedDate && !isTodayDate) bgClass = "bg-amber-50";
-    } else if (urgency === "warning") {
-      borderClass = "border-warning-300";
-      if (!isSelectedDate && !isTodayDate) bgClass = "bg-warning-50";
-    } else if (urgency === "past") {
-      textClass = "text-secondary-400 line-through";
-      if (!isSelectedDate && !isTodayDate) bgClass = "bg-secondary-50";
-    }
-
-    return (
-      <button
-        key={day}
-        onClick={() => {
-          setSelectedDate(date);
-          setShowDetails(schs.length > 0 ? date.toISOString().split("T")[0] : null);
-        }}
-        className={`relative aspect-square flex flex-col items-center justify-start p-1 rounded-lg border transition-all ${
-          isCurrent ? "" : "opacity-60"
-        } ${bgClass} ${borderClass} ${textClass} ${
-          schs.length > 0 ? "cursor-pointer hover:shadow-md" : "cursor-default"
-        }`}
-        aria-label={`${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}${schs.length > 0 ? `, ${schs.length} deadline${schs.length > 1 ? "s" : ""}` : ""}`}
-      >
-        <span className="font-medium text-sm">{day}</span>
-        {schs.length > 0 && (
-          <div className="mt-1 flex flex-wrap gap-0.5 justify-center">
-            {schs.slice(0, 3).map((s) => (
-              <span
-                key={s.id}
-                className={`h-1.5 w-1.5 rounded-full ${
-                  urgency === "urgent" ? "bg-red-500" :
-                  urgency === "soon" ? "bg-amber-500" :
-                  urgency === "warning" ? "bg-warning-500" :
-                  urgency === "past" ? "bg-secondary-400" : "bg-emerald-500"
-                }`}
-                title={s.title}
-              />
-            ))}
-            {schs.length > 3 && (
-              <span className="text-[10px] text-secondary-500">+{schs.length - 3}</span>
-            )}
-          </div>
-        )}
-        {isTodayDate && !isSelectedDate && (
-          <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary-600" />
-        )}
-      </button>
-    );
-  };
 
   const days = useMemo(() => {
+    const renderDay = (day: number, isCurrent: boolean, date: Date) => {
+      const schs = getScholarshipsForDate(date);
+      const urgency = getUrgencyForDate(date);
+      const isTodayDate = isToday(date);
+      const isSelectedDate = isSelected(date);
+
+      let bgClass = "bg-white";
+      let borderClass = "border-secondary-200";
+      let textClass = "text-secondary-900";
+
+      if (isSelectedDate) {
+        bgClass = "bg-primary-50";
+        borderClass = "border-primary-300";
+        textClass = "text-primary-900";
+      } else if (isTodayDate) {
+        bgClass = "bg-primary-50";
+        borderClass = "border-primary-300";
+        textClass = "text-primary-900";
+      } else if (!isCurrent) {
+        textClass = "text-secondary-400";
+        bgClass = "bg-secondary-50";
+      }
+
+      if (urgency === "urgent") {
+        borderClass = "border-red-300";
+        if (!isSelectedDate && !isTodayDate) bgClass = "bg-red-50";
+      } else if (urgency === "soon") {
+        borderClass = "border-amber-300";
+        if (!isSelectedDate && !isTodayDate) bgClass = "bg-amber-50";
+      } else if (urgency === "warning") {
+        borderClass = "border-warning-300";
+        if (!isSelectedDate && !isTodayDate) bgClass = "bg-warning-50";
+      } else if (urgency === "past") {
+        textClass = "text-secondary-400 line-through";
+        if (!isSelectedDate && !isTodayDate) bgClass = "bg-secondary-50";
+      }
+
+      return (
+        <button
+          key={day}
+          onClick={() => {
+            setSelectedDate(date);
+          }}
+          className={`relative aspect-square flex flex-col items-center justify-start p-1 rounded-lg border transition-all ${
+            isCurrent ? "" : "opacity-60"
+          } ${bgClass} ${borderClass} ${textClass} ${
+            schs.length > 0 ? "cursor-pointer hover:shadow-md" : "cursor-default"
+          }`}
+          aria-label={`${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}${schs.length > 0 ? `, ${schs.length} deadline${schs.length > 1 ? "s" : ""}` : ""}`}
+        >
+          <span className="font-medium text-sm">{day}</span>
+          {schs.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-0.5 justify-center">
+              {schs.slice(0, 3).map((s) => (
+                <span
+                  key={s.id}
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    urgency === "urgent" ? "bg-red-500" :
+                    urgency === "soon" ? "bg-amber-500" :
+                    urgency === "warning" ? "bg-warning-500" :
+                    urgency === "past" ? "bg-secondary-400" : "bg-emerald-500"
+                  }`}
+                  title={s.title}
+                />
+              ))}
+              {schs.length > 3 && (
+                <span className="text-[10px] text-secondary-500">+{schs.length - 3}</span>
+              )}
+            </div>
+          )}
+          {isTodayDate && !isSelectedDate && (
+            <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary-600" />
+          )}
+        </button>
+      );
+    };
     const result: (React.ReactNode | null)[] = [];
 
     for (let i = 0; i < startingDayOfWeek; i++) {
@@ -182,7 +175,7 @@ export function CalendarView({ scholarships }: { scholarships: PublicScholarship
     }
 
     return result;
-  }, [currentYear, currentMonth, startingDayOfWeek, daysInMonth, prevMonthLastDay, scholarshipsByDate, now]);
+  }, [currentYear, currentMonth, startingDayOfWeek, daysInMonth, prevMonthLastDay, getScholarshipsForDate, getUrgencyForDate, isToday, isSelected, setSelectedDate]);
 
   const goToToday = () => {
     const today = new Date();

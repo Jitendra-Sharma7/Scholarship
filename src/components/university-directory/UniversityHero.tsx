@@ -237,7 +237,6 @@ export function UniversityHero({
               aria-label="Search universities"
               aria-autocomplete="list"
               aria-controls="search-suggestions"
-              aria-expanded={showSuggestions && getFilteredSuggestions().length > 0}
               spellCheck={false}
               autoComplete="off"
               className="w-full rounded-full border border-[#d7e3ff]/50 bg-white/10 pl-14 pr-14 py-4.5 text-[15px] leading-1.5 text-white placeholder-[#9db2e8]/80 transition-all focus:outline-none focus:ring-2 focus:ring-[#1747D1] focus:ring-offset-2 focus:ring-offset-[#0f1b3d] focus:border-transparent"
@@ -252,25 +251,26 @@ export function UniversityHero({
                 <X className="h-4 w-4" />
               </button>
             )}
-            {/* Search hint icons */}
-            <div className="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[10px] text-[#9db2e8]/60 hidden sm:flex">
-              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5">
-                <Globe className="h-3 w-3" />
-                Country
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5">
-                <MapPin className="h-3 w-3" />
-                City
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5">
-                <BookOpen className="h-3 w-3" />
-                Course
-              </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/5">
-                <Filter className="h-3 w-3" />
-                Level
-              </span>
-            </div>
+          </div>
+
+          {/* Quick-filter hints - separate responsive row below the search input so they never overlap the typed text */}
+          <div className="mt-4 flex flex-wrap justify-center gap-2 text-[11px] text-[#9db2e8]/70">
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+              <Globe className="h-3 w-3 shrink-0" />
+              Country
+            </span>
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+              <MapPin className="h-3 w-3 shrink-0" />
+              City
+            </span>
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+              <BookOpen className="h-3 w-3 shrink-0" />
+              Course
+            </span>
+            <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+              <Filter className="h-3 w-3 shrink-0" />
+              Level
+            </span>
           </div>
 
           {/* Search suggestions dropdown */}

@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { Bookmark, Layers, GraduationCap, MapPin } from "lucide-react";
+import Image from "next/image";
+import { Bookmark, Layers, GraduationCap } from "lucide-react";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { useStore } from "@/lib/store/useStore";
 import type { PublicScholarship } from "@/lib/data/public";
@@ -86,10 +87,13 @@ export function ScholarshipCard({
       {/* Scholarship Image/Provider Logo */}
       {(scholarship.coverImage || scholarship.logo) && (
         <div className="mb-4 -mx-5 -mt-5 rounded-t-2xl overflow-hidden">
-          <img
+          <Image
             src={scholarship.coverImage || scholarship.logo || ""}
             alt={scholarship.providerName || "Scholarship"}
             className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
+            width={480}
+            height={160}
+            style={{ objectFit: "cover" }}
           />
         </div>
       )}

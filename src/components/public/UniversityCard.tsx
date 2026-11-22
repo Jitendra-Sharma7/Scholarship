@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   ArrowRight,
   Bookmark,
@@ -10,7 +11,6 @@ import {
   ExternalLink,
   Globe,
   GraduationCap,
-  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UniversityImage } from "@/components/public/UniversityImage";
@@ -19,7 +19,6 @@ import {
   RankingBadge,
   ScholarshipAvailabilityBadge,
 } from "@/components/public/UniversityBadges";
-import { Button } from "@/components/ui/Button";
 import type { PublicUniversity } from "@/lib/data/public";
 import { useStore } from "@/lib/store/useStore";
 
@@ -111,12 +110,15 @@ export function UniversityCard({
           <div className="absolute -inset-0.5 bg-gradient-to-b from-transparent via-black/40 to-black/60 pointer-events-none" />
         )}
         {university.logo && (
-          <img
+          <Image
             src={university.logo}
             alt={`${university.name} logo`}
-            className="absolute top-4 left-4 z-20 h-12 w-12 rounded-full bg-surface p-1 shadow-sm object-contain"
+            className="absolute top-4 left-4 z-20 rounded-full bg-surface p-1 shadow-sm object-contain"
             loading="lazy"
             decoding="async"
+            width={48}
+            height={48}
+            style={{ objectFit: "contain" }}
           />
         )}
 

@@ -2,7 +2,8 @@
 
 import React from "react";
 import Link from "next/link";
-import { Heart, Bookmark, MapPin, GraduationCap, Award, ExternalLink } from "lucide-react";
+import Image from "next/image";
+import { Heart, Bookmark, MapPin, GraduationCap, ExternalLink } from "lucide-react";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { useStore } from "@/lib/store/useStore";
 import type { PublicScholarship } from "@/lib/data/public";
@@ -66,11 +67,14 @@ export function DirectoryScholarshipCard({ scholarship, viewMode = "grid" }: Dir
       {/* Image */}
       {(scholarship.coverImage || scholarship.logo) && (
         <div className="relative w-full h-48 lg:w-64 lg:h-auto shrink-0 rounded-xl overflow-hidden">
-          <img
+          <Image
             src={scholarship.coverImage || scholarship.logo || ""}
             alt={scholarship.providerName || scholarship.universityName || "Scholarship"}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
+            width={320}
+            height={180}
+            style={{ objectFit: "cover" }}
           />
           {/* Wishlist Heart */}
           <button

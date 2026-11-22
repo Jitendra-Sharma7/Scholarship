@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Trash2, Loader2, MoreHorizontal } from "lucide-react";
 import { toast } from "react-hot-toast";
 
-import { DataTable, Pagination, TableToolbar, type Column, type FilterField } from "@/components/admin/ui/DataTable";
+import { DataTable, Pagination, TableToolbar, type Column } from "@/components/admin/ui/DataTable";
 import { Badge, EmptyState } from "@/components/admin/ui/primitives";
 import { deleteIntake } from "@/app/actions/intake-actions";
 import type { IntakeData } from "@/lib/data/intakes";
@@ -23,27 +23,9 @@ export function IntakeTable({
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
-  const [pending, startTransition] = useTransition();
+  const [pending] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-
-  function run(fn: () => Promise<{ error?: string } | undefined>, successMessage: string) {
-    setBusyId(null);
-    startTransition(async () => {
-      try {
-        const result = await fn();
-        if (result?.error) {
-          toast.error(result.error);
-          return;
-        }
-        toast.success(successMessage);
-        setSelected([]);
-        router.refresh();
-      } catch {
-        toast.error("That action could not be completed. Please try again.");
-      }
-    });
-  }
 
   const columns: Column<IntakeData>[] = [
     {
@@ -233,7 +215,6 @@ function RowMenu({
   onDone: () => void;
 }) {
   const [pending, startTransition] = useTransition();
-  const router = useRouter();
 
   function exec(fn: () => Promise<{ error?: string } | undefined>, message: string) {
     onBusy();

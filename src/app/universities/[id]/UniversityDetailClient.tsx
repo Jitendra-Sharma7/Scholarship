@@ -8,7 +8,6 @@ import {
   Building2,
   Calendar,
   Check,
-  Clock,
   DollarSign,
   ExternalLink,
   Globe,
@@ -18,11 +17,9 @@ import {
   MapPin,
   Shield,
   Star,
-  Trophy,
   BookOpen,
   Search,
 } from "lucide-react";
-import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { Container } from "@/components/layout/Layout";
 import { fetchPublicScholarships } from "@/app/actions/public-actions";
 import type { PublicUniversity, Paginated, PublicScholarship } from "@/lib/data/public";
@@ -31,7 +28,6 @@ import { cn, formatCurrency, formatDate, formatNumber } from "@/lib/utils";
 import { UniversityImage } from "@/components/public/UniversityImage";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import { RankingBadge } from "@/components/public/UniversityBadges";
-import { Button } from "@/components/ui/Button";
 
 interface UniversityDetailClientProps {
   university: PublicUniversity;
@@ -1140,52 +1136,6 @@ function RequirementsSection({ university }: { university: PublicUniversity }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* English language                                                   */
-/* ------------------------------------------------------------------ */
-
-function EnglishSection({
-  university,
-  scholarships,
-}: {
-  university: PublicUniversity;
-  scholarships: PublicScholarship[];
-}) {
-  const hasUniversityLevel = Boolean(university.internationalInfo);
-  const testReqs = scholarships.reduce<string[]>(
-    (acc, s) => [...acc, ...(s.languageReqs ?? [])],
-    []
-  );
-  return (
-    <section aria-labelledby="english-heading" className="space-y-4">
-      <h2 id="english-heading" className="sr-only">English Language Requirements</h2>
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-          <Globe className="h-5 w-5 text-primary-600" />
-          English Language Requirements
-        </h3>
-        {hasUniversityLevel ? (
-          <div className="prose prose-sm prose-gray max-w-none text-gray-700">
-            <p className="whitespace-pre-wrap">{university.internationalInfo}</p>
-          </div>
-        ) : testReqs.length > 0 ? (
-          <p className="text-sm text-gray-700">
-            University-wide English requirements are not published. Published
-            scholarships at this university require:{" "}
-            {[...new Set(testReqs)].join(", ")}.
-          </p>
-        ) : (
-          <p className="text-sm text-gray-500">
-            English language requirements are not published for this
-            university. Check individual scholarship listings or the official
-            admissions website for accepted tests and scores.
-          </p>
-        )}
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /* Intakes                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -1216,7 +1166,7 @@ function IntakesSection({
           </p>
 
           <div className="space-y-3">
-            {intakes.map((name, index) => {
+            {intakes.map((name, _index) => {
               // Determine status based on intake name (simplified logic)
               const isUpcoming = name.toLowerCase().includes("2025") || name.toLowerCase().includes("2026") || name.toLowerCase().includes("2027");
               const status = isUpcoming ? "upcoming" : "open";
@@ -1276,9 +1226,6 @@ function IntakesSection({
 /* ------------------------------------------------------------------ */
 
 function AboutSection({ university }: { university: PublicUniversity }) {
-  const hasContact =
-    university.contactEmail || university.contactPhone || university.address;
-
   return (
     <section aria-labelledby="about-heading" className="space-y-6">
       <h2 id="about-heading" className="sr-only">About the University</h2>
@@ -1427,11 +1374,14 @@ function AboutSection({ university }: { university: PublicUniversity }) {
           </div>
         </article>
 
-        {/* Campus Images */}
-        <article className="rounded-xl border border-gray-200 bg-white p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Image className="h-5 w-5 text-primary-600" />
-            Campus Gallery
+            {/* Campus Images */}
+            <article className="rounded-xl border border-gray-200 bg-white p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <span aria-hidden="true" className="h-5 w-5 text-primary-600">
+                  {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                  <Image />
+                </span>
+                Campus Gallery
           </h3>
           <div className="grid grid-cols-2 gap-3">
             {university.coverImage && (

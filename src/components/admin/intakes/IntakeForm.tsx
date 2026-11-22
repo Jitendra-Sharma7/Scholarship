@@ -1,10 +1,8 @@
 "use client";
 
-import { useActionState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useActionState } from "react";
 import Link from "next/link";
-import { Loader2, Save, X } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { Loader2, Save } from "lucide-react";
 
 import {
   Checkbox,
@@ -46,7 +44,6 @@ export function IntakeForm({ mode, intake }: { mode: "create" | "edit"; intake?:
   const [state, formAction, pending] = useActionState<IntakeFormState, FormData>(action, INITIAL_STATE);
 
   const error = state.error;
-  const router = useRouter();
 
   return (
     <form action={formAction} className="pb-24" noValidate>

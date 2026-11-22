@@ -1,7 +1,6 @@
 "use client";
 
 import { GraduationCap, Globe, BookOpen } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface DirectoryHeroProps {
   subtitle?: string;

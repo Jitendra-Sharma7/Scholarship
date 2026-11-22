@@ -2,8 +2,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronDown, X, Check } from "lucide-react";
-import { CountryFlag } from "@/components/ui/CountryFlag";
-import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import type { PublicCountryOption, PublicField } from "@/lib/data/public";
 
@@ -153,7 +151,7 @@ export function HorizontalFilterBar({
                   ? "bg-primary-50 text-primary-700 font-medium"
                   : "text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900"
               )}
-              role="menuitem"
+              role="option"
               aria-selected={isSelected}
             >
               <span className="truncate">{option.label}</span>
@@ -170,7 +168,7 @@ export function HorizontalFilterBar({
     );
   };
 
-  const renderFilterButton = (config: (typeof filterConfigs)[0], index: number) => {
+  const renderFilterButton = (config: (typeof filterConfigs)[0], _index: number) => {
     const selectedValue = filters[config.key as keyof typeof filters];
     const options = config.key === "country" ? countryOptions : config.key === "fieldOfStudy" ? fieldOptions : config.options;
     const selectedOption = options.find((o) => o.value === selectedValue);

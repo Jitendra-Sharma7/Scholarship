@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp, Filter, X, Check } from "lucide-react";
-import { CountryFlagWithName } from "@/components/ui/CountryFlag";
+import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
 import type { PublicCountryOption, PublicField } from "@/lib/data/public";
 
 interface SidebarFilters {
@@ -138,16 +136,6 @@ export function FilterSidebar({
   isMobile = false,
   onClose,
 }: FilterSidebarProps) {
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    scholarshipType: true,
-    country: true,
-    studyLevel: true,
-    deadline: true,
-    fieldOfStudy: false,
-    fundingAmount: false,
-    university: false,
-    provider: false,
-  });
 
   const handleToggle = (section: string, value: string) => {
     const current = filters[section as keyof typeof filters] || [];

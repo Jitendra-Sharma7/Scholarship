@@ -1,13 +1,9 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ShieldCheck, CheckCircle2, Globe, BookOpen, Award, Bell, Users, Database, ExternalLink, GraduationCap, Building2, FileText, Filter, Search, Sparkles, Target, Clock, TrendingUp, ChevronRight } from "lucide-react";
+import { ShieldCheck, CheckCircle2, Globe, Award, Bell, Building2 } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
-import { CountryFlag } from "@/components/ui/CountryFlag";
-import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { HomeSearchForm } from "@/app/HomeSearchForm";
-import { DeadlineAlertsSignup } from "@/app/DeadlineAlertsSignup";
-import { Button } from "@/components/ui/Button";
 import { FeaturedScholarshipsTabs } from "@/app/FeaturedScholarshipsTabs";
 import { FullyFundedScholarships } from "@/app/FullyFundedScholarships";
 import { ScholarshipCategories } from "@/app/ScholarshipCategories";

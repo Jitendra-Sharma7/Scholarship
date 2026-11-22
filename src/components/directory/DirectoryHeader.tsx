@@ -3,20 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  Menu,
-  X,
-  Search,
-  GraduationCap,
-  Building2,
-  Globe,
-  BookOpen,
-  Award,
-  FileText,
-  ChevronDown,
-  User,
-  LogOut,
-} from "lucide-react";
+import { Menu, X, Search, GraduationCap, Building2, Globe, BookOpen, Award, FileText, ChevronDown, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SiteLogo } from "@/components/layout/SiteLogo";
 import { cn } from "@/lib/utils";

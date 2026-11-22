@@ -3,7 +3,6 @@
 import { ChevronDown, LayoutGrid, LayoutList } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/Button";
 
 interface SortOption {
   value: string;

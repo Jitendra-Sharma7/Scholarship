@@ -3,11 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowRight, Award, ShieldCheck, GraduationCap, MapPin, Calendar, DollarSign } from "lucide-react";
-import { CountryFlag } from "@/components/ui/CountryFlag";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
-import { Button } from "@/components/ui/Button";
 import type { PublicScholarship } from "@/lib/data/public";
-import { formatDate } from "@/lib/utils";
 import { Container } from "@/components/layout/Layout";
 
 interface FullyFundedScholarshipsProps {

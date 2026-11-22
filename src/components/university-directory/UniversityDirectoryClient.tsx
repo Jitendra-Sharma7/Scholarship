@@ -295,7 +295,7 @@ export function UniversityDirectoryClient({
     <div className="space-y-6">
       <div className="lg:flex lg:items-start lg:gap-[28px]">
         <aside
-          className="hidden shrink-0 [@media(min-width:900px)]:sticky [@media(min-width:900px)]:top-[80px] [@media(min-width:900px)]:flex"
+          className="hidden shrink-0 w-[268px] [@media(min-width:900px)]:sticky [@media(min-width:900px)]:top-[80px] [@media(min-width:900px)]:flex"
         >
           <FiltersSidebar
             countries={filterOptions.countries}

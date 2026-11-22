@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
@@ -182,9 +181,8 @@ export async function getSyncLogById(id: string) {
 }
 
 export async function retryFailedSync(id: string): Promise<SyncActionState> {
-  let actor;
   try {
-    actor = await requireAdmin();
+    await requireAdmin();
   } catch (error) {
     return { error: error instanceof Error ? error.message : "Authorization failed" };
   }

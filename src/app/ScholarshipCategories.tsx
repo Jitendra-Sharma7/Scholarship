@@ -2,8 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Award, GraduationCap, BookOpen, FlaskConical, Landmark, Globe, Briefcase, Microscope, Palette, Leaf, Brain, Database } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { ArrowRight, Award, GraduationCap, BookOpen, FlaskConical, Landmark, Globe, Briefcase, Microscope } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 
 const categories = [

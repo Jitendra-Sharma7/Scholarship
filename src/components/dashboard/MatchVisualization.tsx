@@ -258,14 +258,14 @@ export function MatchVisualization({
   const [expanded, setExpanded] = useState<string | null>(null);
 
   // Use user from store if no profile passed
-  const profile = userProfile || {
+  const profile = useMemo(() => userProfile || {
     citizenship: user?.citizenship ?? null,
     degreeLevel: user?.degreeLevel ?? null,
     field: user?.field ?? null,
     targetCountries: user?.targetCountries ?? [],
     gpa: user?.gpa ?? null,
     needFullFunding: user?.needFullFunding ?? false,
-  };
+  }, [userProfile, user]);
 
   // Calculate client-side matches
   const clientMatches = useMemo(() => {
@@ -322,7 +322,7 @@ export function MatchVisualization({
     return () => {
       mounted = false;
     };
-  }, [profile.citizenship, profile.field, profile.degreeLevel, serverMatches.length]);
+  }, [profile.citizenship, profile.field, profile.degreeLevel, profile.gpa, profile.needFullFunding, profile.targetCountries, serverMatches.length]);
 
   // Use server matches if available, otherwise client matches
   const matches = serverMatches.length > 0 ? serverMatches : clientMatches;

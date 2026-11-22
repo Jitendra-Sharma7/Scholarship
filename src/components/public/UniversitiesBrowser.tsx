@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Search, ArrowRight, ExternalLink, Building2, Filter, X, ChevronDown, Globe, Trophy, Shield, GraduationCap, Award, MapPin } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 import { UNIVERSITY_PAGE_SIZE } from "@/lib/page-size";
@@ -368,10 +369,12 @@ export function UniversitiesBrowser({ universities, countries }: UniversitiesBro
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-3">
                       {u.logo ? (
-                        <img
+                        <Image
                           src={u.logo}
                           alt={u.name}
-                          className="h-10 w-10 rounded-lg object-contain"
+                          width={40}
+                          height={40}
+                          className="rounded-lg object-contain"
                         />
                       ) : (
                         <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-50 text-primary-600">

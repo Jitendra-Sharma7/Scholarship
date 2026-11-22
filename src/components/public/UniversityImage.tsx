@@ -54,7 +54,6 @@ export function UniversityImage({
       )}
     >
       {!showFallback && (
-        // eslint-disable-next-line @next/next/no-img-element
         <Image
           fill
           src={src!}

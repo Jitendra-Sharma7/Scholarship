@@ -217,7 +217,7 @@ async function getScholarshipLinks(page: Page, listingUrl: string): Promise<stri
 }
 
 export async function scrapeGlobalScholarshipPoint(
-  targetIntake: string = "September 2027",
+  _targetIntake: string = "September 2027",
   maxPages: number = 10
 ): Promise<{ scholarships: ScrapedScholarship[]; errors: string[] }> {
   const browser = await chromium.launch({ headless: true });

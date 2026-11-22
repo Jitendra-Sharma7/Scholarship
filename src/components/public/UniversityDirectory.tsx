@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { ChevronDown, ArrowRight, LayoutGrid, LayoutList, SlidersHorizontal, X } from "lucide-react";
+import { ChevronDown, ArrowRight, LayoutGrid, LayoutList } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Pagination } from "@/components/ui/Pagination";
 import { UNIVERSITY_PAGE_SIZE } from "@/lib/page-size";

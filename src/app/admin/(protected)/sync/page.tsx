@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, RefreshCw, AlertCircle, CheckCircle, XCircle, Clock, Download, Filter } from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { DataTable, Pagination, TableToolbar, type Column, type FilterField } from "@/components/admin/ui/DataTable";
 import { Badge, EmptyState, PageHeader } from "@/components/admin/ui/primitives";
 import { runSyncNow, getSyncLogs, retryFailedSync, type SyncLog } from "@/app/actions/sync-actions";
-import { formatDate, formatDateLong } from "@/lib/utils";
+import { formatDateLong } from "@/lib/utils";
 
 const STATUS_TONE: Record<string, "green" | "amber" | "red" | "blue" | "purple" | "neutral"> = {
   COMPLETED: "green",
@@ -37,28 +36,20 @@ export default function SyncManagementPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  void searchParams;
+  const [pending] = useTransition();
   const [logs, setLogs] = useState<SyncLog[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStats, setSyncStats] = useState<{ totalFound: number; totalNew: number; totalUpdated: number; totalErrors: number } | null>(null);
   const perPage = 20;
-
-  const parseParams = async () => {
-    const params = await searchParams;
-    const pageParam = Number(params.page ?? "1");
-    return Number.isFinite(pageParam) && pageParam > 0 ? pageParam : 1;
-  };
 
   const loadLogs = async (pageNum = 1) => {
     const result = await getSyncLogs(pageNum, perPage);
     setLogs(result.logs);
     setTotal(result.total);
     setPage(result.page);
-    setTotalPages(result.totalPages);
   };
 
   const handleSync = async (formData: FormData) => {

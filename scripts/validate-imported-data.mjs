@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 const jsonRaw = readFileSync("data/scholarships-archive-2027.json", "utf8");
 const jsonRecords = JSON.parse(jsonRaw);
@@ -10,7 +10,7 @@ let missingCountry = 0;
 let missingLevel = 0;
 let missingDeadline = 0;
 
-jsonRecords.forEach((r, idx) => {
+jsonRecords.forEach((r) => {
   if (!r.title) missingTitle++;
   if (!r.country) missingCountry++;
   if (!r.degreeLevels) missingLevel++;

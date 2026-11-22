@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import { Container } from "@/components/layout/Layout";
 import { getPublicUniversityById, getPublicScholarships } from "@/lib/data/public";
 import { pageMetadata } from "@/lib/seo";
 import { itemListSchema } from "@/lib/seo-jsonld";

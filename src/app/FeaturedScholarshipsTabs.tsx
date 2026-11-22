@@ -2,9 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, GraduationCap, Award, BookOpen, Filter } from "lucide-react";
+import { ArrowRight, GraduationCap, Award, BookOpen } from "lucide-react";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
-import { Button } from "@/components/ui/Button";
 import type { PublicScholarship } from "@/lib/data/public";
 import { Container } from "@/components/layout/Layout";
 

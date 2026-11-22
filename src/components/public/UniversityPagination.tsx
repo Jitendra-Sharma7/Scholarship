@@ -2,7 +2,6 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { cn } from "@/lib/utils";
 
 /** Page numbers with gaps, e.g. 1 … 4 5 6 … 20. */
 function pageWindow(page: number, totalPages: number): (number | "gap")[] {

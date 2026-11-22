@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { LayoutGrid, LayoutList, Filter, RotateCcw, ChevronDown } from "lucide-react";
+import { LayoutGrid, LayoutList, Filter, RotateCcw } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { DirectoryHero } from "@/components/directory/DirectoryHero";
 import { DirectorySearchBar } from "@/components/directory/DirectorySearchBar";
@@ -10,7 +10,7 @@ import { HorizontalFilterBar } from "@/components/directory/HorizontalFilterBar"
 import { FilterSidebar } from "@/components/directory/FilterSidebar";
 import { DirectoryScholarshipCard } from "@/components/directory/DirectoryScholarshipCard";
 import { DirectoryPagination } from "@/components/directory/DirectoryPagination";
-import { fetchPublicScholarships, fetchPublicIntakes } from "@/app/actions/public-actions";
+import { fetchPublicScholarships } from "@/app/actions/public-actions";
 import type { Paginated, PublicCountryOption, PublicField, PublicScholarship } from "@/lib/data/public";
 import { SCHOLARSHIP_PAGE_SIZE } from "@/lib/page-size";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ export function DirectoryBrowser({
   intakes: { id: string; name: string; slug: string }[];
   initialResult: Paginated<PublicScholarship>;
 }) {
+  void intakes;
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -73,7 +74,7 @@ export function DirectoryBrowser({
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
   // Scholarship counts for sidebar
-  const [scholarshipCounts, setScholarshipCounts] = useState({
+  const [scholarshipCounts] = useState({
     scholarshipType: { "fully-funded": 120, "partial-funding": 340, "tuition-discount": 210 },
     country: {} as Record<string, number>,
     studyLevel: { "Undergraduate": 210, "Master's": 320, "PhD": 120 },
@@ -246,7 +247,7 @@ export function DirectoryBrowser({
     handleFilterChange(mappedFilters);
   };
 
-  const handleRemoveChip = (key: string, value: string) => {
+  const handleRemoveChip = (key: string, _value: string) => {
     const newFilters = { ...filters };
     if (key === "country") newFilters.country = "";
     else if (key === "degree") newFilters.degree = "";

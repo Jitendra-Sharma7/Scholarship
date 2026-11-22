@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState, type ReactNode } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /**
@@ -653,15 +654,6 @@ export function CharCount({ value, max }: { value: string; max: number }) {
 
 // --- Image Picker ----------------------------------------------------------
 
-interface MediaItem {
-  id: string;
-  originalName: string;
-  url: string;
-  mimeType: string;
-  folder: string;
-  size: number;
-}
-
 export function ImagePicker({
   label,
   name,
@@ -695,9 +687,11 @@ export function ImagePicker({
         {/* Current image preview */}
         {defaultValue && (
           <div className="relative max-w-xs">
-            <img
+            <Image
               src={defaultValue}
               alt="Current image"
+              width={400}
+              height={300}
               className="w-full h-auto rounded-lg border border-slate-200"
             />
             <button

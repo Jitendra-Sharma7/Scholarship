@@ -3,7 +3,6 @@
 import React from "react";
 import Link from "next/link";
 import { Container, Grid } from "@/components/layout/Layout";
-import { SiteLogo } from "@/components/layout/SiteLogo";
 import { SITE_BRANDING_FALLBACK, type SiteBranding } from "@/lib/site-branding";
 import { Facebook, Youtube, Linkedin, X, Instagram, GraduationCap, ShieldCheck } from "lucide-react";
 

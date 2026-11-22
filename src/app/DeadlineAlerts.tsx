@@ -2,10 +2,10 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Clock, Bell, Calendar, AlertCircle, CheckCircle2, ExternalLink, ArrowRight } from "lucide-react";
+import { Clock, Bell, Calendar, AlertCircle, CheckCircle2 } from "lucide-react";
 import { CountryFlag } from "@/components/ui/CountryFlag";
 import type { PublicScholarship } from "@/lib/data/public";
-import { formatDate, getDeadlineLabel, getDeadlineUrgency } from "@/lib/utils";
+import { formatDate, getDeadlineLabel } from "@/lib/utils";
 import { useNow, daysUntilFrom } from "@/lib/useNow";
 import { cn } from "@/lib/utils";
 import { Container } from "@/components/layout/Layout";
@@ -40,7 +40,6 @@ export function DeadlineAlerts({ closingSoon, upcoming, recentlyUpdated }: Deadl
     return { label: getDeadlineLabel(urgency), urgency };
   };
 
-  const activeCategory = deadlineCategories.find(c => c.id === activeTab);
   const activeScholarships = scholarshipsMap[activeTab as keyof typeof scholarshipsMap] || [];
 
   return (

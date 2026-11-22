@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { getSettingNumber } from "@/lib/settings";
 
 export type AlertType = "THIRTY_DAYS" | "FIFTEEN_DAYS" | "SEVEN_DAYS" | "ONE_DAY" | "ON_DEADLINE" | "OPENING_SOON";
 
@@ -14,7 +13,6 @@ const ALERT_DAYS: Record<AlertType, number> = {
 
 export async function generateDeadlineAlerts() {
   const now = new Date();
-  const closingSoonDays = await getSettingNumber("scholarships.closingSoonDays", 14);
 
   // Get all published scholarships with deadlines
   const scholarships = await prisma.scholarship.findMany({
