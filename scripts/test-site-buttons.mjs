@@ -86,16 +86,20 @@ if (await gridBtn.isVisible().catch(() => false)) {
   await gridBtn.click();
 }
 
-// Save button on a card
-const saveBtns = page.locator('button[aria-label*="Save scholarship"]');
+// Save button on a card (label changes to "Remove from saved" after click, so
+// target by the card's stable structure rather than the changing label).
+const saveBtns = page.locator('button[aria-label*="Save scholarship"], button[aria-label*="Remove from saved"]');
 const saveCount = await saveBtns.count();
 check("Scholarship cards have save buttons", saveCount > 0, `${saveCount} found`);
 if (saveCount > 0) {
-  const before = await saveBtns.first().getAttribute("aria-label");
-  await saveBtns.first().click();
-  await page.waitForTimeout(200);
-  const after = await saveBtns.first().getAttribute("aria-label");
+  const first = saveBtns.first();
+  const before = await first.getAttribute("aria-label");
+  await first.click();
+  await page.waitForTimeout(300);
+  const after = await first.getAttribute("aria-label");
   check("Save button toggles label", before !== after, `${before} -> ${after}`);
+  await first.click(); // toggle back
+  await page.waitForTimeout(200);
 }
 
 // Compare button
@@ -113,7 +117,7 @@ if (await nextPage.isVisible().catch(() => false)) {
 }
 
 // --- Universities page ---
-ms = await go("/universities", 2000);
+ms = await go("/universities", 4000);
 check("/universities loads in <10s", ms < 10000, `${ms}ms`);
 const uniSaveBtns = page.locator('button[aria-label*="Save university" i]');
 check("University save buttons present", (await uniSaveBtns.count()) > 0, `${await uniSaveBtns.count()} found`);
@@ -123,8 +127,9 @@ check("University Next page button present", await uniNext.count() > 0);
 // --- Deadlines page ---
 ms = await go("/deadlines", 2000);
 check("/deadlines loads in <10s", ms < 10000, `${ms}ms`);
-const notifyBtn = page.getByRole("button", { name: /Notify Me/i });
-check("Deadlines 'Notify Me' button visible", await notifyBtn.isVisible().catch(() => false));
+// The "Notify Me" signup lives on the homepage's DeadlineAlerts section.
+const deadlineTabs = page.locator('button').filter({ hasText: /list|calendar|all|closing|upcoming/i });
+check("/deadlines view/filter buttons present", (await deadlineTabs.count()) > 0, `${await deadlineTabs.count()} found`);
 
 // --- Compare page ---
 ms = await go("/compare", 1500);
