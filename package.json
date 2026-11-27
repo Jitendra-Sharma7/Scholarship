@@ -33,11 +33,8 @@
     "db:reset": "prisma db push --force-reset && prisma db seed",
     "postinstall": "prisma generate"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
-    "@prisma/client": "^6.19.3",
+    "@prisma/client": "6.19.3",
     "@supabase/server": "^1.8.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
@@ -67,16 +64,12 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "postcss": "^8.4.49",
-    "prisma": "^7.10.1",
+    "prisma": "6.19.3",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.23.15",
     "typescript": "^5"
   },
-  "allowScripts": {
-    "@prisma/client@6.19.3": true,
-    "@prisma/engines@6.19.3": true,
-    "prisma@6.19.3": true,
-    "unrs-resolver@1.12.2": true,
-    "esbuild@0.28.2": true
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
