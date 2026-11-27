@@ -107,7 +107,7 @@ export function UniversityCard({ university }: UniversityCardProps) {
   return (
     <article
       className={cn(
-        "flex h-full flex-col overflow-hidden rounded-[18px] border border-[#E2E8F0] bg-[#FFFFFF] shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-2 font-onest",
+        "flex h-full flex-col overflow-hidden rounded-[18px] border border-[#D4AF37] bg-[#FFFFFF] shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-2 font-onest",
         isActive && "ring-2 ring-[#1747D1]",
       )}
     >
