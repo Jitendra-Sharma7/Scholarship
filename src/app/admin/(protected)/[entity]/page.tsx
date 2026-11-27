@@ -134,6 +134,7 @@ const SUBTITLE_FIELDS: Record<string, string[]> = {
   fields: ["parentName", "category"],
   blog: ["category", "authorName"],
   resources: ["type", "category"],
+  faqs: ["category"],
   media: ["folder", "url"],
   users: ["email"],
 };

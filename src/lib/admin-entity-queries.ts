@@ -32,6 +32,7 @@ const DELEGATE = {
   field: () => prisma.field,
   blogPost: () => prisma.blogPost,
   resource: () => prisma.resource,
+  faq: () => prisma.fAQ,
   media: () => prisma.media,
   user: () => prisma.user,
 } as const;
@@ -42,7 +43,7 @@ export type Row = Record<string, unknown> & { id: string };
  * Prisma selects per model, including the relation labels the table needs so no
  * N+1 query is issued while rendering.
  */
-function selectFor(model: EntityModel): Prisma.UniversitySelect | Prisma.CountrySelect | Prisma.FieldSelect | Prisma.BlogPostSelect | Prisma.ResourceSelect | Prisma.MediaSelect | Prisma.UserSelect {
+function selectFor(model: EntityModel): Prisma.UniversitySelect | Prisma.CountrySelect | Prisma.FieldSelect | Prisma.BlogPostSelect | Prisma.ResourceSelect | Prisma.FAQSelect | Prisma.MediaSelect | Prisma.UserSelect {
   switch (model) {
     case "university":
       return {
@@ -75,6 +76,11 @@ function selectFor(model: EntityModel): Prisma.UniversitySelect | Prisma.Country
         id: true, title: true, slug: true, type: true, category: true, featured: true,
         publishStatus: true, createdAt: true, updatedAt: true, deletedAt: true,
       } as Prisma.ResourceSelect;
+    case "faq":
+      return {
+        id: true, question: true, answer: true, category: true,
+        publishStatus: true, sortOrder: true, createdAt: true, updatedAt: true, deletedAt: true,
+      } as Prisma.FAQSelect;
     case "media":
       // Media has no `updatedAt`: a file's metadata is set on upload and the row
       // is replaced rather than edited.
@@ -123,6 +129,11 @@ function buildWhere(entity: EntityDef, filters: ListFilters, trashed: boolean) {
         { filename: { contains: q, mode: "insensitive" } },
         { alt: { contains: q, mode: "insensitive" } },
         { folder: { contains: q, mode: "insensitive" } },
+      ];
+    } else if (model === "faq") {
+      where.OR = [
+        { question: { contains: q, mode: "insensitive" } },
+        { answer: { contains: q, mode: "insensitive" } },
       ];
     } else if (model === "field" || model === "country" || model === "university") {
       where.OR = [
@@ -247,6 +258,17 @@ function toRow(entity: EntityDef, raw: Record<string, unknown>): Row {
         type: raw.type,
         category: raw.category,
         featured: raw.featured,
+        publishStatus: raw.publishStatus,
+        updatedAt: day(raw.updatedAt),
+        createdAt: day(raw.createdAt),
+        deletedAt: trashed,
+      };
+    case "faq":
+      return {
+        id: raw.id as string,
+        question: raw.question,
+        category: raw.category,
+        sortOrder: toNumber(raw.sortOrder),
         publishStatus: raw.publishStatus,
         updatedAt: day(raw.updatedAt),
         createdAt: day(raw.createdAt),

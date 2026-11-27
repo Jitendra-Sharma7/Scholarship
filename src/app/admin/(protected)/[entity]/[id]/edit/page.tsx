@@ -51,7 +51,7 @@ export default async function AdminEntityEditPage({
 
   const saved = query.saved === "1";
   const trashed = isTrashed(record);
-  const label = String(record.name ?? record.title ?? record.originalName ?? record.email ?? id);
+  const label = String(record.name ?? record.title ?? record.question ?? record.originalName ?? record.email ?? id);
 
   return (
     <>

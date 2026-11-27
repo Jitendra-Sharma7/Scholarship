@@ -41,6 +41,8 @@ function delegate(model: EntityModel) {
       return prisma.blogPost;
     case "resource":
       return prisma.resource;
+    case "faq":
+      return prisma.fAQ;
     case "media":
       return prisma.media;
     case "user":
@@ -107,7 +109,12 @@ function toData(entity: EntityDef, data: Record<string, unknown>) {
   }
 
   // Sitemap membership defaults to on; an unticked box submits an empty string.
-  if (entity.hasPublish && !entity.fields.some((f) => f.name === "includeInSitemap")) {
+  // FAQ has no `includeInSitemap` column, so it is never stamped here.
+  if (
+    entity.hasPublish &&
+    !entity.fields.some((f) => f.name === "includeInSitemap") &&
+    entity.model !== "faq"
+  ) {
     out.includeInSitemap = true;
   }
 
@@ -140,6 +147,7 @@ const PUBLIC_PATH: Record<string, string> = {
   fields: "/fields",
   blog: "/blog",
   resources: "/resources",
+  faqs: "/faq",
   media: "/",
   users: "/",
 };
@@ -151,6 +159,7 @@ const PUBLIC_PATHS_FOR_MODEL: Record<string, string[]> = {
   field: ["/scholarships", "/finder", "/", "/fields"],
   blogPost: ["/blog", "/"],
   resource: ["/resources", "/"],
+  faq: ["/faq", "/resources"],
   media: [],
   user: [],
 };
@@ -264,11 +273,11 @@ export async function updateEntityRecord(
   const data = toData(entity, input);
 
   const d = delegate(entity.model) as unknown as {
-    findUnique: (a: unknown) => Promise<{ slug: string | null } | null>;
+    findUnique: (a: unknown) => Promise<{ slug?: string | null } | null>;
     update: (a: unknown) => Promise<unknown>;
   };
 
-  const existing = await d.findUnique({ where: { id }, select: { slug: true } });
+  const existing = await d.findUnique({ where: { id }, select: entity.hasSlug ? { slug: true } : undefined });
   if (!existing) return { error: `That ${entity.singular.toLowerCase()} no longer exists.` };
 
   if (entity.hasSlug) {
@@ -345,10 +354,13 @@ export async function setEntityPublishStatus(
   }
 
   const d = delegate(entity.model) as unknown as {
-    findUnique: (a: unknown) => Promise<{ slug?: string; title?: string; name?: string } | null>;
+    findUnique: (a: unknown) => Promise<{ slug?: string | null; title?: string | null; name?: string | null } | null>;
     update: (a: unknown) => Promise<unknown>;
   };
-  const existing = await d.findUnique({ where: { id }, select: { slug: true, title: true, name: true } });
+  const existing = await d.findUnique({
+    where: { id },
+    select: entity.hasSlug ? { slug: true, title: true, name: true } : {},
+  });
   if (!existing) return { error: `That ${entity.singular.toLowerCase()} no longer exists.` };
 
   await d.update({
@@ -576,10 +588,13 @@ export async function deleteEntityForever(
   if (!confirmed) return { error: "Permanent deletion must be confirmed." };
 
   const d = delegate(entity.model) as unknown as {
-    findUnique: (a: unknown) => Promise<{ slug?: string; title?: string; name?: string } | null>;
+    findUnique: (a: unknown) => Promise<{ slug?: string | null; title?: string | null; name?: string | null } | null>;
     delete: (a: unknown) => Promise<unknown>;
   };
-  const existing = await d.findUnique({ where: { id }, select: { slug: true, title: true, name: true } });
+  const existing = await d.findUnique({
+    where: { id },
+    select: entity.hasSlug ? { slug: true, title: true, name: true } : {},
+  });
   if (!existing) return { error: `That ${entity.singular.toLowerCase()} no longer exists.` };
 
   await d.delete({ where: { id } });
@@ -610,6 +625,8 @@ function entitySlugModel(model: EntityModel) {
       return "blogPost" as const;
     case "resource":
       return "resource" as const;
+    case "faq":
+      return "resource" as const;
     default:
       return "resource" as const;
   }
@@ -627,6 +644,8 @@ function auditEntity(model: EntityModel) {
       return "BlogPost" as const;
     case "resource":
       return "Resource" as const;
+    case "faq":
+      return "FAQ" as const;
     case "media":
       return "Media" as const;
     case "user":

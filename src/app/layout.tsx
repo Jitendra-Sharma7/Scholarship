@@ -7,8 +7,8 @@ import localFont from "next/font/local";
 
 import { Providers } from "./providers";
 import { SiteChrome } from "@/components/layout/SiteChrome";
-import { AdSenseScript } from "@/components/ads/AdSenseScript";
 
+import AdSenseScript from "@/components/ads/AdSenseScript";
 import { getSiteBranding } from "@/lib/site-branding-server";
 
 import JsonLd from "@/components/seo/JsonLd";
@@ -189,16 +189,17 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${onest.variable}`}
     >
-        <body className="font-sans antialiased bg-white text-secondary-900">
+      <body className="font-sans antialiased bg-white text-secondary-900">
 
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-secondary-900 focus:border-secondary-900 focus:rounded"
-          >
-            Skip to main content
-          </a>
+        {/* Accessibility: Skip to main content */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-secondary-900 focus:border-secondary-900 focus:rounded"
+        >
+          Skip to main content
+        </a>
 
-          {/* Website structured data */}
+        {/* Website structured data */}
         <JsonLd data={webSiteSchema()} />
 
         {/* Organization structured data */}

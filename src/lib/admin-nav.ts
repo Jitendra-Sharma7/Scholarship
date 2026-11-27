@@ -6,6 +6,7 @@ import {
   Flag,
   FolderOpen,
   GraduationCap,
+  HelpCircle,
   Home,
   Inbox,
   LayoutDashboard,
@@ -133,6 +134,14 @@ export const ADMIN_NAV: NavSection[] = [
         matchPrefix: true,
         description: "Guides, PDFs, videos and links",
       },
+      {
+        href: "/admin/faqs",
+        label: "FAQs",
+        icon: HelpCircle,
+        minRole: "EDITOR",
+        matchPrefix: true,
+        description: "Frequently asked questions shown on the FAQ and resources pages",
+      },
     ],
   },
   {
@@ -217,6 +226,7 @@ export const QUICK_ACTIONS = [
   { href: "/admin/fields/new", label: "Add Field", icon: Library },
   { href: "/admin/blog/new", label: "Write Blog Post", icon: Newspaper },
   { href: "/admin/resources/new", label: "Add Resource", icon: FileText },
+  { href: "/admin/faqs/new", label: "Add FAQ", icon: HelpCircle },
   { href: "/admin/intakes/new", label: "Add Intake", icon: ArrowUpDown },
   { href: "/admin/sync", label: "Run Data Sync", icon: RefreshCw },
 ] as const;

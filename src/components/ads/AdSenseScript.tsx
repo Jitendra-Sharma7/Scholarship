@@ -1,41 +1,39 @@
 
 "use client";
 
-import { useEffect } from "react";
-
-import { loadScriptIfConsented } from "@/lib/consent";
+import Script from "next/script";
 import { useConsentState } from "@/lib/useConsent";
 
-const ADSENSE_PUBLISHER_ID = "ca-pub-6190025929296653";
-
 const ADSENSE_SRC =
-  `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`;
+  "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6190025929296653";
 
-/**
- * Google AdSense integration.
- *
- * Features:
- * - Loads AdSense only after marketing consent.
- * - Prevents loading before a consent decision.
- * - Uses the existing consent management system.
- * - Supports visitors accepting consent after initially declining.
- * - Avoids duplicate script loading through the existing
- *   loadScriptIfConsented implementation.
- */
-export function AdSenseScript() {
+declare global {
+  interface Window {
+    adsenseScriptReady?: boolean;
+  }
+}
+
+export default function AdSenseScript() {
   const consent = useConsentState();
 
-  useEffect(() => {
-    if (!consent) {
-      return;
-    }
+  if (!consent?.marketing) {
+    return null;
+  }
 
-    loadScriptIfConsented(
-      ADSENSE_SRC,
-      "marketing",
-      consent
-    );
-  }, [consent]);
+  return (
+    <Script
+      id="google-adsense-script"
+      src={ADSENSE_SRC}
+      strategy="afterInteractive"
+      async
+      crossOrigin="anonymous"
+      onReady={() => {
+        window.adsenseScriptReady = true;
 
-  return null;
+        window.dispatchEvent(
+          new Event("adsense-script-ready")
+        );
+      }}
+    />
+  );
 }

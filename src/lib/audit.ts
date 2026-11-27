@@ -17,6 +17,7 @@ export type ActivityEntity =
   | "Field"
   | "BlogPost"
   | "Resource"
+  | "FAQ"
   | "User"
   | "Submission"
   | "Media"

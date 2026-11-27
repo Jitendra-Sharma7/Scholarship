@@ -80,6 +80,7 @@ export type EntityModel =
   | "field"
   | "blogPost"
   | "resource"
+  | "faq"
   | "media"
   | "user";
 
@@ -398,6 +399,40 @@ const resources: EntityDef = {
   ],
 };
 
+// --- FAQs ------------------------------------------------------------------
+
+const faqs: EntityDef = {
+  key: "faqs",
+  label: "FAQs",
+  singular: "FAQ",
+  model: "faq",
+  icon: "HelpCircle",
+  description: "Frequently asked questions shown on the FAQ and resources pages.",
+  searchPlaceholder: "Search FAQs by question, answer, or category",
+  defaultSort: { key: "sortOrder", dir: "asc" },
+  hasTrash: true,
+  hasPublish: true,
+  hasFeatured: false,
+  hasSlug: false,
+  columns: [
+    { key: "question", header: "Question", kind: "title", sortable: true },
+    { key: "category", header: "Category", kind: "text", hideBelow: "sm" },
+    { key: "sortOrder", header: "Order", kind: "number", hideBelow: "md", widthClass: "w-20" },
+    { key: "publishStatus", header: "State", kind: "publish", tone: PUBLISH_TONE },
+    { key: "actions", header: "", kind: "text", widthClass: "w-10" },
+  ],
+  filters: [
+    { name: "status", label: "Publish status", ref: "publishStatus" },
+  ],
+  fields: [
+    { name: "question", label: "Question", kind: "text", required: true },
+    { name: "answer", label: "Answer", kind: "textarea", rows: 8, required: true, full: true, group: "content", hint: "Published answer shown on the FAQ page." },
+    { name: "category", label: "Category", kind: "text", hint: "e.g. Applications, Eligibility, Funding" },
+    { name: "sortOrder", label: "Sort order", kind: "number", min: 0, hint: "Lower numbers appear first." },
+    { name: "publishStatus", label: "Publish status", kind: "select", required: true, options: ["DRAFT", "PUBLISHED", "ARCHIVED"], group: "publishing" },
+  ],
+};
+
 // --- Media -----------------------------------------------------------------
 
 const media: EntityDef = {
@@ -489,6 +524,7 @@ export const ENTITIES: Record<string, EntityDef> = {
   fields,
   blog,
   resources,
+  faqs,
   media,
   users,
 };
