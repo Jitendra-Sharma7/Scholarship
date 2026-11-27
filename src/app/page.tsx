@@ -173,28 +173,32 @@ export default async function HomePage() {
                 </div>
               </div>
 
+
               <div className="relative hidden lg:block">
                 <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-card-elevated bg-secondary-100">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 to-primary-600/20" />
-                  <div className="absolute inset-0 flex items-center justify-center relative z-10">
-                    <Image
-                      src="https://images.unsplash.com/photo-1562774053-701939374585?w=1200&q=80"
-                      alt="Global university campus"
-                      fill
-                      className="object-cover"
-                      priority
-                      sizes="50vw"
-                    />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
-                  <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between text-white pointer-events-none">
+                  <Image
+                    src="https://images.unsplash.com/photo-1562774053-701939374585?w=1200&q=80"
+                    alt="Global university campus"
+                    fill
+                    className="object-cover"
+                    priority
+                    sizes="50vw"
+                  />
+
+                  <div className="absolute inset-0 z-10 bg-gradient-to-br from-primary-500/10 to-primary-600/20 pointer-events-none" />
+
+                  <div className="absolute bottom-0 left-0 right-0 h-32 z-10 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+
+                  <div className="absolute bottom-6 left-6 right-6 z-20 flex items-end justify-between text-white pointer-events-none">
                     <div>
                       <p className="text-sm font-medium opacity-90">Top Study Destination</p>
                       <p className="text-2xl font-bold">United Kingdom</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium opacity-90">Scholarships Available</p>
-                      <p className="text-2xl font-bold">{stats.openScholarships.toLocaleString()}+</p>
+                      <p className="text-2xl font-bold">
+                        {stats.openScholarships.toLocaleString()}+
+                      </p>
                     </div>
                   </div>
                 </div>
