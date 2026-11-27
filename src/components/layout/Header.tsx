@@ -65,7 +65,47 @@ const scholarshipGroups: ScholarshipNavGroup[] = [
   },
 ];
 
+const courseGroups: ScholarshipNavGroup[] = [
+  {
+    id: "degree",
+    label: "Courses by Degree",
+    icon: GraduationCap,
+    links: [
+      { label: "Undergraduate Courses", href: "/course-search/?degree=undergraduate" },
+      { label: "Master's Courses", href: "/course-search/?degree=masters" },
+      { label: "MBA Courses", href: "/course-search/?degree=mba" },
+    ],
+  },
+  {
+    id: "subject",
+    label: "Courses by Subject",
+    icon: BookOpen,
+    links: [
+      { label: "Business Courses", href: "/course-search/?subject=business" },
+      { label: "Computer Science Courses", href: "/course-search/?subject=computer-science" },
+      { label: "Data Science Courses", href: "/course-search/?subject=data-science" },
+      { label: "Design Courses", href: "/course-search/?subject=design" },
+      { label: "Finance Courses", href: "/course-search/?subject=finance" },
+      { label: "Marketing Courses", href: "/course-search/?subject=marketing" },
+    ],
+  },
+  {
+    id: "country",
+    label: "Courses by Country",
+    icon: Globe,
+    links: [
+      { label: "Europe Courses", href: "/course-search/?country=europe" },
+      { label: "Germany Courses", href: "/course-search/?country=germany" },
+    ],
+  },
+];
 const navItems: NavItem[] = [
+  {
+    label: "Courses",
+    href: "/course-search",
+    icon: BookOpen,
+    groups: courseGroups,
+  },
   {
     label: "Scholarships",
     href: "/scholarships",
@@ -135,6 +175,7 @@ export function Header() {
     degree: true,
     country: true,
     type: true,
+    subject: true,
   });
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -365,13 +406,13 @@ export function Header() {
                                 {link.label}
                               </Link>
                             ))}
-                            <Link
-                              href="/scholarships"
-                              className="mt-1 flex items-center gap-1 rounded-r-lg px-3 py-2 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50"
-                              onClick={closeMenus}
-                            >
-                              View All Scholarships
-                            </Link>
+<Link
+                               href={item.href}
+                               className="mt-1 flex items-center gap-1 rounded-r-lg px-3 py-2 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50"
+                               onClick={closeMenus}
+                             >
+                               {item.label === "Courses" ? "View All Courses" : "View All Scholarships"}
+                             </Link>
                           </div>
                         </div>
                       </div>
@@ -597,13 +638,13 @@ export function Header() {
                                 {link.label}
                               </Link>
                             ))}
-                            <Link
-                              href="/scholarships"
-                              className="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50"
-                              onClick={closeMenus}
-                            >
-                              View All Scholarships
-                            </Link>
+<Link
+                               href={item.href}
+                               className="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50"
+                               onClick={closeMenus}
+                             >
+                               {item.label === "Courses" ? "View All Courses" : "View All Scholarships"}
+                             </Link>
                           </div>
                         </div>
                       </div>
