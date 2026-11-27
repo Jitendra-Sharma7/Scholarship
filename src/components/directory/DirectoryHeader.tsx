@@ -38,20 +38,6 @@ const navItems = [
     ],
   },
   {
-    label: "Countries",
-    href: "/countries",
-    icon: Globe,
-    items: [
-      { label: "Scholarships in United Kingdom", href: "/scholarships?country=gb", icon: Globe },
-      { label: "Scholarships in USA", href: "/scholarships?country=us", icon: Globe },
-      { label: "Scholarships in Canada", href: "/scholarships?country=ca", icon: Globe },
-      { label: "Scholarships in Australia", href: "/scholarships?country=au", icon: Globe },
-      { label: "Scholarships in Germany", href: "/scholarships?country=de", icon: Globe },
-      { label: "Scholarships in Europe", href: "/scholarships?region=europe", icon: Globe },
-      { label: "View All Countries", href: "/countries", icon: Globe },
-    ],
-  },
-  {
     label: "Fields of Study",
     href: "/fields",
     icon: BookOpen,

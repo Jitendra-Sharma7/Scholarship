@@ -89,11 +89,6 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    label: "Countries",
-    href: "/countries",
-    icon: Globe,
-  },
-  {
     label: "Fields",
     href: "/fields",
     icon: BookOpen,

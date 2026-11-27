@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Inbox, RotateCcw, LayoutGrid, LayoutList, Filter, ChevronLeft, Home, X } from "lucide-react";
+import { Inbox, RotateCcw, LayoutGrid, LayoutList, Filter, ChevronLeft, Home, X } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
 import { SearchFilters } from "@/components/scholarships/SearchFilters";
@@ -120,7 +120,7 @@ export function ScholarshipsBrowser({
     sortBy: firstParam("sort") || firstParam("sortBy") || "relevance",
   });
 
-  const [sortOption, setSortOption] = useState(filters.sortBy);
+  const sortOption = filters.sortBy;
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   // Seeded from the server render, so the first paint is the real result set
@@ -156,10 +156,6 @@ export function ScholarshipsBrowser({
   // later refetches instead of showing a stale list.
   const servedKey = `${JSON.stringify(filters)}|${page}|${sortOption}`;
   const skipKeyRef = useRef<string | null>(servedKey);
-
-  // Debounce timer for the free-text search so keystrokes do not each trigger a
-  // server round trip.
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load the current result page when filters or page change
   useEffect(() => {
@@ -220,27 +216,8 @@ export function ScholarshipsBrowser({
     void load();
     return () => {
       active = false;
-      if (searchDebounceRef.current) {
-        clearTimeout(searchDebounceRef.current);
-        searchDebounceRef.current = null;
-      }
     };
   }, [filters, page, sortOption]);
-
-  // Debounce the search query: only the `query` field triggers the timer, other
-  // filter changes apply immediately.
-  useEffect(() => {
-    if (searchDebounceRef.current) {
-      clearTimeout(searchDebounceRef.current);
-    }
-    searchDebounceRef.current = setTimeout(() => {
-      // Re-fetch is driven by the filters effect above once `filters.query`
-      // settles; this effect exists purely to avoid firing on every keystroke.
-    }, 300);
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
-  }, [filters.query]);
 
   const handleFilterChange = (newFilters: FilterState) => {
     setFilters(newFilters);
@@ -276,20 +253,6 @@ export function ScholarshipsBrowser({
       sortBy: "relevance",
     };
     handleFilterChange(empty);
-  };
-
-  const handleSearchChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, query: value }));
-  };
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleFilterChange(filters);
-  };
-
-  const handleClearSearch = () => {
-    setFilters((prev) => ({ ...prev, query: "" }));
-    handleFilterChange({ ...filters, query: "" });
   };
 
   const handleViewChange = (mode: "grid" | "list") => {
@@ -394,7 +357,7 @@ export function ScholarshipsBrowser({
               <p className="mt-1 text-sm text-secondary-600">
                 {activeCategoryLabel
                   ? `Browse verified ${activeCategoryLabel.toLowerCase()} from accredited universities, governments, and foundations.`
-                  : "Search verified opportunities from accredited universities, governments, and foundations."}
+                  : "Browse verified opportunities from accredited universities, governments, and foundations."}
               </p>
             </>
           )}
@@ -430,43 +393,9 @@ export function ScholarshipsBrowser({
             </div>
           )}
 
-          {/* Search bar */}
-          <form onSubmit={handleSearchSubmit} className="mt-5 flex gap-2" role="search">
-            <div className="relative flex-1">
-              <label htmlFor="scholarship-search" className="sr-only">
-                Search scholarships by keyword
-              </label>
-              <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-secondary-400" />
-              <input
-                id="scholarship-search"
-                type="search"
-                maxLength={200}
-                value={filters.query}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search by title, university, country or keyword..."
-                className="w-full rounded-xl border border-secondary-200 bg-white py-3 pl-10 pr-4 text-sm text-secondary-900 shadow-xs transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              />
-              {filters.query.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="absolute right-3 top-3.5 p-1 text-secondary-400 hover:text-secondary-600 transition-colors"
-                  aria-label="Clear search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-xs transition-all hover:bg-primary-700"
-            >
-              Search
-            </button>
-          </form>
         </div>
 
-        {/* Top Control Bar: Total results, View Mode & Sort */}
+        {/* Top Control Bar: Total results & View Mode */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-secondary-200 bg-white p-4 shadow-card">
           <div className="flex items-center gap-2">
             <span className="font-bold text-secondary-900 text-sm">{result.total}</span>
@@ -511,29 +440,6 @@ export function ScholarshipsBrowser({
               </div>
             </div>
 
-            {/* Sort options */}
-            <div className="flex w-full min-w-0 items-center gap-2 text-xs sm:w-auto">
-              <label htmlFor="scholarship-sort" className="shrink-0 text-secondary-500 font-medium">
-                Sort by:
-              </label>
-              <select
-                id="scholarship-sort"
-                value={sortOption}
-                onChange={(e) => {
-                  setSortOption(e.target.value);
-                  handleFilterChange({ ...filters, sortBy: e.target.value });
-                }}
-                className="min-w-0 flex-1 rounded-lg border border-secondary-200 bg-secondary-50/50 py-1.5 px-2.5 text-xs font-medium text-secondary-800 focus:border-primary-500 focus:outline-none sm:flex-none"
-              >
-                <option value="relevance">Relevance / Match</option>
-                <option value="deadline">Upcoming Deadline</option>
-                <option value="newest">Recently Added</option>
-                <option value="recently-updated">Recently Updated</option>
-                <option value="alphabetical">Alphabetical (A-Z)</option>
-                <option value="amount">Scholarship Amount (High-Low)</option>
-                <option value="fully-funded">Fully Funded First</option>
-              </select>
-            </div>
           </div>
         </div>
 
@@ -590,8 +496,7 @@ export function ScholarshipsBrowser({
                 </h3>
                 <p className="text-sm text-secondary-500 max-w-sm mx-auto mb-6">
                   We couldn&apos;t find any opportunities matching your active
-                  filters and search. Try broadening your criteria or resetting
-                  filters.
+                  filters. Try broadening your criteria or resetting filters.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
@@ -601,15 +506,6 @@ export function ScholarshipsBrowser({
                     <RotateCcw className="h-4 w-4" />
                     Reset all filters
                   </button>
-                  {filters.query && (
-                    <button
-                      onClick={handleClearSearch}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700"
-                    >
-                      <X className="h-4 w-4" />
-                      Clear search
-                    </button>
-                  )}
                   <Link
                     href="/scholarships"
                     className="inline-flex items-center gap-1.5 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700"

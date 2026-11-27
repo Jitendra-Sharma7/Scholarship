@@ -61,14 +61,6 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    label: "Countries",
-    href: "/countries",
-    icon: Globe,
-    items: [
-      { label: "View All Countries", href: "/countries", icon: Globe },
-    ],
-  },
-  {
     label: "Resources",
     href: "/resources",
     icon: FileText,

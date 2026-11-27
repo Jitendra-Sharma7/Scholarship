@@ -7,7 +7,6 @@ import { HomeSearchForm } from "@/app/HomeSearchForm";
 import { FeaturedScholarshipsTabs } from "@/app/FeaturedScholarshipsTabs";
 import { FullyFundedScholarships } from "@/app/FullyFundedScholarships";
 import { ScholarshipCategories } from "@/app/ScholarshipCategories";
-import { CountriesExplorer } from "@/app/CountriesExplorer";
 import { FieldsExplorer } from "@/app/FieldsExplorer";
 import { ScholarshipMatchingCTA } from "@/app/ScholarshipMatchingCTA";
 import { HowItWorks } from "@/app/HowItWorks";
@@ -22,10 +21,8 @@ import { itemListSchema } from "@/lib/seo-jsonld";
 
 import {
   getPublicCountryOptions,
-  getPublicCountryTiles,
   getPublicFields,
   getPublicScholarships,
-  getPublicScholarshipCountryCount,
   getPublicStats,
 } from "@/lib/data/public";
 
@@ -89,8 +86,6 @@ export default async function HomePage() {
     featured,
     fullyFunded,
     countryOptions,
-    countryTiles,
-    scholarshipCountryCount,
     fields,
     stats,
     closingSoon,
@@ -102,8 +97,6 @@ export default async function HomePage() {
     getPublicScholarships({ limit: 6, featuredOnly: true }),
     getPublicScholarships({ funding: "fully-funded", limit: 3 }),
     getPublicCountryOptions(),
-    getPublicCountryTiles(15),
-    getPublicScholarshipCountryCount(),
     getPublicFields(),
     getPublicStats(),
     getPublicScholarships({ status: "closing soon", limit: 5 }),
@@ -287,8 +280,6 @@ export default async function HomePage() {
       <FullyFundedScholarships initialScholarships={fullyFundedList} />
 
       <ScholarshipCategories />
-
-      <CountriesExplorer initialCountries={countryTiles} totalCountries={scholarshipCountryCount} />
 
       <FieldsExplorer initialFields={fields.slice(0, 8)} />
 

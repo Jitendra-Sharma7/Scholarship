@@ -83,21 +83,6 @@ export function SearchFilters({
     { value: "specific", label: "Specific Countries Only" },
   ];
 
-  const applicationFeeOptions = [
-    { value: "", label: "All Fees" },
-    { value: "free", label: "Free ($0)" },
-    { value: "paid", label: "Has Application Fee" },
-  ];
-
-  const sortOptions = [
-    { value: "relevance", label: "Relevance / Match" },
-    { value: "deadline", label: "Upcoming Deadline" },
-    { value: "newest", label: "Recently Added" },
-    { value: "alphabetical", label: "Alphabetical (A-Z)" },
-    { value: "amount", label: "Scholarship Amount (High-Low)" },
-    { value: "fully-funded", label: "Fully Funded First" },
-  ];
-
   const handleSelect = (key: keyof FilterState, value: string) => {
     onChange({
       ...filters,
@@ -111,7 +96,7 @@ export function SearchFilters({
   const hasActiveFilters = Boolean(
     filters.query || filters.country || filters.field || filters.degree || 
     filters.funding || filters.intake || filters.status || 
-    filters.eligibleNationality || filters.applicationFee || filters.university || filters.sortBy
+    filters.eligibleNationality || filters.applicationFee || filters.university
   );
 
   return (
@@ -130,24 +115,6 @@ export function SearchFilters({
             Reset all
           </button>
         )}
-      </div>
-
-      {/* Search Query */}
-      <div className="space-y-2">
-        <label
-          htmlFor={controlId("query")}
-          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
-        >
-          Search Keywords
-        </label>
-        <input
-          id={controlId("query")}
-          type="text"
-          value={filters.query}
-          onChange={(e) => handleSelect("query", e.target.value)}
-          placeholder="e.g., Chevening, DAAD, Computer Science..."
-          className="input-field"
-        />
       </div>
 
       {/* Degree Level */}
@@ -324,50 +291,6 @@ export function SearchFilters({
           {nationalityOptions.map((n) => (
             <option key={n.value} value={n.value}>
               {n.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Application Fee */}
-      <div className="space-y-2">
-        <label
-          htmlFor={controlId("applicationFee")}
-          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
-        >
-          Application Fee
-        </label>
-        <select
-          id={controlId("applicationFee")}
-          value={filters.applicationFee}
-          onChange={(e) => handleSelect("applicationFee", e.target.value)}
-          className="input-field"
-        >
-          {applicationFeeOptions.map((a) => (
-            <option key={a.value} value={a.value}>
-              {a.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Sort By */}
-      <div className="space-y-2">
-        <label
-          htmlFor={controlId("sortBy")}
-          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
-        >
-          Sort By
-        </label>
-        <select
-          id={controlId("sortBy")}
-          value={filters.sortBy}
-          onChange={(e) => handleSelect("sortBy", e.target.value)}
-          className="input-field"
-        >
-          {sortOptions.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
             </option>
           ))}
         </select>
