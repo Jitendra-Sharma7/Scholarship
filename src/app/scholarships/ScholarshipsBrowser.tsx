@@ -39,6 +39,42 @@ interface FilterState {
   sortBy: string;
 }
 
+type FilterKey = Exclude<keyof FilterState, "sortBy">;
+
+const DEGREE_LABELS: Record<string, string> = {
+  Undergraduate: "Bachelor's",
+  "Master's": "Master's",
+  PhD: "Ph.D.",
+  Postdoctoral: "Postdoctoral",
+  Research: "Research",
+};
+
+const FUNDING_LABELS: Record<string, string> = {
+  "fully-funded": "Fully Funded",
+  "fully-tuition": "Full Tuition",
+  "partial-tuition": "Partially Funded",
+  stipend: "Stipend",
+  mixed: "Mixed Funding",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  open: "Open",
+  upcoming: "Upcoming",
+  "closing-soon": "Closing Soon",
+  closed: "Closed",
+  expired: "Expired",
+};
+
+const NATIONALITY_LABELS: Record<string, string> = {
+  international: "Open to International",
+  specific: "Specific Countries Only",
+};
+
+const APPLICATION_FEE_LABELS: Record<string, string> = {
+  free: "Free Application",
+  paid: "Paid Application",
+};
+
 /**
  * The browsing UI. Filter options and the first page of results arrive from the
  * server page as props, so the served HTML already contains real records; later
@@ -265,6 +301,38 @@ export function ScholarshipsBrowser({
 
   const fieldName = contextField?.name;
   const fieldDescription = contextField?.description;
+  const countryName = countries.find((country) => country.id === filters.country)?.name;
+  const universityName = universities.find((university) => university.id === filters.university)?.name;
+  const intakeName = intakes.find((intake) => intake.slug === filters.intake)?.name;
+
+  const activeCategoryLabel = filters.degree
+    ? `${DEGREE_LABELS[filters.degree] ?? filters.degree} Scholarships`
+    : filters.country
+      ? `${countryName ?? filters.country} Scholarships`
+      : filters.funding
+        ? `${FUNDING_LABELS[filters.funding] ?? filters.funding} Scholarships`
+        : null;
+
+  const activeChips: { key: FilterKey; label: string }[] = [];
+  if (filters.query) activeChips.push({ key: "query", label: `Search: ${filters.query}` });
+  if (filters.degree) activeChips.push({ key: "degree", label: DEGREE_LABELS[filters.degree] ?? filters.degree });
+  if (filters.country) activeChips.push({ key: "country", label: countryName ?? filters.country });
+  if (filters.field) activeChips.push({ key: "field", label: fields.find((field) => field.id === filters.field)?.name ?? filters.field });
+  if (filters.funding) activeChips.push({ key: "funding", label: FUNDING_LABELS[filters.funding] ?? filters.funding });
+  if (filters.intake) activeChips.push({ key: "intake", label: intakeName ?? filters.intake });
+  if (filters.status) activeChips.push({ key: "status", label: STATUS_LABELS[filters.status] ?? filters.status });
+  if (filters.eligibleNationality) {
+    activeChips.push({ key: "eligibleNationality", label: NATIONALITY_LABELS[filters.eligibleNationality] ?? filters.eligibleNationality });
+  }
+  if (filters.applicationFee) {
+    activeChips.push({ key: "applicationFee", label: APPLICATION_FEE_LABELS[filters.applicationFee] ?? filters.applicationFee });
+  }
+  if (filters.university) activeChips.push({ key: "university", label: universityName ?? filters.university });
+
+  const handleRemoveFilter = (key: FilterKey) => {
+    const next: FilterState = { ...filters, [key]: "" };
+    handleFilterChange(next);
+  };
 
   return (
     <div className="bg-secondary-50/50 min-h-screen py-8">
@@ -321,12 +389,45 @@ export function ScholarshipsBrowser({
           ) : (
             <>
               <h1 className="text-2xl font-extrabold text-secondary-950 sm:text-3xl">
-                Explore Global Scholarships
+                {activeCategoryLabel ?? "Explore Global Scholarships"}
               </h1>
               <p className="mt-1 text-sm text-secondary-600">
-                Search verified opportunities from accredited universities, governments, and foundations.
+                {activeCategoryLabel
+                  ? `Browse verified ${activeCategoryLabel.toLowerCase()} from accredited universities, governments, and foundations.`
+                  : "Search verified opportunities from accredited universities, governments, and foundations."}
               </p>
             </>
+          )}
+
+          {activeChips.length > 0 && (
+            <div className="mt-5 flex flex-wrap items-center gap-2 rounded-xl border border-secondary-200 bg-white p-3 shadow-xs">
+              <span className="text-xs font-semibold uppercase tracking-wider text-secondary-500">
+                Active filters
+              </span>
+              {activeChips.map((chip) => (
+                <span
+                  key={chip.key}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700"
+                >
+                  {chip.label}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFilter(chip.key)}
+                    className="rounded-full p-0.5 text-primary-600 transition-colors hover:bg-primary-100 hover:text-primary-800"
+                    aria-label={`Remove ${chip.label} filter`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="ml-auto text-xs font-semibold text-primary-600 underline underline-offset-4 transition-colors hover:text-primary-700"
+              >
+                Clear all
+              </button>
+            </div>
           )}
 
           {/* Search bar */}
@@ -374,7 +475,7 @@ export function ScholarshipsBrowser({
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             {/* Mobile Filter Toggle Button */}
             <button
               onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
@@ -411,8 +512,8 @@ export function ScholarshipsBrowser({
             </div>
 
             {/* Sort options */}
-            <div className="flex items-center gap-2 text-xs">
-              <label htmlFor="scholarship-sort" className="text-secondary-500 font-medium">
+            <div className="flex w-full min-w-0 items-center gap-2 text-xs sm:w-auto">
+              <label htmlFor="scholarship-sort" className="shrink-0 text-secondary-500 font-medium">
                 Sort by:
               </label>
               <select
@@ -422,7 +523,7 @@ export function ScholarshipsBrowser({
                   setSortOption(e.target.value);
                   handleFilterChange({ ...filters, sortBy: e.target.value });
                 }}
-                className="rounded-lg border border-secondary-200 bg-secondary-50/50 py-1.5 px-2.5 text-xs font-medium text-secondary-800 focus:border-primary-500 focus:outline-none"
+                className="min-w-0 flex-1 rounded-lg border border-secondary-200 bg-secondary-50/50 py-1.5 px-2.5 text-xs font-medium text-secondary-800 focus:border-primary-500 focus:outline-none sm:flex-none"
               >
                 <option value="relevance">Relevance / Match</option>
                 <option value="deadline">Upcoming Deadline</option>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Menu, X, Search, GraduationCap, Building2, Globe, BookOpen, Award, FileText, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SiteLogo } from "@/components/layout/SiteLogo";
@@ -17,37 +17,60 @@ interface DropdownItem {
   section?: string;
 }
 
+interface ScholarshipNavGroup {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  links: { label: string; href: string }[];
+}
+
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   dropdown?: DropdownItem[];
+  groups?: ScholarshipNavGroup[];
 }
+
+const scholarshipGroups: ScholarshipNavGroup[] = [
+  {
+    id: "degree",
+    label: "Scholarships by Degree",
+    icon: GraduationCap,
+    links: [
+      { label: "Bachelor's Scholarships", href: "/scholarships?degree=Undergraduate" },
+      { label: "Master's Scholarships", href: "/scholarships?degree=Master's" },
+      { label: "Ph.D. Scholarships", href: "/scholarships?degree=PhD" },
+    ],
+  },
+  {
+    id: "country",
+    label: "Scholarships by Country",
+    icon: Globe,
+    links: [
+      { label: "Australia Scholarships", href: "/scholarships?country=au" },
+      { label: "Canada Scholarships", href: "/scholarships?country=ca" },
+      { label: "Ireland Scholarships", href: "/scholarships?country=ie" },
+    ],
+  },
+  {
+    id: "type",
+    label: "Scholarships by Type",
+    icon: Award,
+    links: [
+      { label: "Fully Funded Scholarships", href: "/scholarships?funding=fully-funded" },
+      { label: "Full Tuition Scholarships", href: "/scholarships?funding=fully-tuition" },
+      { label: "Partially Funded Scholarships", href: "/scholarships?funding=partial-tuition" },
+    ],
+  },
+];
 
 const navItems: NavItem[] = [
   {
     label: "Scholarships",
     href: "/scholarships",
     icon: GraduationCap,
-    dropdown: [
-      { label: "All Scholarships", href: "/scholarships" },
-      { divider: true, section: "By Funding Type" },
-      { label: "Fully Funded Scholarships", href: "/scholarships?funding=fully-funded" },
-      { label: "Partially Funded Scholarships", href: "/scholarships?funding=partial-tuition" },
-      { label: "Full Tuition Scholarships", href: "/scholarships?funding=fully-tuition" },
-      { label: "Stipend Scholarships", href: "/scholarships?funding=stipend" },
-      { label: "Mixed Funding Scholarships", href: "/scholarships?funding=mixed" },
-      { divider: true, section: "By Degree Level" },
-      { label: "Undergraduate Scholarships", href: "/scholarships?degree=Undergraduate" },
-      { label: "Master's Scholarships", href: "/scholarships?degree=Master's" },
-      { label: "PhD Scholarships", href: "/scholarships?degree=PhD" },
-      { label: "Doctoral Scholarships", href: "/scholarships?degree=Doctoral" },
-      { label: "MBA Scholarships", href: "/scholarships?degree=MBA" },
-      { divider: true, section: "Popular Searches" },
-      { label: "Scholarships with No Application Fee", href: "/scholarships?applicationFee=free" },
-      { label: "Closing Soon", href: "/scholarships?status=closing soon" },
-      { label: "Recently Added", href: "/scholarships?sort=newest" },
-    ],
+    groups: scholarshipGroups,
   },
   {
     label: "Universities",
@@ -113,7 +136,13 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [mobileOpenDropdown, setMobileOpenDropdown] = useState<string | null>(null);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    degree: true,
+    country: true,
+    type: true,
+  });
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -205,12 +234,161 @@ export function Header() {
   };
 
   const isActive = (href: string) => {
-    return pathname === href || pathname?.startsWith(href + "/");
+    const [path, queryString] = href.split("?");
+    if (pathname !== path) return false;
+    if (!queryString) return true;
+
+    const target = new URLSearchParams(queryString);
+    for (const [key, value] of target.entries()) {
+      if (searchParams.get(key) !== value) return false;
+    }
+    return true;
+  };
+
+  const toggleGroup = (id: string) => {
+    setOpenGroups((current) => ({ ...current, [id]: !current[id] }));
+  };
+
+  const closeMenus = () => {
+    setActiveDropdown(null);
+    setMobileOpenDropdown(null);
+    setIsMobileMenuOpen(false);
   };
 
   const renderDesktopItem = (item: NavItem) => {
     const hasDropdown = item.dropdown && item.dropdown.length > 0;
+    const hasGroups = item.groups && item.groups.length > 0;
     const isOpen = activeDropdown === item.label;
+
+    if (hasGroups) {
+      return (
+        <div
+          key={item.label}
+          className="relative"
+          role="none"
+          ref={(el) => { dropdownRefs.current[item.label] = el; }}
+          onMouseEnter={() => openDropdown(item.label)}
+          onMouseLeave={() => scheduleClose()}
+        >
+          <button
+            type="button"
+            onClick={() => setActiveDropdown(isOpen ? null : item.label)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              isActive(item.href)
+                ? "bg-primary-50 text-primary-700"
+                : "text-secondary-600 hover:bg-secondary-100 hover:text-secondary-900",
+              isOpen && "bg-primary-50 text-primary-700"
+            )}
+            aria-haspopup="true"
+            aria-expanded={isOpen}
+            aria-controls="scholarships-navigation"
+          >
+            {item.label}
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 transition-transform duration-200",
+                isOpen && "rotate-180"
+              )}
+              aria-hidden="true"
+            />
+          </button>
+
+          {isOpen && (
+            <div
+              id="scholarships-navigation"
+              className="absolute left-0 top-full z-50 mt-2 w-[760px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-secondary-200 bg-white shadow-card-elevated animate-slide-in"
+              role="group"
+              aria-label="Browse scholarships"
+              onMouseEnter={() => openDropdown(item.label)}
+              onMouseLeave={() => scheduleClose()}
+            >
+              <div className="grid grid-cols-1 divide-y divide-secondary-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                {item.groups?.map((group) => {
+                  const GroupIcon = group.icon;
+                  const groupOpen = openGroups[group.id] ?? true;
+                  const groupActive = group.links.some((link) => isActive(link.href));
+
+                  return (
+                    <div key={group.id} className="p-2.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.id)}
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm font-semibold transition-colors",
+                          groupActive
+                            ? "bg-primary-50 text-primary-700"
+                            : "text-secondary-800 hover:bg-secondary-50"
+                        )}
+                        aria-expanded={groupOpen}
+                        aria-controls={`desktop-scholarship-group-${group.id}`}
+                      >
+                        <span
+                          className={cn(
+                            "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
+                            groupActive
+                              ? "bg-primary-100 text-primary-700"
+                              : "bg-secondary-100 text-secondary-600"
+                          )}
+                        >
+                          <GroupIcon className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1">{group.label}</span>
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 shrink-0 text-secondary-400 transition-transform duration-200",
+                            groupOpen && "rotate-180"
+                          )}
+                          aria-hidden="true"
+                        />
+                      </button>
+
+                      <div
+                        id={`desktop-scholarship-group-${group.id}`}
+                        className={cn(
+                          "grid transition-all duration-300 ease-out",
+                          groupOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                        )}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <div className="ml-3 mt-1 space-y-0.5 border-l border-secondary-200 pl-2">
+                            {group.links.map((link) => (
+                              <Link
+                                key={link.label}
+                                href={link.href}
+                                className={cn(
+                                  "relative flex items-center rounded-r-lg px-3 py-2 text-sm transition-colors",
+                                  isActive(link.href)
+                                    ? "bg-primary-50 font-medium text-primary-700"
+                                    : "text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900"
+                                )}
+                                onClick={closeMenus}
+                              >
+                                {isActive(link.href) && (
+                                  <span className="absolute -left-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary-600" />
+                                )}
+                                {link.label}
+                              </Link>
+                            ))}
+                            <Link
+                              href="/scholarships"
+                              className="mt-1 flex items-center gap-1 rounded-r-lg px-3 py-2 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50"
+                              onClick={closeMenus}
+                            >
+                              View All Scholarships
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
 
     if (hasDropdown) {
       return (
@@ -317,7 +495,132 @@ export function Header() {
   const renderMobileItem = (item: NavItem) => {
     const Icon = item.icon;
     const hasDropdown = item.dropdown && item.dropdown.length > 0;
+    const hasGroups = item.groups && item.groups.length > 0;
     const isMobileOpen = mobileOpenDropdown === item.label;
+
+    if (hasGroups) {
+      return (
+        <div key={item.label}>
+          <button
+            type="button"
+            onClick={() => setMobileOpenDropdown(isMobileOpen ? null : item.label)}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-left",
+              isActive(item.href)
+                ? "bg-primary-50 text-primary-700"
+                : "text-secondary-600 hover:bg-secondary-100"
+            )}
+            aria-expanded={isMobileOpen}
+            aria-controls="mobile-scholarships-navigation"
+          >
+            <Icon className="h-5 w-5 shrink-0" />
+            {item.label}
+            <ChevronDown
+              className={cn(
+                "ml-auto h-5 w-5 shrink-0 transition-transform duration-200",
+                isMobileOpen && "rotate-180"
+              )}
+              aria-hidden="true"
+            />
+          </button>
+
+          <div
+            id="mobile-scholarships-navigation"
+            className={cn(
+              "grid transition-all duration-300 ease-out",
+              isMobileOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            )}
+          >
+            <div className="min-h-0 overflow-hidden">
+              <div className="ml-8 mt-1 space-y-2 border-l border-secondary-200 pl-2">
+                {item.groups?.map((group) => {
+                  const GroupIcon = group.icon;
+                  const groupOpen = openGroups[group.id] ?? true;
+                  const groupActive = group.links.some((link) => isActive(link.href));
+
+                  return (
+                    <div
+                      key={group.id}
+                      className="overflow-hidden rounded-xl border border-secondary-200 bg-white"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(group.id)}
+                        className={cn(
+                          "flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-semibold transition-colors",
+                          groupActive
+                            ? "bg-primary-50 text-primary-700"
+                            : "text-secondary-800 hover:bg-secondary-50"
+                        )}
+                        aria-expanded={groupOpen}
+                        aria-controls={`mobile-scholarship-group-${group.id}`}
+                      >
+                        <span
+                          className={cn(
+                            "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
+                            groupActive
+                              ? "bg-primary-100 text-primary-700"
+                              : "bg-secondary-100 text-secondary-600"
+                          )}
+                        >
+                          <GroupIcon className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                        <span className="min-w-0 flex-1">{group.label}</span>
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 shrink-0 text-secondary-400 transition-transform duration-200",
+                            groupOpen && "rotate-180"
+                          )}
+                          aria-hidden="true"
+                        />
+                      </button>
+
+                      <div
+                        id={`mobile-scholarship-group-${group.id}`}
+                        className={cn(
+                          "grid transition-all duration-300 ease-out",
+                          groupOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                        )}
+                      >
+                        <div className="min-h-0 overflow-hidden">
+                          <div className="space-y-0.5 px-2 pb-2">
+                            {group.links.map((link) => (
+                              <Link
+                                key={link.label}
+                                href={link.href}
+                                className={cn(
+                                  "relative flex items-center rounded-lg px-3 py-2 text-sm transition-colors",
+                                  isActive(link.href)
+                                    ? "bg-primary-50 font-medium text-primary-700"
+                                    : "text-secondary-600 hover:bg-secondary-50 hover:text-secondary-900"
+                                )}
+                                onClick={closeMenus}
+                              >
+                                {isActive(link.href) && (
+                                  <span className="absolute left-1 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary-600" />
+                                )}
+                                {link.label}
+                              </Link>
+                            ))}
+                            <Link
+                              href="/scholarships"
+                              className="flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50"
+                              onClick={closeMenus}
+                            >
+                              View All Scholarships
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     if (hasDropdown) {
       return (
