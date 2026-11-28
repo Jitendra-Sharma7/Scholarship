@@ -71,9 +71,9 @@ const courseGroups: ScholarshipNavGroup[] = [
     label: "Courses by Degree",
     icon: GraduationCap,
     links: [
-      { label: "Undergraduate Courses", href: "/course-search/?degree=undergraduate" },
-      { label: "Master's Courses", href: "/course-search/?degree=masters" },
-      { label: "MBA Courses", href: "/course-search/?degree=mba" },
+      { label: "Undergraduate Courses", href: "/course-search?degree=undergraduate" },
+      { label: "Master's Courses", href: "/course-search?degree=masters" },
+      { label: "MBA Courses", href: "/course-search?degree=mba" },
     ],
   },
   {
@@ -81,12 +81,12 @@ const courseGroups: ScholarshipNavGroup[] = [
     label: "Courses by Subject",
     icon: BookOpen,
     links: [
-      { label: "Business Courses", href: "/course-search/?subject=business" },
-      { label: "Computer Science Courses", href: "/course-search/?subject=computer-science" },
-      { label: "Data Science Courses", href: "/course-search/?subject=data-science" },
-      { label: "Design Courses", href: "/course-search/?subject=design" },
-      { label: "Finance Courses", href: "/course-search/?subject=finance" },
-      { label: "Marketing Courses", href: "/course-search/?subject=marketing" },
+      { label: "Business Courses", href: "/course-search?subject=business" },
+      { label: "Computer Science Courses", href: "/course-search?subject=computer-science" },
+      { label: "Data Science Courses", href: "/course-search?subject=data-science" },
+      { label: "Design Courses", href: "/course-search?subject=design" },
+      { label: "Finance Courses", href: "/course-search?subject=finance" },
+      { label: "Marketing Courses", href: "/course-search?subject=marketing" },
     ],
   },
   {
@@ -94,8 +94,8 @@ const courseGroups: ScholarshipNavGroup[] = [
     label: "Courses by Country",
     icon: Globe,
     links: [
-      { label: "Europe Courses", href: "/course-search/?country=europe" },
-      { label: "Germany Courses", href: "/course-search/?country=germany" },
+      { label: "Europe Courses", href: "/course-search?country=europe" },
+      { label: "Germany Courses", href: "/course-search?country=germany" },
     ],
   },
 ];

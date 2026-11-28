@@ -1226,6 +1226,8 @@ export async function getPublicIntakes() {
 export interface ScholarshipQuery {
   query?: string;
   country?: string;
+  /** A Country.region (e.g. "Europe"); resolved to the region's country ids. */
+  region?: string;
   field?: string;
   degree?: string;
   funding?: string;
@@ -1258,6 +1260,7 @@ export async function getPublicScholarships(
   const {
     query,
     country,
+    region,
     field,
     degree,
     funding,
@@ -1286,6 +1289,20 @@ export async function getPublicScholarships(
       { university: { name: { contains: like, mode: "insensitive" } } },
       { country: { name: { contains: like, mode: "insensitive" } } },
     ];
+  }
+  // A region is resolved to its member country ids in a single round trip, so a
+  // "Europe" filter matches every published scholarship in any European country
+  // without the caller having to enumerate them. An explicit country wins if both
+  // are somehow present.
+  if (region && !country) {
+    const regionCountries = await prisma.country.findMany({
+      where: { ...VISIBLE, region: { equals: region, mode: "insensitive" } },
+      select: { id: true },
+    });
+    const regionIds = regionCountries.map((c) => c.id);
+    // An unknown region yields an empty set rather than "no filter", so a
+    // hand-edited ?region=Atlantis shows an honest empty result.
+    where.countryId = regionIds.length > 0 ? { in: regionIds } : { in: [] };
   }
   if (country) where.countryId = country;
   if (university) where.universityId = university;

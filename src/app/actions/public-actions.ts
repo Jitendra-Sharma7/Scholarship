@@ -68,6 +68,7 @@ function sanitiseFilters(input: Partial<ScholarshipQuery>): ScholarshipQuery {
   return {
     query: input.query?.slice(0, 200) || undefined,
     country: input.country?.slice(0, 80) || undefined,
+    region: input.region?.slice(0, 80) || undefined,
     field: input.field?.slice(0, 120) || undefined,
     degree: input.degree?.slice(0, 80) || undefined,
     funding: input.funding?.slice(0, 40) || undefined,
