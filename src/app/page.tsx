@@ -190,7 +190,7 @@ export default async function HomePage() {
                     <div className="text-right">
                       <p className="text-sm font-medium opacity-90">Scholarships Available</p>
                       <p className="text-2xl font-bold">
-                        {stats.openScholarships.toLocaleString()}+
+                        {stats.openScholarships.toLocaleString("en-US")}+
                       </p>
                     </div>
                   </div>
@@ -228,7 +228,7 @@ export default async function HomePage() {
                   <Award className="h-6 w-6" aria-hidden="true" />
                 </div>
                 <p className="text-3xl sm:text-4xl font-extrabold text-primary-600">
-                  {stats.openScholarships.toLocaleString()}+
+                  {stats.openScholarships.toLocaleString("en-US")}+
                 </p>
                 <p className="mt-1 text-xs font-medium uppercase tracking-wider text-secondary-500">
                   Open Scholarships

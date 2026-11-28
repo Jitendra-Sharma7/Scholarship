@@ -12,15 +12,15 @@ declare global {
 }
 
 interface AdUnitProps {
-    slot: string;
-    format?: string;
+    _slot: string;
+    _format?: string;
     responsive?: boolean;
     className?: string;
 }
 
 export default function AdUnit({
-    slot,
-    format = "auto",
+    _slot,
+    _format = "auto",
     responsive = true,
     className = "",
 }: AdUnitProps) {

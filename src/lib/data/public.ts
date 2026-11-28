@@ -1238,6 +1238,10 @@ export interface ScholarshipQuery {
   featured?: boolean;
   university?: string;
   intake?: string;
+  studyMode?: string;
+  duration?: string;
+  tuitionFee?: string;
+  courseType?: string;
   page?: number;
   limit?: number;
   /** Internal: the Top Opportunities section. */
@@ -1271,6 +1275,10 @@ export async function getPublicScholarships(
     featured,
     university,
     intake,
+    studyMode,
+    duration,
+    tuitionFee,
+    courseType,
     page = 1,
     limit = 12,
     featuredOnly = false,
@@ -1313,6 +1321,32 @@ export async function getPublicScholarships(
   if (degree) where.degreeLevels = { has: degree };
   if (field && field !== "all") where.fields = { some: { fieldId: field } };
   if (intake) where.intakes = { some: { intake: { slug: intake } } };
+
+  // Study Mode filter
+  if (studyMode) where.studyMode = studyMode;
+
+  // Duration filter (partial match since duration is a free-text field)
+  if (duration) where.duration = { contains: duration, mode: "insensitive" };
+
+  // Tuition Fee filter (filter by fundingAmount range)
+  if (tuitionFee) {
+    try {
+      const range = JSON.parse(tuitionFee) as { min: number; max: number };
+      if (range.min !== undefined || range.max !== undefined) {
+        const amountFilter: Record<string, number> = {};
+        if (range.min !== undefined) amountFilter.gte = range.min;
+        if (range.max !== undefined && range.max !== Infinity) amountFilter.lte = range.max;
+        if (Object.keys(amountFilter).length > 0) {
+          where.fundingAmount = amountFilter;
+        }
+      }
+    } catch {
+      // Invalid tuitionFee format, ignore
+    }
+  }
+
+  // Course Type filter (using studyType field)
+  if (courseType) where.studyType = { equals: courseType, mode: "insensitive" };
 
   // Eligible nationality filter
   if (eligibleNationality && eligibleNationality !== "all") {

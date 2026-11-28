@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useId } from "react";
-import { Filter, RotateCcw } from "lucide-react";
+import { Filter, RotateCcw, GraduationCap, BookOpen, Globe, Building2, Monitor, Clock, Euro, Layers } from "lucide-react";
 import type { CourseFilterState, CourseSearchOptions } from "@/lib/course-search";
 
 interface CourseFiltersProps {
@@ -25,8 +25,60 @@ export function CourseFilters({
   };
 
   const hasActiveFilters = Boolean(
-    filters.degree || filters.subject || filters.country || filters.university,
+    filters.degree ||
+      filters.subject ||
+      filters.country ||
+      filters.university ||
+      filters.studyMode ||
+      filters.duration ||
+      filters.tuitionFee ||
+      filters.courseType,
   );
+
+  const renderSelect = (
+    label: string,
+    name: keyof CourseFilterState,
+    options: { value: string; label: string }[],
+    Icon: React.ComponentType<{ className?: string }>,
+    placeholder: string,
+  ) => (
+    <div className="space-y-2">
+      <label
+        htmlFor={controlId(name)}
+        className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-secondary-500"
+      >
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+      </label>
+      <select
+        id={controlId(name)}
+        value={filters[name]}
+        onChange={(e) => handleSelect(name, e.target.value)}
+        className="input-field"
+      >
+        <option value="">{placeholder}</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const degreeOptions = options.degrees.map((d) => ({ value: d.slug, label: d.label }));
+  const subjectOptions = options.subjects.map((s) => ({ value: s.slug, label: s.name }));
+  const countryOptions = [
+    ...(options.regions.length > 0
+      ? options.regions.map((r) => ({ value: r.slug, label: `${r.name} (Region)` }))
+      : []),
+    ...options.countries.map((c) => ({ value: c.slug, label: c.name })),
+  ];
+  const universityOptions = options.universities.map((u) => ({ value: u.id, label: u.name }));
+  const studyModeOptions = options.studyModes.map((s) => ({ value: s.slug, label: s.label }));
+  const durationOptions = options.durations.map((d) => ({ value: d.slug, label: d.label }));
+  const tuitionFeeOptions = options.tuitionFees.map((t) => ({ value: t.slug, label: t.label }));
+  const courseTypeOptions = options.courseTypes.map((c) => ({ value: c.slug, label: c.label }));
 
   return (
     <div className="space-y-6 rounded-2xl border border-secondary-200 bg-white p-5 shadow-card">
@@ -46,110 +98,14 @@ export function CourseFilters({
         )}
       </div>
 
-      {/* Degree */}
-      <div className="space-y-2">
-        <label
-          htmlFor={controlId("degree")}
-          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
-        >
-          Degree
-        </label>
-        <select
-          id={controlId("degree")}
-          value={filters.degree}
-          onChange={(e) => handleSelect("degree", e.target.value)}
-          className="input-field"
-        >
-          <option value="">All Degrees</option>
-          {options.degrees.map((d) => (
-            <option key={d.slug} value={d.slug}>
-              {d.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Subject */}
-      <div className="space-y-2">
-        <label
-          htmlFor={controlId("subject")}
-          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
-        >
-          Subject
-        </label>
-        <select
-          id={controlId("subject")}
-          value={filters.subject}
-          onChange={(e) => handleSelect("subject", e.target.value)}
-          className="input-field"
-        >
-          <option value="">All Subjects</option>
-          {options.subjects.map((s) => (
-            <option key={s.id} value={s.slug}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Country / Region */}
-      <div className="space-y-2">
-        <label
-          htmlFor={controlId("country")}
-          className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
-        >
-          Country / Region
-        </label>
-        <select
-          id={controlId("country")}
-          value={filters.country}
-          onChange={(e) => handleSelect("country", e.target.value)}
-          className="input-field"
-        >
-          <option value="">All Countries</option>
-          {options.regions.length > 0 && (
-            <optgroup label="Regions">
-              {options.regions.map((r) => (
-                <option key={`region-${r.slug}`} value={r.slug}>
-                  {r.name}
-                </option>
-              ))}
-            </optgroup>
-          )}
-          <optgroup label="Countries">
-            {options.countries.map((c) => (
-              <option key={c.id} value={c.slug}>
-                {c.name}
-              </option>
-            ))}
-          </optgroup>
-        </select>
-      </div>
-
-      {/* University */}
-      {options.universities.length > 0 && (
-        <div className="space-y-2">
-          <label
-            htmlFor={controlId("university")}
-            className="text-xs font-semibold uppercase tracking-wider text-secondary-500"
-          >
-            University
-          </label>
-          <select
-            id={controlId("university")}
-            value={filters.university}
-            onChange={(e) => handleSelect("university", e.target.value)}
-            className="input-field"
-          >
-            <option value="">All Universities</option>
-            {options.universities.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {renderSelect("Degree", "degree", degreeOptions, GraduationCap, "All Degrees")}
+      {renderSelect("Subject", "subject", subjectOptions, BookOpen, "All Subjects")}
+      {renderSelect("Country / Region", "country", countryOptions, Globe, "All Countries")}
+      {universityOptions.length > 0 && renderSelect("University", "university", universityOptions, Building2, "All Universities")}
+      {studyModeOptions.length > 0 && renderSelect("Study Mode", "studyMode", studyModeOptions, Monitor, "All Study Modes")}
+      {durationOptions.length > 0 && renderSelect("Duration", "duration", durationOptions, Clock, "All Durations")}
+      {tuitionFeeOptions.length > 0 && renderSelect("Tuition Fee", "tuitionFee", tuitionFeeOptions, Euro, "All Fee Ranges")}
+      {courseTypeOptions.length > 0 && renderSelect("Course Type", "courseType", courseTypeOptions, Layers, "All Types")}
     </div>
   );
 }

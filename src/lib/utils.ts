@@ -16,6 +16,7 @@ export function formatCurrency(amount: number, currency: string = "USD"): string
 export function formatDate(date: Date | string | null): string {
   if (!date) return "TBA";
   return new Date(date).toLocaleDateString("en-US", {
+    timeZone: "UTC",
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -25,6 +26,7 @@ export function formatDate(date: Date | string | null): string {
 export function formatDateLong(date: Date | string | null): string {
   if (!date) return "To Be Announced";
   return new Date(date).toLocaleDateString("en-US", {
+    timeZone: "UTC",
     year: "numeric",
     month: "long",
     day: "numeric",

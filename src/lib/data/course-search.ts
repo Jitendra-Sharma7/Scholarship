@@ -7,6 +7,10 @@ import {
   type SubjectOption,
   type CountryOption,
   type RegionOption,
+  type StudyModeOption,
+  type DurationOption,
+  type TuitionFeeOption,
+  type CourseTypeOption,
 } from "@/lib/course-search";
 
 /**
@@ -21,7 +25,15 @@ import {
 export async function getCourseSearchOptions(): Promise<CourseSearchOptions> {
   const VISIBLE = { publishStatus: "PUBLISHED" as const, deletedAt: null };
 
-  const [degreeRows, fields, countryRows, universities] = await Promise.all([
+  const [
+    degreeRows,
+    fields,
+    countryRows,
+    universities,
+    studyModeRows,
+    durationRows,
+    courseTypeRows,
+  ] = await Promise.all([
     // Distinct degree levels across every published, non-deleted scholarship.
     prisma.scholarship.findMany({
       where: VISIBLE,
@@ -37,6 +49,21 @@ export async function getCourseSearchOptions(): Promise<CourseSearchOptions> {
       orderBy: { name: "asc" },
     }),
     getPublicUniversitiesList({ limit: 60 }),
+    // Distinct study modes
+    prisma.scholarship.findMany({
+      where: { ...VISIBLE, studyMode: { not: null } },
+      select: { studyMode: true },
+    }),
+    // Distinct durations
+    prisma.scholarship.findMany({
+      where: { ...VISIBLE, duration: { not: null } },
+      select: { duration: true },
+    }),
+    // Distinct course types (using studyType)
+    prisma.scholarship.findMany({
+      where: { ...VISIBLE, studyType: { not: null } },
+      select: { studyType: true },
+    }),
   ]);
 
   // --- Degrees: distinct, de-duplicated by slug, with a friendly label. ---
@@ -82,11 +109,72 @@ export async function getCourseSearchOptions(): Promise<CourseSearchOptions> {
     a.name.localeCompare(b.name),
   );
 
+  // --- Study Modes ---
+  const studyModeBySlug = new Map<string, StudyModeOption>();
+  for (const row of studyModeRows) {
+    const value = row.studyMode?.trim();
+    if (!value) continue;
+    const slug = slugify(value);
+    if (!studyModeBySlug.has(slug)) {
+      studyModeBySlug.set(slug, { value, slug, label: value });
+    }
+  }
+  const studyModes = [...studyModeBySlug.values()].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  );
+
+  // --- Durations ---
+  const durationBySlug = new Map<string, DurationOption>();
+  for (const row of durationRows) {
+    const value = row.duration?.trim();
+    if (!value) continue;
+    const slug = slugify(value);
+    if (!durationBySlug.has(slug)) {
+      durationBySlug.set(slug, { value, slug, label: value });
+    }
+  }
+  const durations = [...durationBySlug.values()].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  );
+
+  // --- Tuition Fee Ranges ---
+  const tuitionFeeBySlug = new Map<string, TuitionFeeOption>();
+  const tuitionRanges = [
+    { min: 0, max: 5000, label: "Under €5,000" },
+    { min: 5000, max: 10000, label: "€5,000 - €10,000" },
+    { min: 10000, max: 20000, label: "€10,000 - €20,000" },
+    { min: 20000, max: 50000, label: "€20,000 - €50,000" },
+    { min: 50000, max: Infinity, label: "Over €50,000" },
+  ];
+  for (const range of tuitionRanges) {
+    const slug = slugify(range.label);
+    tuitionFeeBySlug.set(slug, { value: JSON.stringify(range), slug, label: range.label });
+  }
+  const tuitionFees = [...tuitionFeeBySlug.values()];
+
+  // --- Course Types ---
+  const courseTypeBySlug = new Map<string, CourseTypeOption>();
+  for (const row of courseTypeRows) {
+    const value = row.studyType?.trim();
+    if (!value) continue;
+    const slug = slugify(value);
+    if (!courseTypeBySlug.has(slug)) {
+      courseTypeBySlug.set(slug, { value, slug, label: value });
+    }
+  }
+  const courseTypes = [...courseTypeBySlug.values()].sort((a, b) =>
+    a.label.localeCompare(b.label),
+  );
+
   return {
     degrees,
     subjects,
     countries,
     regions,
     universities: universities.map((u) => ({ id: u.id, name: u.name })),
+    studyModes,
+    durations,
+    tuitionFees,
+    courseTypes,
   };
 }

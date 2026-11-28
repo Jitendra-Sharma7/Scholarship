@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Inbox, RotateCcw, Filter, X, Home } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
-import { ScholarshipCard } from "@/components/scholarships/ScholarshipCard";
+import { CourseCard } from "@/components/course-search/CourseCard";
 import { CourseFilters } from "@/components/course-search/CourseFilters";
 import { fetchPublicScholarships } from "@/app/actions/public-actions";
 import {
@@ -39,6 +39,10 @@ export function CourseSearchBrowser({
     subject: searchParams.get("subject") ?? "",
     country: searchParams.get("country") ?? "",
     university: searchParams.get("university") ?? "",
+    studyMode: searchParams.get("studyMode") ?? "",
+    duration: searchParams.get("duration") ?? "",
+    tuitionFee: searchParams.get("tuitionFee") ?? "",
+    courseType: searchParams.get("courseType") ?? "",
   });
 
   const [filters, setFilters] = useState<CourseFilterState>(initialState);
@@ -78,6 +82,10 @@ export function CourseSearchBrowser({
           country: resolved.country || undefined,
           region: resolved.region || undefined,
           university: resolved.university || undefined,
+          studyMode: resolved.studyMode || undefined,
+          duration: resolved.duration || undefined,
+          tuitionFee: resolved.tuitionFee || undefined,
+          courseType: resolved.courseType || undefined,
           page,
           limit: SCHOLARSHIP_PAGE_SIZE,
         });
@@ -128,6 +136,22 @@ export function CourseSearchBrowser({
   if (resolved.university) {
     const uni = options.universities.find((u) => u.id === resolved.university);
     chips.push({ key: "university", label: uni?.name ?? resolved.university });
+  }
+  if (resolved.studyMode) {
+    const match = options.studyModes.find((s) => s.value === resolved.studyMode);
+    chips.push({ key: "studyMode", label: match?.label ?? resolved.studyMode });
+  }
+  if (resolved.duration) {
+    const match = options.durations.find((d) => d.value === resolved.duration);
+    chips.push({ key: "duration", label: match?.label ?? resolved.duration });
+  }
+  if (resolved.tuitionFee) {
+    const match = options.tuitionFees.find((t) => t.value === resolved.tuitionFee);
+    chips.push({ key: "tuitionFee", label: match?.label ?? resolved.tuitionFee });
+  }
+  if (resolved.courseType) {
+    const match = options.courseTypes.find((c) => c.value === resolved.courseType);
+    chips.push({ key: "courseType", label: match?.label ?? resolved.courseType });
   }
 
   const heading = chips.length
@@ -286,7 +310,7 @@ export function CourseSearchBrowser({
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {result.data.map((course) => (
-                    <ScholarshipCard key={course.id} scholarship={course} />
+                    <CourseCard key={course.id} course={course} />
                   ))}
                 </div>
 

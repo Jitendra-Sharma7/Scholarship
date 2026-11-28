@@ -9,6 +9,7 @@ import { SiteLogo } from "@/components/layout/SiteLogo";
 import { Container, Flex } from "@/components/layout/Layout";
 import { useStore } from "@/lib/store/useStore";
 import { cn } from "@/lib/utils";
+import { fetchCourseNavGroups } from "@/app/actions/course-nav-actions";
 
 interface DropdownItem {
   label?: string;
@@ -65,106 +66,12 @@ const scholarshipGroups: ScholarshipNavGroup[] = [
   },
 ];
 
-const courseGroups: ScholarshipNavGroup[] = [
-  {
-    id: "degree",
-    label: "Courses by Degree",
-    icon: GraduationCap,
-    links: [
-      { label: "Undergraduate Courses", href: "/course-search?degree=undergraduate" },
-      { label: "Master's Courses", href: "/course-search?degree=masters" },
-      { label: "MBA Courses", href: "/course-search?degree=mba" },
-    ],
-  },
-  {
-    id: "subject",
-    label: "Courses by Subject",
-    icon: BookOpen,
-    links: [
-      { label: "Business Courses", href: "/course-search?subject=business" },
-      { label: "Computer Science Courses", href: "/course-search?subject=computer-science" },
-      { label: "Data Science Courses", href: "/course-search?subject=data-science" },
-      { label: "Design Courses", href: "/course-search?subject=design" },
-      { label: "Finance Courses", href: "/course-search?subject=finance" },
-      { label: "Marketing Courses", href: "/course-search?subject=marketing" },
-    ],
-  },
-  {
-    id: "country",
-    label: "Courses by Country",
-    icon: Globe,
-    links: [
-      { label: "Europe Courses", href: "/course-search?country=europe" },
-      { label: "Germany Courses", href: "/course-search?country=germany" },
-    ],
-  },
-];
-const navItems: NavItem[] = [
-  {
-    label: "Courses",
-    href: "/course-search",
-    icon: BookOpen,
-    groups: courseGroups,
-  },
-  {
-    label: "Scholarships",
-    href: "/scholarships",
-    icon: GraduationCap,
-    groups: scholarshipGroups,
-  },
-  {
-    label: "Universities",
-    href: "/universities",
-    icon: Building2,
-    dropdown: [
-      { label: "All Universities", href: "/universities" },
-      { divider: true, section: "By Category" },
-      { label: "Universities with Scholarships", href: "/universities?scholarships=with" },
-      { label: "Universities with Fully Funded Scholarships", href: "/universities?scholarships=fully-funded" },
-      { label: "Universities by Country", href: "/universities?sort=country" },
-      { divider: true, section: "By Study Level" },
-      { label: "Undergraduate Programs", href: "/universities?studyLevel=ug" },
-      { label: "Postgraduate Programs", href: "/universities?studyLevel=pg" },
-      { label: "PhD / Doctoral Programs", href: "/universities?studyLevel=phd" },
-    ],
-  },
-  {
-    label: "Fields",
-    href: "/fields",
-    icon: BookOpen,
-  },
-  {
-    label: "Fully Funded",
-    href: "/fully-funded",
-    icon: Award,
-  },
-  {
-    label: "Resources",
-    href: "/resources",
-    icon: FileText,
-    dropdown: [
-      { label: "All Resources & Guides", href: "/resources" },
-      { divider: true, section: "Application Guides" },
-      { label: "How to Find Scholarships", href: "/resources/how-to-find-fully-funded-scholarships" },
-      { label: "Writing Statement of Purpose", href: "/resources/writing-a-strong-statement-of-purpose" },
-      { label: "Recommendation Letters Guide", href: "/resources/complete-guide-to-recommendation-letters" },
-      { label: "Scholarship Interview Prep", href: "/resources/how-to-prepare-for-scholarship-interviews" },
-      { label: "Common Application Mistakes", href: "/resources/common-scholarship-application-mistakes" },
-      { divider: true, section: "Language Tests" },
-      { label: "IELTS vs TOEFL Comparison", href: "/resources/ielts-vs-toefl-which-test" },
-      { divider: true, section: "Financial Aid" },
-      { label: "Financial Aid vs Scholarships", href: "/resources/financial-aid-vs-scholarships" },
-      { label: "Understanding Funding Types", href: "/resources/understanding-scholarship-funding-types" },
-      { divider: true, section: "Visa Information" },
-      { label: "Student Visa Requirements by Country", href: "/resources/student-visa-requirements-by-country" },
-      { divider: true, section: "Organisation & Strategy" },
-      { label: "Reading Listings Critically", href: "/resources/reading-a-scholarship-listing-critically" },
-      { divider: true, section: "Other Resources" },
-      { label: "Frequently Asked Questions", href: "/faq" },
-      { label: "Blog", href: "/blog" },
-    ],
-  },
-];
+const GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  degree: GraduationCap,
+  subject: BookOpen,
+  country: Globe,
+  type: Award,
+};
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -177,11 +84,91 @@ export function Header() {
     type: true,
     subject: true,
   });
+  const [courseGroups, setCourseGroups] = useState<ScholarshipNavGroup[]>([]);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    fetchCourseNavGroups().then((groups) => {
+      setCourseGroups(
+        groups.map((g) => ({
+          ...g,
+          icon: GROUP_ICONS[g.id] || GraduationCap,
+        }))
+      );
+    });
+  }, []);
+
+  const navItems: NavItem[] = [
+    {
+      label: "Courses",
+      href: "/course-search",
+      icon: BookOpen,
+      groups: courseGroups,
+    },
+    {
+      label: "Scholarships",
+      href: "/scholarships",
+      icon: GraduationCap,
+      groups: scholarshipGroups,
+    },
+    {
+      label: "Universities",
+      href: "/universities",
+      icon: Building2,
+      dropdown: [
+        { label: "All Universities", href: "/universities" },
+        { divider: true, section: "By Category" },
+        { label: "Universities with Scholarships", href: "/universities?scholarships=with" },
+        { label: "Universities with Fully Funded Scholarships", href: "/universities?scholarships=fully-funded" },
+        { label: "Universities by Country", href: "/universities?sort=country" },
+        { divider: true, section: "By Study Level" },
+        { label: "Undergraduate Programs", href: "/universities?studyLevel=ug" },
+        { label: "Postgraduate Programs", href: "/universities?studyLevel=pg" },
+        { label: "PhD / Doctoral Programs", href: "/universities?studyLevel=phd" },
+      ],
+    },
+    {
+      label: "Fields",
+      href: "/fields",
+      icon: BookOpen,
+    },
+    {
+      label: "Fully Funded",
+      href: "/fully-funded",
+      icon: Award,
+    },
+    {
+      label: "Resources",
+      href: "/resources",
+      icon: FileText,
+      dropdown: [
+        { label: "All Resources & Guides", href: "/resources" },
+        { divider: true, section: "Application Guides" },
+        { label: "How to Find Scholarships", href: "/resources/how-to-find-fully-funded-scholarships" },
+        { label: "Writing Statement of Purpose", href: "/resources/writing-a-strong-statement-of-purpose" },
+        { label: "Recommendation Letters Guide", href: "/resources/complete-guide-to-recommendation-letters" },
+        { label: "Scholarship Interview Prep", href: "/resources/how-to-prepare-for-scholarship-interviews" },
+        { label: "Common Application Mistakes", href: "/resources/common-scholarship-application-mistakes" },
+        { divider: true, section: "Language Tests" },
+        { label: "IELTS vs TOEFL Comparison", href: "/resources/ielts-vs-toefl-which-test" },
+        { divider: true, section: "Financial Aid" },
+        { label: "Financial Aid vs Scholarships", href: "/resources/financial-aid-vs-scholarships" },
+        { label: "Understanding Funding Types", href: "/resources/understanding-scholarship-funding-types" },
+        { divider: true, section: "Visa Information" },
+        { label: "Student Visa Requirements by Country", href: "/resources/student-visa-requirements-by-country" },
+        { divider: true, section: "Organisation & Strategy" },
+        { label: "Reading Listings Critically", href: "/resources/reading-a-scholarship-listing-critically" },
+        { divider: true, section: "Other Resources" },
+        { label: "Frequently Asked Questions", href: "/faq" },
+        { label: "Blog", href: "/blog" },
+      ],
+    },
+  ];
+
   const openDropdown = (label: string) => {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current);

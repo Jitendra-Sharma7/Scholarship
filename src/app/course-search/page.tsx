@@ -38,6 +38,10 @@ function readState(
     subject: first(params.subject),
     country: first(params.country),
     university: first(params.university),
+    studyMode: first(params.studyMode),
+    duration: first(params.duration),
+    tuitionFee: first(params.tuitionFee),
+    courseType: first(params.courseType),
   };
 }
 
@@ -87,6 +91,10 @@ export default async function CourseSearchPage({
     country: resolved.country || undefined,
     region: resolved.region || undefined,
     university: resolved.university || undefined,
+    studyMode: resolved.studyMode || undefined,
+    duration: resolved.duration || undefined,
+    tuitionFee: resolved.tuitionFee || undefined,
+    courseType: resolved.courseType || undefined,
     page: 1,
     limit: SCHOLARSHIP_PAGE_SIZE,
   });

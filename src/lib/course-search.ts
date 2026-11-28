@@ -42,12 +42,40 @@ export interface RegionOption {
   slug: string;
 }
 
+export interface StudyModeOption {
+  value: string;
+  slug: string;
+  label: string;
+}
+
+export interface DurationOption {
+  value: string;
+  slug: string;
+  label: string;
+}
+
+export interface TuitionFeeOption {
+  value: string;
+  slug: string;
+  label: string;
+}
+
+export interface CourseTypeOption {
+  value: string;
+  slug: string;
+  label: string;
+}
+
 export interface CourseSearchOptions {
   degrees: DegreeOption[];
   subjects: SubjectOption[];
   countries: CountryOption[];
   regions: RegionOption[];
   universities: { id: string; name: string }[];
+  studyModes: StudyModeOption[];
+  durations: DurationOption[];
+  tuitionFees: TuitionFeeOption[];
+  courseTypes: CourseTypeOption[];
 }
 
 /**
@@ -60,6 +88,10 @@ export interface CourseFilterState {
   subject: string;
   country: string;
   university: string;
+  studyMode: string;
+  duration: string;
+  tuitionFee: string;
+  courseType: string;
 }
 
 /** The same filters resolved to the concrete values the data layer expects. */
@@ -69,6 +101,10 @@ export interface ResolvedCourseQuery {
   country: string;
   region: string;
   university: string;
+  studyMode: string;
+  duration: string;
+  tuitionFee: string;
+  courseType: string;
 }
 
 export const EMPTY_COURSE_FILTERS: CourseFilterState = {
@@ -76,6 +112,10 @@ export const EMPTY_COURSE_FILTERS: CourseFilterState = {
   subject: "",
   country: "",
   university: "",
+  studyMode: "",
+  duration: "",
+  tuitionFee: "",
+  courseType: "",
 };
 
 /**
@@ -133,6 +173,42 @@ function findRegionName(regions: RegionOption[], slug: string): string {
   return prefix ? prefix.name : "";
 }
 
+function findStudyModeSlug(studyModes: StudyModeOption[], slug: string): string {
+  if (!slug) return "";
+  const wanted = slugify(slug);
+  const exact = studyModes.find((s) => s.slug === wanted);
+  if (exact) return exact.value;
+  const prefix = studyModes.find((s) => s.slug.startsWith(wanted));
+  return prefix ? prefix.value : "";
+}
+
+function findDurationSlug(durations: DurationOption[], slug: string): string {
+  if (!slug) return "";
+  const wanted = slugify(slug);
+  const exact = durations.find((d) => d.slug === wanted);
+  if (exact) return exact.value;
+  const prefix = durations.find((d) => d.slug.startsWith(wanted));
+  return prefix ? prefix.value : "";
+}
+
+function findTuitionFeeSlug(tuitionFees: TuitionFeeOption[], slug: string): string {
+  if (!slug) return "";
+  const wanted = slugify(slug);
+  const exact = tuitionFees.find((t) => t.slug === wanted);
+  if (exact) return exact.value;
+  const prefix = tuitionFees.find((t) => t.slug.startsWith(wanted));
+  return prefix ? prefix.value : "";
+}
+
+function findCourseTypeSlug(courseTypes: CourseTypeOption[], slug: string): string {
+  if (!slug) return "";
+  const wanted = slugify(slug);
+  const exact = courseTypes.find((c) => c.slug === wanted);
+  if (exact) return exact.value;
+  const prefix = courseTypes.find((c) => c.slug.startsWith(wanted));
+  return prefix ? prefix.value : "";
+}
+
 /**
  * Resolve URL slugs to concrete DB values. A country slug that names a region
  * (e.g. "europe") becomes a `region` filter; anything else resolves to a single
@@ -153,6 +229,10 @@ export function resolveCourseQuery(
     country: countryId,
     region: regionName,
     university: state.university,
+    studyMode: findStudyModeSlug(options.studyModes, state.studyMode),
+    duration: findDurationSlug(options.durations, state.duration),
+    tuitionFee: findTuitionFeeSlug(options.tuitionFees, state.tuitionFee),
+    courseType: findCourseTypeSlug(options.courseTypes, state.courseType),
   };
 }
 
@@ -167,5 +247,9 @@ export function courseFiltersToQuery(state: CourseFilterState): string {
   if (state.subject) params.set("subject", state.subject);
   if (state.country) params.set("country", state.country);
   if (state.university) params.set("university", state.university);
+  if (state.studyMode) params.set("studyMode", state.studyMode);
+  if (state.duration) params.set("duration", state.duration);
+  if (state.tuitionFee) params.set("tuitionFee", state.tuitionFee);
+  if (state.courseType) params.set("courseType", state.courseType);
   return params.toString();
 }
