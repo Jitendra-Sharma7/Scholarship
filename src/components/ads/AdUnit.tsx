@@ -1,82 +1,76 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useConsentState } from "@/lib/useConsent";
 
 declare global {
-    interface Window {
-        adsbygoogle?: Array<Record<string, unknown>>;
-        adsenseScriptReady?: boolean;
-    }
+  interface Window {
+    adsbygoogle?: Array<Record<string, unknown>>;
+  }
 }
 
 interface AdUnitProps {
-    _slot: string;
-    _format?: string;
-    responsive?: boolean;
-    className?: string;
+  slot: string;
+  format?: string;
+  responsive?: boolean;
+  className?: string;
 }
 
+const PUBLISHER_ID = "ca-pub-6190025929296653";
+
 export default function AdUnit({
-    _slot,
-    _format = "auto",
-    responsive = true,
-    className = "",
+  slot,
+  format = "auto",
+  responsive = true,
+  className = "",
 }: AdUnitProps) {
-    const consent = useConsentState();
-    const [scriptReady, setScriptReady] = useState(false);
+  const consent = useConsentState();
+  const pushedRef = useRef(false);
 
-    useEffect(() => {
-        const checkScript = () => {
-            setScriptReady(
-                window.adsenseScriptReady === true
-            );
-        };
-
-        checkScript();
-
-        window.addEventListener(
-            "adsense-script-ready",
-            checkScript
-        );
-
-        return () => {
-            window.removeEventListener(
-                "adsense-script-ready",
-                checkScript
-            );
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!consent?.marketing || !scriptReady) {
-            return;
-        }
-
-        try {
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (error) {
-            console.error("Google AdSense initialization error:", error);
-        }
-    }, [consent?.marketing, scriptReady]);
-
+  useEffect(() => {
     if (!consent?.marketing) {
-        return null;
+      pushedRef.current = false;
+      return;
     }
+    if (pushedRef.current) return;
 
-    return (
-        <div className={className}>
-            <ins
-                className="adsbygoogle"
-                style={{ display: "block" }}
-                data-ad-client="ca-pub-6190025929296653"
-                data-ad-slot={5893622679}
-                data-ad-format={responsive}
-                data-full-width-responsive={
-                    responsive ? "true" : "false"
-                }
-            />
-        </div>
-    );
+    let cancelled = false;
+
+    const tryPush = () => {
+      if (cancelled || pushedRef.current) return;
+      if (typeof window === "undefined" || !Array.isArray(window.adsbygoogle)) {
+        window.setTimeout(tryPush, 200);
+        return;
+      }
+      try {
+        (window.adsbygoogle as Array<Record<string, unknown>>).push({});
+        pushedRef.current = true;
+      } catch (error) {
+        console.error("Google AdSense initialization error:", error);
+      }
+    };
+
+    tryPush();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [consent?.marketing]);
+
+  if (!consent?.marketing) {
+    return null;
+  }
+
+  return (
+    <div className={className}>
+      <ins
+        className="adsbygoogle"
+        style={{ display: "block" }}
+        data-ad-client={PUBLISHER_ID}
+        data-ad-slot={slot}
+        data-ad-format={format}
+        data-full-width-responsive={responsive ? "true" : "false"}
+      />
+    </div>
+  );
 }

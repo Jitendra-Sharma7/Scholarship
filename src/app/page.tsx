@@ -13,6 +13,7 @@ import { HowItWorks } from "@/app/HowItWorks";
 import { VerificationTransparency } from "@/app/VerificationTransparency";
 import { DeadlineAlerts } from "@/app/DeadlineAlerts";
 import { NewsletterSection } from "@/app/NewsletterSection";
+import AdUnit from "@/components/ads/AdUnit";
 
 import JsonLd from "@/components/seo/JsonLd";
 
@@ -278,6 +279,12 @@ export default async function HomePage() {
       />
 
       <FullyFundedScholarships initialScholarships={fullyFundedList} />
+
+      <section className="bg-white py-8">
+        <Container>
+          <AdUnit slot="5893622679" className="mx-auto max-w-7xl" />
+        </Container>
+      </section>
 
       <ScholarshipCategories />
 
