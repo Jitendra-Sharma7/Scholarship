@@ -5,10 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { GraduationCap, Clock, Euro, MapPin, BookOpen } from "lucide-react";
 import { CountryFlag } from "@/components/ui/CountryFlag";
-import type { PublicScholarship } from "@/lib/data/public";
+import type { PublicCourse } from "@/lib/data/course-search";
 
 interface CourseCardProps {
-  course: PublicScholarship;
+  course: PublicCourse;
 }
 
 function formatTuition(amount: number | null, currency: string | null): string {
@@ -27,13 +27,14 @@ function formatDuration(duration: string | null): string {
 }
 
 export function CourseCard({ course }: CourseCardProps) {
-  const primaryDegree = course.degreeLevels[0] || "Not specified";
-  const primaryField = course.fields[0] || "Not specified";
   const studyMode = course.studyMode || "Not specified";
+  const detailHref = course.url || "/course-search";
 
   return (
     <Link
-      href={`/scholarships/${course.slug}`}
+      href={detailHref}
+      target={course.url ? "_blank" : undefined}
+      rel={course.url ? "noopener noreferrer" : undefined}
       className="group relative flex flex-col justify-between rounded-2xl border border-secondary-200/90 bg-white p-5 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary-300 hover:shadow-card-hover"
     >
       {/* Course Image/University Logo */}
@@ -41,7 +42,7 @@ export function CourseCard({ course }: CourseCardProps) {
         <div className="mb-4 -mx-5 -mt-5 rounded-t-2xl overflow-hidden">
           <Image
             src={course.coverImage || course.logo || ""}
-            alt={course.universityName || "University"}
+            alt={course.universityName || course.title}
             className="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
             width={480}
             height={160}
@@ -55,20 +56,14 @@ export function CourseCard({ course }: CourseCardProps) {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             {/* Course Type Badge */}
-            {course.studyType && (
+            {course.courseType && (
               <span className="inline-flex items-center rounded-md border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">
-                {course.studyType}
+                {course.courseType}
               </span>
             )}
-            {/* Funding Badge */}
-            <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs uppercase tracking-wider ${
-              course.fundingType === "fully-funded"
-                ? "bg-success-50 text-success-700 border-success-200 font-semibold"
-                : course.fundingType === "fully-tuition"
-                ? "bg-primary-50 text-primary-700 border-primary-200"
-                : "bg-warning-50 text-warning-700 border-warning-200"
-            }`}>
-              {course.fundingType.replace("-", " ")}
+            {/* Degree Badge */}
+            <span className="inline-flex items-center rounded-md border border-primary-200 bg-primary-50 px-2.5 py-0.5 text-xs uppercase tracking-wider text-primary-700 font-semibold">
+              {course.degree}
             </span>
           </div>
         </div>
@@ -80,8 +75,7 @@ export function CourseCard({ course }: CourseCardProps) {
 
         {/* University & Location */}
         <p className="mt-1 text-sm text-secondary-600">
-          {course.universityName || course.providerName || "Official Organization"}
-          {course.city && ` • ${course.city}`}
+          {course.universityName || "Independent Provider"}
           {course.countryName && `, ${course.countryName}`}
         </p>
 
@@ -89,15 +83,15 @@ export function CourseCard({ course }: CourseCardProps) {
         <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-secondary-600 sm:grid-cols-4">
           <div className="flex items-center gap-1.5 rounded-lg bg-secondary-50 p-2">
             <GraduationCap className="h-3.5 w-3.5 text-secondary-400 shrink-0" />
-            <span className="truncate" title={course.degreeLevels.join(", ")}>
-              {primaryDegree}
+            <span className="truncate" title={course.degree}>
+              {course.degree}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5 rounded-lg bg-secondary-50 p-2">
             <BookOpen className="h-3.5 w-3.5 text-secondary-400 shrink-0" />
-            <span className="truncate" title={course.fields.join(", ")}>
-              {primaryField}
+            <span className="truncate" title={course.subject}>
+              {course.subject}
             </span>
           </div>
 
@@ -117,10 +111,12 @@ export function CourseCard({ course }: CourseCardProps) {
             <span className="truncate">{formatDuration(course.duration)}</span>
           </div>
 
-          {course.fundingAmount && (
+          {course.tuitionAmount && (
             <div className="flex items-center gap-1.5 rounded-lg bg-secondary-50 p-2 sm:col-span-2">
               <Euro className="h-3.5 w-3.5 text-secondary-400 shrink-0" />
-              <span className="truncate font-medium">{formatTuition(course.fundingAmount, course.currency)}</span>
+              <span className="truncate font-medium">
+                {formatTuition(course.tuitionAmount, course.currency)}
+              </span>
             </div>
           )}
 

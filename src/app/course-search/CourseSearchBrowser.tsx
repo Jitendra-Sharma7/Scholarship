@@ -7,7 +7,7 @@ import { Inbox, RotateCcw, Filter, X, Home } from "lucide-react";
 import { Container } from "@/components/layout/Layout";
 import { CourseCard } from "@/components/course-search/CourseCard";
 import { CourseFilters } from "@/components/course-search/CourseFilters";
-import { fetchPublicScholarships } from "@/app/actions/public-actions";
+import { fetchPublicCourses } from "@/app/actions/public-actions";
 import {
   resolveCourseQuery,
   courseFiltersToQuery,
@@ -15,13 +15,14 @@ import {
   type CourseFilterState,
   type CourseSearchOptions,
 } from "@/lib/course-search";
-import type { Paginated, PublicScholarship } from "@/lib/data/public";
+import type { Paginated } from "@/lib/data/public";
+import type { PublicCourse } from "@/lib/data/course-search";
 import { SCHOLARSHIP_PAGE_SIZE } from "@/lib/page-size";
 
 interface CourseSearchBrowserProps {
   options: CourseSearchOptions;
   initialState: CourseFilterState;
-  initialResult: Paginated<PublicScholarship>;
+  initialResult: Paginated<PublicCourse>;
 }
 
 type FilterKey = keyof CourseFilterState;
@@ -47,7 +48,7 @@ export function CourseSearchBrowser({
 
   const [filters, setFilters] = useState<CourseFilterState>(initialState);
   const [page, setPage] = useState(1);
-  const [result, setResult] = useState<Paginated<PublicScholarship>>(initialResult);
+  const [result, setResult] = useState<Paginated<PublicCourse>>(initialResult);
   const [loading, setLoading] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
 
@@ -76,9 +77,13 @@ export function CourseSearchBrowser({
       setLoading(true);
       try {
         const resolved = resolveCourseQuery(filters, options);
-        const res = await fetchPublicScholarships({
+        // The URL carries friendly slugs; the DB stores the subject display name.
+        const subjectName = resolved.field
+          ? options.subjects.find((s) => s.id === resolved.field)?.name ?? resolved.field
+          : undefined;
+        const res = await fetchPublicCourses({
           degree: resolved.degree || undefined,
-          field: resolved.field || undefined,
+          subject: subjectName || undefined,
           country: resolved.country || undefined,
           region: resolved.region || undefined,
           university: resolved.university || undefined,
@@ -284,7 +289,7 @@ export function CourseSearchBrowser({
               <div className="rounded-2xl border border-dashed border-secondary-300 bg-white p-16 text-center">
                 <Inbox className="h-12 w-12 text-secondary-400 mx-auto mb-4" />
                 <h3 className="text-base font-bold text-secondary-900 mb-2">
-                  No courses found
+                  No courses available
                 </h3>
                 <p className="text-sm text-secondary-500 max-w-sm mx-auto mb-6">
                   We couldn&apos;t find any courses matching your filters. Try

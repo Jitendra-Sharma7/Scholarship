@@ -175,6 +175,7 @@ model Country {
   scholarships        Scholarship[]
   scholarshipLinks    ScholarshipCountry[]
   universities        University[]
+  courses             Course[]
 
   @@index([publishStatus, deletedAt])
   @@index([region])
@@ -228,6 +229,7 @@ model University {
   scholarships                Scholarship[]
   country                     Country?          @relation(fields: [countryId], references: [id])
   fields                      UniversityField[]
+  courses                     Course[]
 
   @@index([publishStatus, deletedAt])
   @@index([countryId])
@@ -424,6 +426,57 @@ model UniversityField {
 
   @@id([universityId, fieldId])
   @@index([fieldId])
+}
+
+/// *
+/// * A published course/programme offered by a university.
+/// *
+/// * Courses are a first-class, separate data source from scholarships: the
+/// * Course Search page and the Navbar "Courses" dropdown read ONLY this table
+/// * and never fall back to Scholarship rows. A course carries its own degree
+/// * level (Undergraduate / Master's / MBA ...), subject, country (and through
+/// * it, region) and university, which is exactly what the navbar categories
+/// * and the /course-search filters resolve against.
+model Course {
+  id               String        @id @default(cuid())
+  title            String
+  slug             String        @unique
+  description      String?
+  shortDescription String?
+  /// Degree level, e.g. "Undergraduate", "Master's", "MBA".
+  degree           String
+  /// Subject area, e.g. "Business", "Computer Science", "Data Science".
+  subject          String
+  countryId        String?
+  universityId     String?
+  studyMode        String?
+  duration         String?
+  /// Tuition fee in `currency`, used by the tuition-range filter.
+  tuitionAmount    Float?
+  currency         String?
+  /// Course type, e.g. "Full-time", "Online".
+  courseType       String?
+  intake           String?
+  language         String?
+  /// External programme URL; the detail affordance links here when present.
+  url              String?
+  coverImage       String?
+  logo             String?
+  featured         Boolean       @default(false)
+  publishStatus    PublishStatus @default(PUBLISHED)
+  seoTitle         String?
+  seoDescription   String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+  country          Country?      @relation(fields: [countryId], references: [id])
+  university       University?   @relation(fields: [universityId], references: [id])
+
+  @@index([publishStatus, deletedAt])
+  @@index([degree])
+  @@index([subject])
+  @@index([countryId])
+  @@index([universityId])
 }
 
 model BlogPost {

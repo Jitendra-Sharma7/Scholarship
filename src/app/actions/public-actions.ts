@@ -44,6 +44,11 @@ import {
   type MatchProfile,
   type MatchResult,
 } from "@/lib/data/store";
+import {
+  getPublicCourses,
+  type CourseQuery,
+  type PublicCourse,
+} from "@/lib/data/course-search";
 
 /**
  * Upper bounds, so a client component cannot turn a public read action into an
@@ -91,6 +96,32 @@ export async function fetchPublicScholarships(
   filters: Partial<ScholarshipQuery>
 ): Promise<Paginated<PublicScholarship>> {
   return getPublicScholarships(sanitiseFilters(filters));
+}
+
+function sanitiseCourseFilters(input: Partial<CourseQuery>): CourseQuery {
+  return {
+    degree: input.degree?.slice(0, 80) || undefined,
+    subject: input.subject?.slice(0, 120) || undefined,
+    country: input.country?.slice(0, 80) || undefined,
+    region: input.region?.slice(0, 80) || undefined,
+    university: input.university?.slice(0, 80) || undefined,
+    studyMode: input.studyMode?.slice(0, 80) || undefined,
+    duration: input.duration?.slice(0, 120) || undefined,
+    tuitionFee: input.tuitionFee?.slice(0, 120) || undefined,
+    courseType: input.courseType?.slice(0, 80) || undefined,
+    page: typeof input.page === "number" && input.page > 0 ? Math.trunc(input.page) : 1,
+    limit: clampLimit(input.limit),
+  };
+}
+
+/**
+ * Course reads for the browser. Courses are a separate data source from
+ * scholarships; this never falls back to scholarship rows.
+ */
+export async function fetchPublicCourses(
+  filters: Partial<CourseQuery>
+): Promise<Paginated<PublicCourse>> {
+  return getPublicCourses(sanitiseCourseFilters(filters));
 }
 
 export async function fetchPublicScholarship(id: string): Promise<PublicScholarship | null> {

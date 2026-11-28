@@ -1,7 +1,6 @@
 import { Suspense, cache } from "react";
 import type { Metadata } from "next";
-import { getPublicScholarships } from "@/lib/data/public";
-import { getCourseSearchOptions } from "@/lib/data/course-search";
+import { getPublicCourses, getCourseSearchOptions } from "@/lib/data/course-search";
 import {
   resolveCourseQuery,
   courseFiltersToQuery,
@@ -19,8 +18,13 @@ import { CourseSearchBrowser } from "./CourseSearchBrowser";
  * Every "Courses by Degree / Subject / Country" navigation link lands here with
  * only the query string differing (`?degree=masters`, `?subject=business`,
  * `?country=germany`, `?country=europe`). The server resolves those friendly
- * slugs to concrete database values, reads the first page of matching records,
- * and hands both the filter options and the results to the browser component.
+ * slugs to concrete values, reads the first page of matching course records
+ * from the dedicated Course data source, and hands both the filter options and
+ * the results to the browser component.
+ *
+ * Courses and scholarships are separate data sources: this page never reads or
+ * falls back to scholarship rows. When no course matches, the browser shows a
+ * "No courses available" empty state.
  */
 
 const getOptions = cache(getCourseSearchOptions);
@@ -85,9 +89,15 @@ export default async function CourseSearchPage({
   const options = await getOptions();
   const resolved = resolveCourseQuery(state, options);
 
-  const initialResult = await getPublicScholarships({
+  // The URL carries friendly slugs; the DB stores the subject display name, so
+  // resolve the subject id back to its label before querying courses.
+  const subjectName = resolved.field
+    ? options.subjects.find((s) => s.id === resolved.field)?.name ?? resolved.field
+    : undefined;
+
+  const initialResult = await getPublicCourses({
     degree: resolved.degree || undefined,
-    field: resolved.field || undefined,
+    subject: subjectName || undefined,
     country: resolved.country || undefined,
     region: resolved.region || undefined,
     university: resolved.university || undefined,
@@ -110,10 +120,10 @@ export default async function CourseSearchPage({
       <JsonLd
         data={itemListSchema({
           name: "Courses",
-          items: initialResult.data.map((s) => ({
-            name: s.title,
-            path: `/scholarships/${s.slug}`,
-            description: s.shortDescription ?? s.description,
+          items: initialResult.data.map((c) => ({
+            name: c.title,
+            path: c.url ?? `/course-search`,
+            description: c.shortDescription ?? c.description,
           })),
         })}
       />

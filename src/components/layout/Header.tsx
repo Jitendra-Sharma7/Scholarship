@@ -9,7 +9,6 @@ import { SiteLogo } from "@/components/layout/SiteLogo";
 import { Container, Flex } from "@/components/layout/Layout";
 import { useStore } from "@/lib/store/useStore";
 import { cn } from "@/lib/utils";
-import { fetchCourseNavGroups } from "@/app/actions/course-nav-actions";
 
 interface DropdownItem {
   label?: string;
@@ -66,12 +65,47 @@ const scholarshipGroups: ScholarshipNavGroup[] = [
   },
 ];
 
-const GROUP_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  degree: GraduationCap,
-  subject: BookOpen,
-  country: Globe,
-  type: Award,
-};
+/**
+ * The Courses dropdown is a fixed, exact structure: three sections with the
+ * specified child categories only. Every child links to the same unified
+ * `/course-search` page with its filter pre-applied via the query string; the
+ * per-group "View All Courses" link (appended by the renderer) points at the
+ * bare `/course-search`. No scholarship content appears here.
+ */
+const courseGroups: ScholarshipNavGroup[] = [
+  {
+    id: "degree",
+    label: "Courses by Degree",
+    icon: GraduationCap,
+    links: [
+      { label: "Undergraduate Courses", href: "/course-search?degree=undergraduate" },
+      { label: "Master's Courses", href: "/course-search?degree=masters" },
+      { label: "MBA Courses", href: "/course-search?degree=mba" },
+    ],
+  },
+  {
+    id: "subject",
+    label: "Courses by Subject",
+    icon: BookOpen,
+    links: [
+      { label: "Business Courses", href: "/course-search?subject=business" },
+      { label: "Computer Science Courses", href: "/course-search?subject=computer-science" },
+      { label: "Data Science Courses", href: "/course-search?subject=data-science" },
+      { label: "Design Courses", href: "/course-search?subject=design" },
+      { label: "Finance Courses", href: "/course-search?subject=finance" },
+      { label: "Marketing Courses", href: "/course-search?subject=marketing" },
+    ],
+  },
+  {
+    id: "country",
+    label: "Courses by Country",
+    icon: Globe,
+    links: [
+      { label: "Europe Courses", href: "/course-search?country=europe" },
+      { label: "Germany Courses", href: "/course-search?country=germany" },
+    ],
+  },
+];
 
 export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -84,23 +118,11 @@ export function Header() {
     type: true,
     subject: true,
   });
-  const [courseGroups, setCourseGroups] = useState<ScholarshipNavGroup[]>([]);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    fetchCourseNavGroups().then((groups) => {
-      setCourseGroups(
-        groups.map((g) => ({
-          ...g,
-          icon: GROUP_ICONS[g.id] || GraduationCap,
-        }))
-      );
-    });
-  }, []);
 
   const navItems: NavItem[] = [
     {
